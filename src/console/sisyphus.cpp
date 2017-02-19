@@ -2,11 +2,13 @@
 
 #include    "cove/barn/cv_include.h"
 #include    "rube/barn/ru_include.h"
+#include    "rube/engine/ru_rubereactor.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------
 
 int main( int argc, char *argv[])
 {
+    Ru_RubeRunner       rr;
     return 0;
 }
 

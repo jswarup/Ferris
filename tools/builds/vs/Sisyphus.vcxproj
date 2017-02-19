@@ -145,6 +145,14 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\console\sisyphus.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Cove.vcxproj">
+      <Project>{dd3cb04b-bd3f-49df-a822-c43c1067e251}</Project>
+    </ProjectReference>
+    <ProjectReference Include="Rube.vcxproj">
+      <Project>{da20f347-01ab-4478-993d-0ba6aa0a89d0}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
