@@ -3,21 +3,19 @@
 
 #include    "rube/engine/ru_rubesite.h"
 
-
 //-------------------------------------------------------------------------
-// A simple and-gate
 
-class Ru_AndGate : public Ru_Site< Ru_Inlet< bool, bool>, Ru_Outlet< bool >>
-{ 
-    typedef Ru_Site< Ru_Inlet< bool, bool>, Ru_Outlet< bool >>  Base;
-public:
-	//---------------------------------------------------------------------
+struct Ru_AndGate
+{
+    typedef Ru_Inlet< bool, bool>       Inlet;
+    typedef Ru_Outlet< bool>            Outlet;   
 
-	Ru_AndGate( Ru_RubeSite *master, const std::string &str)
-		: Base( master, str)
-	{
-		
-	}
 
-	
+
+    Outlet::Tuple     Action( const Inlet::Tuple  &input)
+    {
+        bool b = input.Var< 0>() && input.Var< 1>();
+        return Outlet::Tuple( b);
+    }
 };
+

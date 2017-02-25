@@ -9,7 +9,7 @@
 
 int main( int argc, char *argv[])
 {
-    Ru_AndGate       rr( nullptr, "test");
+    Ru_Site< Ru_AndGate>       rr( "test", nullptr) ;
     return 0;
 }
 
