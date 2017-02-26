@@ -40,8 +40,8 @@ public:
                 return pr;
             dl = pr;
         }
-        CV_ERROR_ASSERT(false)
-            return NULL;
+        //CV_ERROR_ASSERT(false)
+        return NULL;
     }
 };
 
@@ -53,8 +53,173 @@ public:
 // Hence, Cv_DList, independently, should always be  open.
 // Ax_CList is derived from Cv_DList to enforce the circularity.
 
-template <class DLink, bool CircularFlag = false>
+template <class DLink>
 class Cv_DList
+{
+protected:
+
+    DLink   *m_Head;
+
+public:
+    class Iterator;
+
+    Cv_DList(DLink *h = NULL)
+        : m_Head(h)
+    {}
+
+
+    DLink   *GetHead(void) const { return m_Head; }
+    void    SetHead( DLink *dl) { m_Head = dl; }
+
+    DLink   *GetTail(void) const
+    {
+        if (!m_Head)
+            return NULL;
+        return m_Head->GetPrev();
+    }
+
+    
+
+    bool isSingle(void) const { return (GetTail() == GetHead()); }
+
+    int nEntry(void)const
+    {
+        int n = 0;
+        for (Iterator it = Begin().anchor(); it != NULL; ++n, ++it)
+            ;
+        return n;
+    }
+
+    //_____________________________________________________________________________________________________________________________
+
+    void    Prepend(DLink *dl)
+    {
+        DLink   *tl = GetTail();
+        if (tl)
+        {
+            m_Head->SetPrev(dl);
+            dl->SetNext(m_Head);
+            dl->SetPrev(tl);
+        }
+        else
+        {
+            CV_ERROR_ASSERT(m_Head == NULL)
+                dl->SetPrev(dl); // make dl the GetTail
+        }
+        m_Head = dl;
+        return;
+    }
+
+    //_____________________________________________________________________________________________________________________________
+
+    void    Append(DLink *dl)
+    {
+        DLink   *tl = GetTail();
+        if (tl)
+        {
+            tl->SetNext(dl);
+            dl->SetPrev(tl);
+        }
+        else
+        {
+            CV_ERROR_ASSERT(m_Head == NULL)
+                m_Head = dl;
+        }
+        m_Head->SetPrev(dl); // make dl the tail
+        return;
+    }
+
+    //_____________________________________________________________________________________________________________________________
+
+    DLink    *Remove(DLink *dl)
+    {
+        if (isSingle())
+        {
+            CV_ERROR_ASSERT(dl == m_Head);
+            m_Head = NULL;
+            return dl->Initialize();
+        }
+        
+        DLink   *tl = GetTail();
+        if ((dl != tl) && (dl != m_Head))
+        {
+            dl->GetNext()->SetPrev(dl->GetPrev());
+            dl->GetPrev()->SetNext(dl->GetNext());
+            return dl->Initialize();
+        }
+        if (dl == tl)
+            m_Head->SetPrev(dl->GetPrev()); // make dl the tail
+        else if (dl == m_Head)
+        {
+            m_Head = m_Head->GetNext();
+            m_Head->SetPrev(tl);
+        }
+        return dl->Initialize();
+    }
+
+    //_____________________________________________________________________________________________________________________________
+
+    void    InsertAfter(DLink *ref, DLink *dl)
+    {
+        DLink   *tl = GetTail();
+        if (ref == tl)
+        {
+            append(dl);
+            return;
+        }
+        dl->SetNext(ref->GetNext());
+        dl->GetNext()->SetPrev(dl);
+        dl->SetPrev(ref);
+        ref->SetNext(dl);
+        return;
+    }
+
+    //_____________________________________________________________________________________________________________________________
+
+    void    InsertBefore(DLink *ref, DLink *dl)
+    {
+        if (ref == m_Head)
+        {
+            prepend(dl);
+            return;
+        }
+        dl->SetPrev(ref->GetPrev());
+        dl->GetPrev()->SetNext(dl);
+        dl->SetNext(ref);
+        ref->SetPrev(dl);
+        return;
+    }
+
+    //_____________________________________________________________________________________________________________________________
+
+    void    Transfer(Cv_DList< DLink> *dlist)
+    {
+        DLink   *tl = GetTail();
+        DLink   *dh = dlist->GetHead();
+        DLink   *dt = dlist->GetTail();
+        if (tl)
+        {
+            tl->SetNext(dh);
+            dh->SetPrev(tl);
+        }
+        else
+        {
+            //CV_ERROR_ASSERT(m_Head == NULL)
+            m_Head = dh;
+        }
+        m_Head->SetPrev(dt); // make dt the tail
+        dlist->m_Head = NULL;
+        return;
+    }
+
+    //_____________________________________________________________________________________________________________________________
+
+    
+};
+
+
+template <class DLink, bool CircularFlag = false>
+class Cv_CList
 {
 protected:
 
@@ -70,7 +235,7 @@ protected:
 public:
     class Iterator;
 
-    Cv_DList(DLink *h = NULL)
+    Cv_CList(DLink *h = NULL)
         : m_Head(h)
     {}
 
@@ -168,7 +333,7 @@ public:
 
     //_____________________________________________________________________________________________________________________________
 
-    DLink    *Remove(DLink *dl)
+    Cv_CList    *Remove(DLink *dl)
     {
         if (isSingle())
         {
@@ -262,38 +427,7 @@ public:
 
     //_____________________________________________________________________________________________________________________________
 
-    class Iterator
-    {
-    protected:
-        DLink   *ptr;
-        DLink   *anc;
-
-        void    ValidateAnchor(void) { if (ptr == anc)  ptr = NULL; }
-    public:
-        Iterator(DLink *p = NULL) : ptr(p), anc(NULL) {}
-        Iterator(const Iterator &X) : ptr(X.ptr), anc(X.anc) {}
-
-        DLink       *operator*() const { return ptr; }
-        DLink       *operator->() const { return ptr; }
-        Iterator    &operator++() { ptr = ptr->GetNext(); ValidateAnchor(); return (*this); }
-        Iterator    operator++(int) { Iterator tmp = *this; ++*this; return tmp; }
-        Iterator    &operator--() { ptr = ptr->GetPrev(); ValidateAnchor(); return *this; }
-        Iterator    operator--(int) { Iterator tmp = *this; --*this; return tmp; }
-        bool        operator==(const Iterator &X) const { return (ptr == X.ptr); }
-        bool        operator!=(const Iterator &X) const { return (!(*this == X)); }
-
-        Iterator    Anchor(void)
-        {
-            Iterator    cIt(*this);
-            cIt.anc = cIt.ptr;
-            return cIt;
-        }
-
-        DLink   *GetAnchor(void) const { return anc; }
-    };
-
-    Iterator    Begin(void) const { return Iterator(m_Head); }
-    Iterator    End(void) const { DLink    *tl = GetTail(); return  tl ? tl->GetNext() : NULL; }
+    
 };
 
 //----------------------------------------------------------------------

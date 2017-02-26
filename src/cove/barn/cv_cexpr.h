@@ -30,4 +30,72 @@ template < class X>
     static constexpr const X    &Min( const X &x1, const X &x2) { return x1 < x2 ? x1 : x2; }
 
 };
+
+
+//_____________________________________________________________________________________________________________________________
+
+struct Cv_TypeEngage
+{
+template < typename T> 
+    struct  Exist
+    { 
+        typedef void        Note; 
+    };
+
+   //_____________________________________________________________________________________________________________________________
+
+template < typename T1, typename T2> 
+    struct Same
+    { 
+    };
+
+
+template < typename T1> 
+    struct Same< T1, T1>
+    { 
+        typedef void      Note; 
+    };
+
+    //_____________________________________________________________________________________________________________________________
+
+template < typename T1, typename T2> 
+    struct NotSame
+    { 
+        typedef void      Note; 
+    };
+
+
+template < typename T1> 
+    struct NotSame< T1, T1>
+    { 
+    };
+
+    //_____________________________________________________________________________________________________________________________
+
+template < typename T, typename = void> 
+    struct  NotVoid
+    { 
+        typedef void        Note; 
+    };
+
+template < typename T> 
+    struct  NotVoid< T, typename Same<  T, void>::Note> 
+    {
+    };
+    
+    //_____________________________________________________________________________________________________________________________
+
+template < typename T, typename = void> 
+    struct Stream
+    { 
+        typedef std::false_type  Note;
+    };
+       
+template < typename T>
+    struct Stream< T, typename Exist< decltype( operator<<( *( std::ostream *) nullptr, *( const T *) nullptr)) >::Type> 
+    { 
+        typedef std::true_type  Note;
+    };
+};
+
 //_____________________________________________________________________________________________________________________________

@@ -9,7 +9,9 @@
 
 int main( int argc, char *argv[])
 {
-    Ru_Site< Ru_AndGate>       rr( "test", nullptr) ;
+    
+    Ru_Site< Ru_HalfAdder>   rr( nullptr) ;
+    
     return 0;
 }
 
