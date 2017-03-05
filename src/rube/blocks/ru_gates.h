@@ -3,28 +3,25 @@
 
 #include    "rube/engine/ru_rubesite.h"
 
-//-------------------------------------------------------------------------
+//_____________________________________________________________________________________________________________________________
 
 struct Ru_AndGate
 {
     typedef Ru_Inlet< bool, bool>       Inlet;
     typedef Ru_Outlet< bool>            Outlet;   
-
-
-
+     
     Outlet::Tuple     Action( const Inlet::Tuple  &input)
     {
         return Outlet::Tuple( input.Var< 0>() && input.Var< 1>());
     }
 };
 
+//_____________________________________________________________________________________________________________________________
 
 struct Ru_XorGate
 {
     typedef Ru_Inlet< bool, bool>       Inlet;
     typedef Ru_Outlet< bool>            Outlet;   
-
-
 
     Outlet::Tuple     Action( const Inlet::Tuple  &input)
     {
@@ -32,7 +29,7 @@ struct Ru_XorGate
     }
 };
 
-
+//_____________________________________________________________________________________________________________________________
 
 struct Ru_HalfAdder 
 {
@@ -41,8 +38,8 @@ struct Ru_HalfAdder
 
     typedef Ru_Compound< Ru_AndGate, Ru_XorGate>   Compound;
 
- template < class SitePtr >
-    static void    Bind( SitePtr site)
+ template < class Site  >
+    static void    Bind( Site *site)
     {
 
         site->InPort< 0>()->Join( site->Child< 0>()->InPort< 0>());
@@ -57,43 +54,4 @@ struct Ru_HalfAdder
     
 };
 
-
-/*
-
-class FlHalfAdder : public FlModule  
-{
-public:
-	FlInPort<FlBool>		a;
-	FlInPort<FlBool>		b;
-	
-	FlOutPort<FlBool>		sum;
-	FlOutPort<FlBool>		carry;
-
-	FlAndGate				andGate;
-	FlXorGate				xorGate;
-
-public:
-	//---------------------------------------------------------------------
-
-	FlHalfAdder( const std::string &str = std::string(), FlModule *p = NULL) 
-		: FlModule( str, p),
-		  andGate(  "and", this),
-		  xorGate( "xor", this),
-		  a( "in1", this),
-		  b( "in2", this),
-		  sum( "sum", this),
-		  carry( "carry", this)
-	{
-		a.join( andGate.fetchPort( "in1"));
-		a.join( xorGate.fetchPort( "in1"));
-
-		b.join( andGate.fetchPort( "in2"));
-		b.join( xorGate.fetchPort( "in2"));
-
-		sum.join( xorGate.fetchPort( "out"));
-		carry.join( andGate.fetchPort( "out"));
-	}
-
-	//---------------------------------------------------------------------
-};
-*/
+//_____________________________________________________________________________________________________________________________

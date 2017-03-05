@@ -29,6 +29,9 @@
     <ClCompile Include="..\..\..\src\rube\barn\ru_include.cpp" />
     <ClCompile Include="..\..\..\src\rube\engine\ru_rubereactor.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\src\rube\CMakeLists.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DA20F347-01AB-4478-993D-0BA6AA0A89D0}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

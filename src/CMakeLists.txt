@@ -2,10 +2,12 @@
 # refer to the root source directory of the project as ${HELLO_SOURCE_DIR} and
 # to the root binary directory of the project as ${HELLO_BINARY_DIR}.
 cmake_minimum_required (VERSION 2.8.11)
-project (Ferris)
-
-# Recurse into the "Hello" and "Demo" subdirectories. This does not actually
-# cause another cmake executable to run. The same process will walk through
+project (ferris)
+ 
 # the project's entire directory structure.
-add_subdirectory (Cove)
-add_subdirectory (Console)
+add_subdirectory (cove)
+add_subdirectory (console)
+add_subdirectory (rube)
+
+set(ferris_source_files console/sisyphus)
+add_executable(ferris ${ferris_source_files})

@@ -29,6 +29,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\cove\barn\cv_include.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\..\src\cove\CMakeLists.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DD3CB04B-BD3F-49DF-A822-C43C1067E251}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

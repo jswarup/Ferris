@@ -190,11 +190,11 @@ template < int K>
 template < class Module>
 struct Ru_Site< Module, typename Cv_TypeEngage::Exist< typename Module::Compound>::Note > : public Ru_TSite< Module>, public Module::Compound
 {
-    typedef typename Module::Compound   Compound;
+    typedef typename Module::Compound   Compound; 
     
 public:
     Ru_Site( Ru_RubeSite *master)
-        : Ru_TSite< Module>( master), Compound( master)
+        : Ru_TSite< Module>( master), Compound( master) 
     {
         Module::Bind( this);
     }
