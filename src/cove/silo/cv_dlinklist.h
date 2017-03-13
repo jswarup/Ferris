@@ -78,17 +78,7 @@ public:
         return m_Head->GetPrev();
     }
 
-    
-
     bool isSingle(void) const { return (GetTail() == GetHead()); }
-
-    int nEntry(void)const
-    {
-        int n = 0;
-        for (Iterator it = Begin().anchor(); it != NULL; ++n, ++it)
-            ;
-        return n;
-    }
 
     //_____________________________________________________________________________________________________________________________
 
@@ -261,14 +251,6 @@ public:
     }
 
     bool isSingle(void) const { return (GetTail() == GetHead()); }
-
-    int nEntry(void)const
-    {
-        int n = 0;
-        for (Iterator it = Begin().anchor(); it != NULL; ++n, ++it)
-            ;
-        return n;
-    }
 
     //_____________________________________________________________________________________________________________________________
 

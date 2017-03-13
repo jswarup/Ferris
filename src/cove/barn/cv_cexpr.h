@@ -13,7 +13,7 @@ template < class X>
     static constexpr X          DoubleTrim( X sz)  { return (( sz + sizeof( double) -1) / sizeof( double)) * sizeof( double) -1; }
 
 template < class X>    
-    static constexpr X          Pow2( X bits) { return bits == 0 ? 1 : 2 * Cv_ConstExprLib::Pow2( bits -1); }
+    static constexpr X          Pow2( X bits) { return bits == 0 ? 1 : 2 * Cv_CExpr::Pow2( bits -1); }
 
 template < class X>
     static constexpr auto       InitVal( void) { return X(); }

@@ -10,7 +10,7 @@
 int main( int argc, char *argv[])
 {
     
-    Ru_Site< Ru_HalfAdder>   rr( nullptr) ;
+    Ru_HalfAdder::Site   rr( nullptr) ;
     
     return 0;
 }

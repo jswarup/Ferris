@@ -15,13 +15,13 @@ public:
 
    void     Join( Ru_Port *port)
     {
-        Cv_DList< Ru_Port< T>>  list1( GetHeadLink());
+        Cv_DList< Ru_Port< T>>  list1( Cv_DLink< Ru_Port < T>>::GetHeadLink());
         Cv_DList< Ru_Port< T>>  list2( port->GetHeadLink());
         list1.Transfer( &list2); 
         return ;
     }
 };
-
+  
 //_____________________________________________________________________________________________________________________________
 
 
@@ -30,10 +30,10 @@ class   Ru_Inlet : public Ru_Inlet< Rest...>
 {
     Ru_Port< T>     m_Port;
 
-    typedef typename  Ru_Inlet< Rest...>    Base;
+    typedef Ru_Inlet< Rest...>    Base;
        
 public:
-    typedef typename  Ru_Tuple< T, Rest...> Tuple;
+    typedef Ru_Tuple< T, Rest...> Tuple;
     
     Ru_Inlet( void)
     {}
@@ -54,7 +54,7 @@ class   Ru_Inlet< T>
     Ru_Port< T>                    m_Port;
 
 public:
-    typedef typename  Ru_Tuple< T>  Tuple;
+    typedef Ru_Tuple< T> 	Tuple;
 
     Ru_Inlet( void)
     {}
@@ -71,9 +71,9 @@ class   Ru_Outlet : public Ru_Outlet< Rest...>
 {
     Ru_Port< T>     m_Port;
 
-    typedef typename  Ru_Outlet< Rest...>  Base;
+    typedef Ru_Outlet< Rest...>  	Base;
 public:
-    typedef typename  Ru_Tuple< T>  Tuple;
+    typedef Ru_Tuple< T>  			Tuple;
 
     Ru_Outlet( void)
     {}
@@ -94,7 +94,7 @@ class   Ru_Outlet< T>
     Ru_Port< T>     m_Port;
 
 public:
-    typedef typename  Ru_Tuple< T>  Tuple;
+    typedef Ru_Tuple< T>  			Tuple;
 
     Ru_Outlet( void)
     {}
@@ -143,7 +143,7 @@ template < class Module, typename = void>
 struct Ru_Site : public Ru_TSite< Module>
 {
     Ru_Site( Ru_RubeSite *master)
-        : Ru_TSite( master)
+        : Ru_TSite< Module>( master)
     {}
 
 };
@@ -196,7 +196,7 @@ public:
     Ru_Site( Ru_RubeSite *master)
         : Ru_TSite< Module>( master), Compound( master) 
     {
-        Module::Bind( this);
+       // Module::Bind( this);
     }
 
 };

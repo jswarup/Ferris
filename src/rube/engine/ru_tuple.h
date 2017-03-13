@@ -11,8 +11,8 @@ class   Ru_Tuple : public Ru_Tuple< Rest...>
    
 public:
     typedef T                               CType;
-    typedef typename  Ru_Tuple< T, Rest...> Tuple;
-    typedef typename  Ru_Tuple< Rest...>    Base;
+    typedef Ru_Tuple< T, Rest...> Tuple;
+    typedef Ru_Tuple< Rest...>    Base;
     
     Ru_Tuple( void)
     {}
@@ -22,14 +22,14 @@ public:
     {}
 
     Ru_Tuple( const T &t, Rest... rest)
-        : m_Var( t), Base( rest)
+        : m_Var( t), Base( rest...)
     {}
 
     template < int K>
     auto        Var( void) const { return Base::Var< K -1>(); }
 
     template <>
-    auto        Var< 0>( void) const { return m_Var; }
+    auto       	Var< 0>( void) const { return m_Var; }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -43,7 +43,7 @@ class   Ru_Tuple< T>
 public:
     typedef T                       CType;
 
-    typedef typename  Ru_Tuple< T>  Tuple;
+    typedef Ru_Tuple< T>  Tuple;
 
     Ru_Tuple( void)
     {}

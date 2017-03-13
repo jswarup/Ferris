@@ -5,8 +5,11 @@ cmake_minimum_required (VERSION 2.8.11)
 project (ferris)
  
 # the project's entire directory structure.
+
+include_directories( ${CMAKE_SOURCE_DIR})
+
+set(CMAKE_CXX_FLAGS "-Wall --std=c++14")
 add_subdirectory (cove)
-add_subdirectory (console)
 add_subdirectory (rube)
 
 set(ferris_source_files console/sisyphus)
