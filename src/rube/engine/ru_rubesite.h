@@ -25,82 +25,37 @@ public:
 //_____________________________________________________________________________________________________________________________
 
 
-template < typename T, typename... Rest>
-class   Ru_Inlet : public Ru_Inlet< Rest...>
-{
-    Ru_Port< T>     m_Port;
-
-    typedef Ru_Inlet< Rest...>    Base;
+template < typename... T>
+class   Ru_Inlet : public Ru_Tuple< Ru_Port< T>...>
+{ 
+    typedef Ru_Tuple< Ru_Port< T>...>    Base;
        
 public:
-    typedef Ru_Tuple< T, Rest...> Tuple;
+    typedef Ru_Tuple< T...> Tuple;
     
     Ru_Inlet( void)
     {}
 
     template < int K>
-    auto        Port( void) { return Base::Port< K -1>(); }
-
-    template <>
-    auto        Port< 0>( void) { return &m_Port; }
+    auto        Port( void) { return Base::Ptr< K>(); }
+     
 };
 
-//_____________________________________________________________________________________________________________________________
-
-
-template < typename T >
-class   Ru_Inlet< T>
-{
-    Ru_Port< T>                    m_Port;
-
-public:
-    typedef Ru_Tuple< T> 	Tuple;
-
-    Ru_Inlet( void)
-    {}
-
-    template < int K>
-    auto        Port( void) { return &m_Port; }
-}; 
 
 //_____________________________________________________________________________________________________________________________
 
-
-template < typename T, typename... Rest>
-class   Ru_Outlet : public Ru_Outlet< Rest...>
-{
-    Ru_Port< T>     m_Port;
-
-    typedef Ru_Outlet< Rest...>  	Base;
+template < typename... T>
+class   Ru_Outlet : public Ru_Tuple< Ru_Port< T>...>
+{ 
+    typedef Ru_Tuple< Ru_Port< T>...> 	Base;
 public:
-    typedef Ru_Tuple< T>  			Tuple;
+    typedef Ru_Tuple< T...>  			Tuple;
 
     Ru_Outlet( void)
     {}
 
     template < int K>
-    auto        Port( void) { return Base::Port< K -1>(); }
-
-    template <>
-    auto        Port< 0>( void) { return &m_Port; }
-};
-
-//_____________________________________________________________________________________________________________________________
-
-
-template < typename T >
-class   Ru_Outlet< T>
-{
-    Ru_Port< T>     m_Port;
-
-public:
-    typedef Ru_Tuple< T>  			Tuple;
-
-    Ru_Outlet( void)
-    {}
-
-    template < int K>
-    auto        Port( void) { return &m_Port; }
+    auto        Port( void) { return Base::Ptr< K>(); }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -150,39 +105,17 @@ struct Ru_Site : public Ru_TSite< Module>
 
 //_____________________________________________________________________________________________________________________________
 
-template < typename T, typename... Rest>
-struct Ru_Compound : public Ru_Compound< Rest...>
+template < typename...  T>
+struct Ru_Compound : public Ru_Tuple< Ru_Site< T>...>
 {
-    typedef Ru_Compound< Rest...>  Base;
-
-    Ru_Site< T>         m_Site;
+    typedef Ru_Tuple< Ru_Site< T>...>  Base;
 
     Ru_Compound( Ru_RubeSite *master)
-        : Base( master), m_Site( master)
+        : Base( master)
     {}
 
 template < int K>
-    auto    Child( void)  { return Base::Child< K -1>(); }
-
-template <>
-    auto    Child< 0>( void)  { return &m_Site; }
-
-};
-
-//_____________________________________________________________________________________________________________________________
-
-template <typename T>
-struct Ru_Compound< T> 
-{
-    Ru_Site< T>         m_Site;
-
-    Ru_Compound( Ru_RubeSite *master)
-        : m_Site( master)
-    {}
-
-    
-template < int K>
-    auto    Child( void)  { return &m_Site; }
+    auto    Child( void)  { return Base::Ptr< K>(); }
 };
 
 //_____________________________________________________________________________________________________________________________
