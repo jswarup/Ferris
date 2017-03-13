@@ -34,7 +34,6 @@ class   Ru_Tuple : public Ru_Tuple< Rest...>
 {
     T        m_Var;
    
-    
 public:
     typedef T                     CType;
     typedef Ru_Tuple< T, Rest...> Tuple;
@@ -59,8 +58,11 @@ template <class X>
         : Base( x), m_Var( x)
     {}
     
-    template < int K>
+template < int K>
     auto        Ptr( void)  { return Ru_TupleIndex< Tuple, K>( this).PVar(); } 
+
+template < int K>
+    auto        Var( void) const { return *const_cast<Tuple *>( this)->Ptr< K>(); }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -74,7 +76,7 @@ class   Ru_Tuple< T>
 public:
     typedef T                       CType;
 
-    typedef Ru_Tuple< T>  Tuple;
+    typedef Ru_Tuple< T>            Tuple;
 
     Ru_Tuple( void)
     {}
@@ -94,11 +96,8 @@ template <class X>
 
     auto	PVar( void) { return &m_Var; }
 
-    template < int K>
+template < int K>
     auto    Var( void) const { return m_Var; }
-
-    template < int K>
-    auto    Ptr( void) { return &m_Var; }
 }; 
 
 //_____________________________________________________________________________________________________________________________
