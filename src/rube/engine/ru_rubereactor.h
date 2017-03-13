@@ -1,6 +1,7 @@
 //----------------------------------------- ru_rubereactor.h --------------------------------------------------------------------
 #pragma once
 
+#include    "rube/engine/ru_tuple.h"
 
 //_____________________________________________________________________________________________________________________________
 
@@ -20,74 +21,36 @@ public:
 //_____________________________________________________________________________________________________________________________
 
 
-template < typename T, typename... Rest>
-class   Ru_Ingress : public Ru_Ingress< Rest...>
+template < typename... T>
+class   Ru_Ingress : public Ru_Tuple< Ru_Slot< T>... >
 {
-    Ru_Slot< T>     m_Port;
 
 public:
-    typedef typename  Ru_Ingress< Rest...>  Base;
+    typedef Ru_Tuple< Ru_Slot< T>...>  	Base;
 
     Ru_Ingress( void)
     {}
 
     template < int K>
-    auto        Port( void) { return Base::Port< K -1>(); }
-
-    template <>
-    auto        Port< 0>( void) { return &m_Port; }
+    auto        Port( void) { return Ru_TupleIndex< Base, K>( this).PVar(); } 
 };
 
-//_____________________________________________________________________________________________________________________________
-
-
-template < typename T >
-class   Ru_Ingress< T>
-{
-    Ru_Slot< T>     m_Port;
-
-public:
-    Ru_Ingress( void)
-    {}
-
-    template < int K>
-    auto        Port( void) { return &m_Port; }
-}; 
 
 //_____________________________________________________________________________________________________________________________
 
 
-template < typename T, typename... Rest>
-class   Ru_Outgress : public Ru_Outgress< Rest...>
+template < typename... T>
+class   Ru_Outgress : public Ru_Tuple< Ru_Slot< T>... >
 {
-    Ru_Slot< T>     m_Port;
-
-    typedef typename  Ru_Ingress< Rest...>  Base;
+    
 public:
+	typedef Ru_Tuple< Ru_Slot< T>...> 	Base;
+	
     Ru_Outgress( void)
     {}
 
     template < int K>
-    auto        Port( void) { return Base::Port< K -1>(); }
-
-    template <>
-    auto        Port< 0>( void) { return &m_Port; }
-};
-
-//_____________________________________________________________________________________________________________________________
-
-
-template < typename T >
-class   Ru_Outgress< T>
-{
-    Ru_Slot< T>     m_Port;
-
-public:
-    Ru_Outgress( void)
-    {}
-
-    template < int K>
-    auto        Port( void) { return &m_Port; }
+    auto        Port( void) { return Ru_TupleIndex< Base, K>( this).PVar(); } 
 };
 
 //_____________________________________________________________________________________________________________________________

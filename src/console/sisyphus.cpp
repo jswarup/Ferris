@@ -11,7 +11,7 @@ int main( int argc, char *argv[])
 {
     
     Ru_HalfAdder::Site   rr( nullptr) ;
-    
+    std::cout << "OK";
     return 0;
 }
 
