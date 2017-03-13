@@ -25,8 +25,9 @@ class   Ru_Ingress : public Ru_Ingress< Rest...>
 {
     Ru_Slot< T>     m_Port;
 
-    typedef typename  Ru_Ingress< Rest...>  Base;
 public:
+    typedef typename  Ru_Ingress< Rest...>  Base;
+
     Ru_Ingress( void)
     {}
 

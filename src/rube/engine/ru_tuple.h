@@ -3,17 +3,43 @@
 
 //_____________________________________________________________________________________________________________________________
 
+template <typename T, int K>
+struct Ru_TupleIndex
+{
+	T	*m_T;
+	
+	Ru_TupleIndex( T *p)
+		:  m_T( p)
+	{}
+
+	auto	PVar( void) { return Ru_TupleIndex< typename T::Base, K -1>( m_T).PVar(); }
+};
+
+template <typename T>
+struct Ru_TupleIndex< T, 0>
+{
+	T	*m_T;
+	
+	Ru_TupleIndex( T *p)
+		:  m_T( p)
+	{}
+
+	auto	PVar( void) { return m_T->PVar(); }
+};
+
+//_____________________________________________________________________________________________________________________________
 
 template < typename T, typename... Rest>
 class   Ru_Tuple : public Ru_Tuple< Rest...>
 {
     T        m_Var;
    
+    
 public:
-    typedef T                               CType;
+    typedef T                     CType;
     typedef Ru_Tuple< T, Rest...> Tuple;
     typedef Ru_Tuple< Rest...>    Base;
-    
+
     Ru_Tuple( void)
     {}
 
@@ -25,21 +51,16 @@ public:
         : m_Var( t), Base( rest...)
     {}
 
+	auto	PVar( void) { return &m_Var; }
+	
+
 template <class X>
     Ru_Tuple( const X &x)
-        : m_Var( x), Base( x)
+        : Base( x), m_Var( x)
     {}
+    
     template < int K>
-    auto        Var( void) const { return Base::Var< K -1>(); }
-
-    template <>
-    auto       	Var< 0>( void) const { return m_Var; }
-
-    template < int K>
-    auto        Ptr( void)  { return Base::Ptr< K -1>(); }
-
-    template <>
-    auto       	Ptr< 0>( void) { return &m_Var; }
+    auto        Ptr( void)  { return Ru_TupleIndex< Tuple, K>( this).PVar(); } 
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -70,6 +91,8 @@ template <class X>
     Ru_Tuple( const X &x)
         : m_Var( x) 
     {}
+
+    auto	PVar( void) { return &m_Var; }
 
     template < int K>
     auto    Var( void) const { return m_Var; }
