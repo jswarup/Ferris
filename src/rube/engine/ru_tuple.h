@@ -30,6 +30,23 @@ struct Ru_TupleIndex< T, 0>
 //_____________________________________________________________________________________________________________________________
 
 template < typename T, typename... Rest>
+class   Ru_Tuple; 
+
+struct Ru_TupleTools
+{   
+template< typename T, typename... BT >
+    static constexpr auto   Make( T &&t1, Ru_Tuple< BT...> &&t2);
+
+template< typename... Types >
+    static constexpr auto   Make( Types&&... args );
+
+
+
+}; 
+
+//_____________________________________________________________________________________________________________________________
+
+template < typename T, typename... Rest>
 class   Ru_Tuple : public Ru_Tuple< Rest...>
 {
     T        m_Var;
@@ -43,23 +60,23 @@ public:
     {}
 
     Ru_Tuple( const T &t, Rest... rest)
-        : m_Var( t), Base( rest...)
+        : Base( rest...), m_Var( t)
     {}
 
 	Ru_Tuple( const Ru_Tuple &t)
-        : m_Var( t.m_Var), Base( t)
+        : Base( t), m_Var( t.m_Var)
     {}
 
     Ru_Tuple( const T &t, const Base &rest)
-        : m_Var( t), Base( rest)
+        : Base( rest), m_Var( t) 
     {}
 
     Ru_Tuple( Ru_Tuple &&t)
-        : m_Var( t.m_Var), Base( t)
+        : Base( t), m_Var( t.m_Var)
     {}
 
     Ru_Tuple( T &&t, Base &&rest)
-        : m_Var( t), Base( rest)
+        : Base( rest), m_Var( t)
     {}
 
     auto	PVar( void) { return &m_Var; }
@@ -72,9 +89,9 @@ template < int K>
 
 
 template < typename Lambda>
-    auto    Compose( const Lambda &param)
+    auto    Compose( Lambda param)
     {
-        return Ru_TupleTools::Make( [=]() { return  param( m_Var); }, Base::Compose( param) );
+        return Ru_TupleTools::Make( param( m_Var), Base::Compose( param) );
     };
 
 template < typename... X>
@@ -118,32 +135,34 @@ template < int K>
     auto    Var( void) const { return m_Var; }
 
 template < typename Lambda>
-    auto    Compose( const Lambda &param)
+    auto    Compose( Lambda param)
     {
-        return Ru_TupleTools::Make( [=]() { return  param( m_Var); } );
+        return Ru_TupleTools::Make( param( m_Var) );
     };
 
 
-template < typename X>
-    auto Invoke( X args)
+template < typename... X>
+    auto Invoke( X... args)
     {
-        return  Ru_TupleTools::Make( m_Var( args)) ;
+        return  Ru_TupleTools::Make( m_Var( args...)) ;
     }
 }; 
 
 //_____________________________________________________________________________________________________________________________
 
-struct Ru_TupleTools
-{   
+
 
 template< class... Types >
-    static constexpr auto   Make( Types&&... args )
-    {
-        return Ru_Tuple< Types...>( args...);
-    }
+constexpr auto   Ru_TupleTools::Make( Types&&... args )
+{
+	return Ru_Tuple< Types...>( args...);
+}
 
-
-};  
+template< typename T, typename... BT >
+constexpr auto  Ru_TupleTools::Make( T &&t1, Ru_Tuple< BT...> &&t2)
+{
+    return Ru_Tuple< T, BT...>( t1, t2);
+}
 
 //_____________________________________________________________________________________________________________________________
 

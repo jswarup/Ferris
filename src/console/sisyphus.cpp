@@ -13,7 +13,7 @@ int main( int argc, char *argv[])
     {
         return Ru_TupleTools::Make( param...);
     };
-    
+    /*
     auto    a = vl( 2, 2.5, "arfe", 'a');
 
 
@@ -24,16 +24,25 @@ int main( int argc, char *argv[])
     auto    q = lm( 1);
     auto    t = q( 1,2,3);
 
-    auto    b = vl( 2);
+    auto    b = Ru_TupleTools::Make( 2, 5);
     //auto    c = b.Compose( lm);
-    auto    c = vl( []( auto p) { std::cout << p; return true; });
-        
-    auto    d = c.Invoke( 6);
-
     auto x = a.Compose( lm);
+    */
+    auto    b = Ru_TupleTools::Make( 2, 5, 7);
+    auto    c = b.Compose( [=]( auto p) 
+        { 
+            return [=]( auto... args) 
+            { 
+                std::cout << p; 
+                return true; 
+            }; 
+        });
+        
+     auto    d = c.Invoke( 6, 4); 
+    
 
   //  x.Invoke( 1, 2);
-    Ru_Site< Ru_HalfAdder>      rr( nullptr) ;
+ //   Ru_Site< Ru_HalfAdder>      rr( nullptr) ;
     std::cout << "OK";
     return 0;
 }
