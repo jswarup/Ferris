@@ -42,27 +42,46 @@ public:
     Ru_Tuple( void)
     {}
 
-    Ru_Tuple( const Ru_Tuple &t)
-        : m_Var( t.m_Var), Base( t)
-    {}
-
     Ru_Tuple( const T &t, Rest... rest)
         : m_Var( t), Base( rest...)
     {}
 
-	auto	PVar( void) { return &m_Var; }
-	
-
-template <class X>
-    Ru_Tuple( const X &x)
-        : Base( x), m_Var( x)
+	Ru_Tuple( const Ru_Tuple &t)
+        : m_Var( t.m_Var), Base( t)
     {}
-    
+
+    Ru_Tuple( const T &t, const Base &rest)
+        : m_Var( t), Base( rest)
+    {}
+
+    Ru_Tuple( Ru_Tuple &&t)
+        : m_Var( t.m_Var), Base( t)
+    {}
+
+    Ru_Tuple( T &&t, Base &&rest)
+        : m_Var( t), Base( rest)
+    {}
+
+    auto	PVar( void) { return &m_Var; }
+	
 template < int K>
     auto        Ptr( void)  { return Ru_TupleIndex< Tuple, K>( this).PVar(); } 
 
 template < int K>
     auto        Var( void) const { return *const_cast<Tuple *>( this)->Ptr< K>(); }
+
+
+template < typename Lambda>
+    auto    Compose( const Lambda &param)
+    {
+        return Ru_TupleTools::Make( [=]() { return  param( m_Var); }, Base::Compose( param) );
+    };
+
+template < typename... X>
+    auto Invoke( X... args)
+    {
+        return  Ru_TupleTools::Make( m_Var( args...), Base::Invoke( args...)) ;
+    }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -89,16 +108,42 @@ public:
         : m_Var( t.m_Var) 
     {}
 
-template <class X>
-    Ru_Tuple( const X &x)
-        : m_Var( x) 
+    Ru_Tuple( Ru_Tuple &&t)
+        : m_Var( t.m_Var) 
     {}
 
     auto	PVar( void) { return &m_Var; }
 
 template < int K>
     auto    Var( void) const { return m_Var; }
+
+template < typename Lambda>
+    auto    Compose( const Lambda &param)
+    {
+        return Ru_TupleTools::Make( [=]() { return  param( m_Var); } );
+    };
+
+
+template < typename X>
+    auto Invoke( X args)
+    {
+        return  Ru_TupleTools::Make( m_Var( args)) ;
+    }
 }; 
+
+//_____________________________________________________________________________________________________________________________
+
+struct Ru_TupleTools
+{   
+
+template< class... Types >
+    static constexpr auto   Make( Types&&... args )
+    {
+        return Ru_Tuple< Types...>( args...);
+    }
+
+
+};  
 
 //_____________________________________________________________________________________________________________________________
 

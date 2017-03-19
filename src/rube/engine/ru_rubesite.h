@@ -10,16 +10,13 @@ class   Ru_Port : public Cv_DLink< Ru_Port < T>>
 {
 
 public:
+    typedef Cv_DLink< Ru_Port < T>>     Base;
+
     Ru_Port( void) 
     {}
 
-   void     Join( Ru_Port *port)
-    {
-        Cv_DList< Ru_Port< T>>  list1( Cv_DLink< Ru_Port < T>>::GetHeadLink());
-        Cv_DList< Ru_Port< T>>  list2( port->GetHeadLink());
-        list1.Transfer( &list2); 
-        return ;
-    }
+    Cv_DList< Ru_Port< T>>      ListHead( void) { return Cv_DList< Ru_Port< T>>( Base::GetHeadLink()); }
+    void                        Join( Ru_Port *port)   {  Cv_DList< Ru_Port< T>>    dlist = port->ListHead(); ListHead().Transfer( &dlist);  }
 };
   
 //_____________________________________________________________________________________________________________________________
@@ -90,6 +87,25 @@ struct Ru_TSite : public Ru_RubeSite
     template < int K>
     auto        OutPort( void) { return Ru_TupleIndex< Outlet, K>( &m_Outlet).PVar();  } 
 
+    //-------------------------------------------------------------------
+/*
+    void	Bake( void)
+    {			
+	    for ( Ar_STLVector< Fr_Port*>::Iterator portIt = portList.begin(); portIt != portList.end(); ++portIt) {
+		    Fr_Port		*port = *portIt;
+		    Fr_SimContext::connect( port);
+	    }
+	    for ( Ar_STLVector< Fr_Module*>::Iterator subIt = subModuleList.begin(); subIt != subModuleList.end(); ++subIt) {
+		    Fr_Module	*sub = (*subIt);
+		    sub->bake();
+	    }
+	    initialize();
+	    for ( Ar_STLVector< Fr_FixedAction*>::Iterator actIt = actList.begin(); actIt != actList.end(); ++actIt) {
+		    Fr_FixedAction	*act = *actIt;
+		    act->attachToTriggers();
+	    }
+	    return;
+    }*/
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -105,13 +121,13 @@ struct Ru_Site : public Ru_TSite< Module>
 
 //_____________________________________________________________________________________________________________________________
 
-template < typename...  T>
-struct Ru_Compound : public Ru_Tuple< Ru_Site< T>...>
+template < class Module, typename...  T>
+struct Ru_Compound : public Ru_TSite< Module>, public Ru_Tuple< Ru_Site< T>...>
 {
     typedef Ru_Tuple< Ru_Site< T>...>  Base;
 
     Ru_Compound( Ru_RubeSite *master)
-        : Base( master)
+        : Ru_TSite< Module>( master), Base( master)
     {}
 
 template < int K>
@@ -121,13 +137,13 @@ template < int K>
 //_____________________________________________________________________________________________________________________________
 
 template < class Module>
-struct Ru_Site< Module, typename Cv_TypeEngage::Exist< typename Module::Compound>::Note > : public Ru_TSite< Module>, public Module::Compound
+struct Ru_Site< Module, typename Cv_TypeEngage::Exist< typename Module::Compound>::Note > : public Module::Compound
 {
     typedef typename Module::Compound   Compound; 
     
 public:
     Ru_Site( Ru_RubeSite *master)
-        : Ru_TSite< Module>( master), Compound( master) 
+        : Compound( master) 
     {
        // Module::Bind( this);
     }
