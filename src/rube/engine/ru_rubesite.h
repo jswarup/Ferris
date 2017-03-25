@@ -115,7 +115,7 @@ struct Ru_Compound : public Ru_Tuple< Ru_Site< T>...>
     {}
 
 template < int K>
-    auto    Child( void)  { return Ru_TupleIndex< Ru_Compound, K>( this).PVar(); }
+    auto    Child( void)  { return Ru_TupleIndex< Base, K>( this).PVar(); }
 };
 
 //_____________________________________________________________________________________________________________________________

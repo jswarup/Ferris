@@ -6,18 +6,23 @@
 template <typename T, int K>
 struct Ru_TupleIndex
 {
+    typedef typename T::Base TBase;
+
 	T	*m_T;
+
 	
 	Ru_TupleIndex( T *p)
 		:  m_T( p)
 	{}
 
-	auto	PVar( void) { return Ru_TupleIndex< typename T::Base, K -1>( m_T).PVar(); }
+	auto	PVar( void)  {  return  Ru_TupleIndex< TBase, K -1>( static_cast< TBase *>( m_T)).PVar();  }
 };
 
 template <typename T>
 struct Ru_TupleIndex< T, 0>
 {
+    typedef typename T::Base TBase;
+
 	T	*m_T;
 	
 	Ru_TupleIndex( T *p)
@@ -75,9 +80,9 @@ class   Ru_Tuple< T>
     
 public:
     typedef T                       CType;
-
     typedef Ru_Tuple< T>            Tuple;
-
+    typedef void                    Base;
+    
     Ru_Tuple( void)
     {}
 

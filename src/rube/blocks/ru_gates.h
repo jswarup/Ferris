@@ -45,15 +45,17 @@ struct Ru_HalfAdder
         Site( Ru_RubeSite *master)
             : Ru_Site< Ru_HalfAdder>( master)
         {
+            Ru_Site< Ru_AndGate> *andGate = Child< 0>();
+            Ru_Site< Ru_XorGate> *xorGate = Child< 1>();
 
-            InPort< 0>()->Join( Child< 0>()->InPort< 0>());
-		    InPort< 0>()->Join( Child< 1>()->InPort< 0>());
+            InPort< 0>()->Join( andGate->InPort< 0>());
+		    InPort< 0>()->Join( xorGate->InPort< 0>());
 
-		    InPort< 1>()->Join( Child< 0>()->InPort< 1>());
-		    InPort< 1>()->Join( Child< 1>()->InPort< 1>());
+		    InPort< 1>()->Join( andGate->InPort< 1>());
+		    InPort< 1>()->Join( xorGate->InPort< 1>());
 
-		    OutPort< 0>()->Join( Child< 1>()->OutPort< 0>());
-		    OutPort< 1>()->Join( Child< 0>()->OutPort< 0>());       
+		    OutPort< 0>()->Join( xorGate->OutPort< 0>());
+		    OutPort< 1>()->Join( andGate->OutPort< 0>());       
         }
     };
 
