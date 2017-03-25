@@ -8,7 +8,8 @@
 struct Ru_AndGate
 {
     typedef Ru_Inlet< bool, bool>       Inlet;
-    typedef Ru_Outlet< bool>            Outlet; 
+    typedef Ru_Outlet< bool>            Outlet;   
+    typedef Ru_Site< Ru_AndGate>        Site;
      
     Outlet::Tuple     Action( const Inlet::Tuple  &input)
     {
@@ -21,7 +22,8 @@ struct Ru_AndGate
 struct Ru_XorGate
 {
     typedef Ru_Inlet< bool, bool>       Inlet;
-    typedef Ru_Outlet< bool>            Outlet;  
+    typedef Ru_Outlet< bool>            Outlet;   
+    typedef Ru_Site< Ru_XorGate>        Site;
     
     Outlet::Tuple     Action( const Inlet::Tuple  &input)
     {
@@ -34,12 +36,14 @@ struct Ru_XorGate
 struct Ru_HalfAdder 
 {
     typedef Ru_Inlet< bool, bool>       Inlet;
-    typedef Ru_Outlet< bool, bool>      Outlet;  
+    typedef Ru_Outlet< bool, bool>      Outlet;   
 
-    struct Compound : Ru_Compound< Ru_AndGate, Ru_XorGate> 
+    typedef Ru_Compound< Ru_AndGate, Ru_XorGate>   Compound;
+
+    struct Site : public Ru_Site< Ru_HalfAdder>
     {
-        Compound( Ru_RubeSite *master)
-            : Ru_Compound< Ru_AndGate, Ru_XorGate>( master)
+        Site( Ru_RubeSite *master)
+            : Ru_Site< Ru_HalfAdder>( master)
         {
 
             InPort< 0>()->Join( Child< 0>()->InPort< 0>());

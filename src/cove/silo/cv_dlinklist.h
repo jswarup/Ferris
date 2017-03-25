@@ -6,9 +6,13 @@
 template <class DLink>
 class Cv_DLink
 {
+    Cv_DLink( const Cv_DLink &dl);
+
 protected:
     DLink    *m_Prev;
     DLink    *m_Next;
+
+    
 
 public:
     Cv_DLink(void) { Initialize(); }
@@ -19,20 +23,20 @@ public:
         m_Next = NULL;
         return m_Prev;
     }
-
+ 
     DLink       *GetPrev(void) const { return m_Prev; }
     DLink       *GetNext(void) const { return m_Next; }
 
-    void        SetPrev(DLink *d) { m_Prev = d; }
-    void        SetNext(DLink *d) { m_Next = d; }
+    void        SetPrev( DLink *d) { m_Prev = d; }
+    void        SetNext( DLink *d) { m_Next = d; }
 
     //_____________________________________________________________________________________________________________________________
     // returns the head element of this List and if the list is circular
 
-    DLink   *GetHeadLink(void) const
+    DLink   *GetHeadLink(void) 
     {
-        DLink	*dl = (DLink *) this;
-        for (DLink *pr = dl->m_Prev; pr; pr = pr->m_Prev)              // prev field s always filled
+        DLink	    *dl = static_cast< DLink *>( this);
+        for (  DLink *pr = dl->m_Prev; pr; pr = pr->m_Prev)              // prev field s always filled
         {
             if (!pr->m_Next)                                          // prev of head tail which has NULL next.
                 return dl;
@@ -41,7 +45,7 @@ public:
             dl = pr;
         }
         //CV_ERROR_ASSERT(false)
-        return NULL;
+        return nullptr;
     }
 };
 
@@ -60,8 +64,7 @@ protected:
 
     DLink   *m_Head;
 
-public:
-    class Iterator;
+public: 
 
     Cv_DList(DLink *h = NULL)
         : m_Head(h)
@@ -222,8 +225,7 @@ protected:
         if (tl)
             tl->SetNext(NULL);
     }
-public:
-    class Iterator;
+public: 
 
     Cv_CList(DLink *h = NULL)
         : m_Head(h)
@@ -246,8 +248,8 @@ public:
             return !CircularFlag;
         if (!GetTail()->GetNext())
             return true;
-        CV_ERROR_ASSERT(((DLink *)GetTail()->GetNext()) == m_Head)
-            return false;
+        CV_ERROR_ASSERT( static_cast< DLink *>( GetTail()->GetNext()) == m_Head)
+        return false;
     }
 
     bool isSingle(void) const { return (GetTail() == GetHead()); }
