@@ -9,7 +9,10 @@
 
 int main( int argc, char *argv[])
 {
-    auto    b = Ru_TupleTools::Make( 2);
+    Ru_HalfAdder::Site   rr( nullptr) ;
+    std::cout << "OK\n";
+
+    auto    b = Ru_TupleTools::Make( 2, 4);
     auto    lm = []( uint32_t k, auto var, auto... args) 
     { 
         std::cout << var; 
@@ -24,8 +27,7 @@ int main( int argc, char *argv[])
     auto    c = b.Compose( lm);
     auto    d = c.Invoke( 6, 5);  
     
-    Ru_HalfAdder::Site   rr( nullptr) ;
-    std::cout << "OK";
+    
     return 0;
 }
 

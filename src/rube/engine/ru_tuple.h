@@ -77,7 +77,7 @@ public:
     {}
 
     Ru_Tuple( const Ru_Tuple< T> &t, const Base &base)
-        : Base( base), m_Var( t.m_Var) 
+        : Base( base), m_Var( t.Var< 0>()) 
     {}
 
 template <class X>
@@ -97,17 +97,13 @@ template < int K>
 template < typename Lambda>
     auto    Compose( Lambda param) const
     {
-        auto        baseComp = Base::Compose( param); 
-        auto        varComp = [=](auto... rest) { return param( uint32_t( Tuple::Sz -1), m_Var, rest...);};
-        return Ru_TupleTools::Make( varComp, baseComp); 
+        return Ru_TupleTools::Make( [=](auto... rest) { return param( uint32_t( Tuple::Sz -1), m_Var, rest...);},  Base::Compose( param)); 
     };
 
     template < typename... X>
     auto Invoke( X... args) const
     {
-        auto    baseInv = Base::Invoke( args...);
-        auto    varInv = m_Var( args...);
-        return  Ru_TupleTools::Make( varInv, baseInv) ;
+        return  Ru_TupleTools::Make( m_Var( args...), Base::Invoke( args...)) ;
     }
 };
 
@@ -152,15 +148,13 @@ template < int K>
 template < typename Lambda>
     auto    Compose( Lambda param) const
     {
-        auto    varComp = [=](auto... rest) { return param( uint32_t( 0), m_Var, rest...);};
-        return  Ru_TupleTools::Make( varComp);
+        return  Ru_TupleTools::Make( [=](auto... rest) { return param( uint32_t( 0), m_Var, rest...);});
     };
 
 template < typename... X>
     auto Invoke( X... args) const
     {
-        auto    varInv = m_Var( args...);
-        return  Ru_TupleTools::Make( varInv) ;
+        return  Ru_TupleTools::Make( m_Var( args...)) ;
     }
 }; 
 
