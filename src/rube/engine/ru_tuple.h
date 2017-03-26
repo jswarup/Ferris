@@ -3,6 +3,11 @@
 
 //_____________________________________________________________________________________________________________________________
 
+template < typename T, typename... Rest>
+class   Ru_Tuple; 
+
+//_____________________________________________________________________________________________________________________________
+
 template <typename T, int K>
 struct Ru_TupleIndex
 {
@@ -34,6 +39,18 @@ struct Ru_TupleIndex< T, 0>
 
 //_____________________________________________________________________________________________________________________________
 
+struct  Ru_TupleTools
+{   
+template< typename... Types >
+    static constexpr auto   Make( Types&&... args );
+	
+template< typename T, typename... BT >
+    static constexpr auto  Make( T &&t1, Ru_Tuple< BT...> &&t2);
+	
+};
+
+//_____________________________________________________________________________________________________________________________
+
 template < typename T, typename... Rest>
 class   Ru_Tuple : public Ru_Tuple< Rest...>
 {
@@ -52,26 +69,38 @@ public:
     {}
 
     Ru_Tuple( const Ru_Tuple &t)
-        : m_Var( t.m_Var), Base( t)
+        : Base( t), m_Var( t.m_Var)
     {}
 
     Ru_Tuple( const T &t, Rest... rest)
-        : m_Var( t), Base( rest...)
+        : Base( rest...), m_Var( t)
     {}
 
-	auto	PVar( void) { return &m_Var; }
-	
+    Ru_Tuple( const Ru_Tuple< T> &t, const Base &base)
+        : Base( base), m_Var( t.m_Var) 
+    {}
 
 template <class X>
-    Ru_Tuple( const X &x)
+    Ru_Tuple( X x)
         : Base( x), m_Var( x)
     {}
     
+	auto	PVar( void) { return &m_Var; }
+	
+
 template < int K>
     auto        Ptr( void)  { return Ru_TupleIndex< Tuple, Tuple::Sz -1 -K>( this).PVar(); } 
 
 template < int K>
     auto        Var( void) const { return *const_cast<Tuple *>( this)->Ptr< K>(); }
+
+template < typename Lambda>
+    auto    Compose( const Lambda &param) const
+    {
+        auto    baseComp = Base::Compose( param);
+        auto    varComp = [=](auto... rest) { return param( Sz -1, m_Var, rest...);};
+        return Ru_TupleTools::Make( varComp, baseComp); 
+    };
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -103,7 +132,7 @@ public:
     {}
 
 template <class X>
-    Ru_Tuple( const X &x)
+    Ru_Tuple(  X x)
         : m_Var( x) 
     {}
 
@@ -111,6 +140,13 @@ template <class X>
 
 template < int K>
     auto    Var( void) const { return m_Var; }
+
+template < typename Lambda>
+    auto    Compose( const Lambda &param) const
+    {
+        auto    varComp = [=](auto... rest) { return param( Sz -1, m_Var, rest...);};
+        return  Ru_TupleTools::Make( varComp);
+    };
 }; 
 
 //_____________________________________________________________________________________________________________________________
@@ -126,13 +162,20 @@ struct Ru_Index< 0, Tuple>
     typedef typename Tuple::CType  Type;
 };
 
-struct  Ru_TupleTools
-{   
+//_____________________________________________________________________________________________________________________________
+
+
 template< typename... Types >
-    static constexpr auto   Make( Types&&... args )
-    {
-	    return Ru_Tuple< Types...>( std::forward<Types>( args)...);
-    }
-};
+constexpr auto   Ru_TupleTools::Make( Types&&... args )
+{
+	return Ru_Tuple< Types...>( std::forward<Types>( args)...);
+}
+
+template< typename T, typename... BT >
+constexpr auto  Ru_TupleTools::Make( T &&t1, Ru_Tuple< BT...> &&t2)
+{
+	return Ru_Tuple< T, BT...>( std::forward<T>( t1), std::forward< Ru_Tuple< BT...> >( t2));
+}
+
 
 //_____________________________________________________________________________________________________________________________
