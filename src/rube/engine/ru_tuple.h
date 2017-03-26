@@ -69,7 +69,7 @@ public:
     {}
 
     Ru_Tuple( const Ru_Tuple &t)
-        : Base( t), m_Var( t.m_Var)
+        : Base( ( const Base &) t), m_Var( t.m_Var)
     {}
 
     Ru_Tuple( const T &t, Rest... rest)
