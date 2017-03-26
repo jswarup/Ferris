@@ -9,7 +9,8 @@
 
 int main( int argc, char *argv[])
 {
-    
+    auto    b = Ru_TupleTools::Make( 2, 5, 7);
+
     Ru_HalfAdder::Site   rr( nullptr) ;
     std::cout << "OK";
     return 0;

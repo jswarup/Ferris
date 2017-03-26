@@ -5,9 +5,10 @@
 
 //_____________________________________________________________________________________________________________________________
 
-template < typename T >
-class   Ru_Port : public Cv_DLink< Ru_Port < T>>
+template < typename T, bool in >
+class   Ru_Port : public Cv_DLink< Ru_Port < T, in>>
 {
+    typedef Ru_Port < T, in>  Port;
 
 public:
     Ru_Port( void) 
@@ -15,8 +16,8 @@ public:
 
    void     Join( Ru_Port *port)
     {
-        Cv_DList< Ru_Port< T>>  list1( Cv_DLink< Ru_Port < T>>::GetHeadLink());
-        Cv_DList< Ru_Port< T>>  list2( port->GetHeadLink());
+        Cv_DList< Port>  list1( Cv_DLink< Port>::GetHeadLink());
+        Cv_DList< Port>  list2( port->GetHeadLink());
         list1.Transfer( &list2); 
         return ;
     }
@@ -26,17 +27,17 @@ public:
 
 
 template < typename... T>
-class   Ru_Inlet : public Ru_Tuple< Ru_Port< T>...>
+class   Ru_Inlet : public Ru_Tuple< Ru_Port< T, true>...>
 { 
 public:
-    typedef Ru_Tuple< Ru_Port< T>...>   Base;
-    typedef Ru_Tuple< T...>             Tuple;
+    typedef Ru_Tuple< Ru_Port< T, true>...>     Base;
+    typedef Ru_Tuple< T...>                     Tuple;
     
     Ru_Inlet( void)
     {}
 
     template < int K>
-    auto        Port( void) { return Ru_TupleIndex< Base,  K>( this).PVar(); }
+    auto        Port( void) { return Ru_TupleIndex< Base,  Base::Sz -1 -K>( this).PVar(); }
      
 };
 
@@ -44,18 +45,18 @@ public:
 //_____________________________________________________________________________________________________________________________
 
 template < typename... T>
-class   Ru_Outlet : public Ru_Tuple< Ru_Port< T>...>
+class   Ru_Outlet : public Ru_Tuple< Ru_Port< T, false>...>
 { 
     
 public:
-    typedef Ru_Tuple< Ru_Port< T>...> 	Base;
+    typedef Ru_Tuple< Ru_Port< T, false>...> 	Base;
     typedef Ru_Tuple< T...>  			Tuple;
 
     Ru_Outlet( void)
     {}
 
     template < int K>
-    auto        Port( void) { return Ru_TupleIndex< Base, K>( this).PVar(); }
+    auto        Port( void) { return Ru_TupleIndex< Base, Base::Sz -1 -K>( this).PVar(); }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -85,10 +86,13 @@ struct Ru_TSite : public Ru_RubeSite
     {}
 
     template < int K>
-    auto        InPort( void) { return Ru_TupleIndex< Inlet, K>( &m_Inlet).PVar();  }
+    auto        InPort( void) { return Ru_TupleIndex< Inlet, Inlet::Sz -1 -K>( &m_Inlet).PVar();  }
 
     template < int K>
-    auto        OutPort( void) { return Ru_TupleIndex< Outlet, K>( &m_Outlet).PVar();  } 
+    auto        OutPort( void) { return Ru_TupleIndex< Outlet, Outlet::Sz -1 -K>( &m_Outlet).PVar();  } 
+
+
+
 
 };
 
@@ -115,7 +119,7 @@ struct Ru_Compound : public Ru_Tuple< Ru_Site< T>...>
     {}
 
 template < int K>
-    auto    Child( void)  { return Ru_TupleIndex< Base, K>( this).PVar(); }
+    auto    Child( void)  { return Ru_TupleIndex< Base, Base::Sz -1 -K>( this).PVar(); }
 };
 
 //_____________________________________________________________________________________________________________________________

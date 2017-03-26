@@ -44,6 +44,10 @@ public:
     typedef Ru_Tuple< T, Rest...> Tuple;
     typedef Ru_Tuple< Rest...>    Base;
 
+    enum {
+        Sz = Base::Sz +1,
+    };
+    
     Ru_Tuple( void)
     {}
 
@@ -64,7 +68,7 @@ template <class X>
     {}
     
 template < int K>
-    auto        Ptr( void)  { return Ru_TupleIndex< Tuple, K>( this).PVar(); } 
+    auto        Ptr( void)  { return Ru_TupleIndex< Tuple, Tuple::Sz -1 -K>( this).PVar(); } 
 
 template < int K>
     auto        Var( void) const { return *const_cast<Tuple *>( this)->Ptr< K>(); }
@@ -82,6 +86,10 @@ public:
     typedef T                       CType;
     typedef Ru_Tuple< T>            Tuple;
     typedef void                    Base;
+    
+    enum {
+        Sz = 1,
+    };
     
     Ru_Tuple( void)
     {}
@@ -116,6 +124,15 @@ template <typename Tuple>
 struct Ru_Index< 0, Tuple>
 {
     typedef typename Tuple::CType  Type;
+};
+
+struct  Ru_TupleTools
+{   
+template< typename... Types >
+    static constexpr auto   Make( Types&&... args )
+    {
+	    return Ru_Tuple< Types...>( std::forward<Types>( args)...);
+    }
 };
 
 //_____________________________________________________________________________________________________________________________

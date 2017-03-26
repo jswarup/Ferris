@@ -7,7 +7,7 @@
 
 struct Ru_AndGate
 {
-    typedef Ru_Inlet< bool, bool>       Inlet;
+    typedef Ru_Inlet< bool, int>       Inlet;
     typedef Ru_Outlet< bool>            Outlet;   
     typedef Ru_Site< Ru_AndGate>        Site;
      
@@ -21,7 +21,7 @@ struct Ru_AndGate
 
 struct Ru_XorGate
 {
-    typedef Ru_Inlet< bool, bool>       Inlet;
+    typedef Ru_Inlet< bool, int>       Inlet;
     typedef Ru_Outlet< bool>            Outlet;   
     typedef Ru_Site< Ru_XorGate>        Site;
     
@@ -35,7 +35,7 @@ struct Ru_XorGate
 
 struct Ru_HalfAdder 
 {
-    typedef Ru_Inlet< bool, bool>       Inlet;
+    typedef Ru_Inlet< bool, int>       Inlet;
     typedef Ru_Outlet< bool, bool>      Outlet;   
 
     typedef Ru_Compound< Ru_AndGate, Ru_XorGate>   Compound;
@@ -45,8 +45,8 @@ struct Ru_HalfAdder
         Site( Ru_RubeSite *master)
             : Ru_Site< Ru_HalfAdder>( master)
         {
-            Ru_Site< Ru_AndGate> *andGate = Child< 0>();
-            Ru_Site< Ru_XorGate> *xorGate = Child< 1>();
+            Ru_Site< Ru_XorGate> *andGate = Child< 0>();
+            Ru_Site< Ru_AndGate> *xorGate = Child< 1>();
 
             InPort< 0>()->Join( andGate->InPort< 0>());
 		    InPort< 0>()->Join( xorGate->InPort< 0>());
