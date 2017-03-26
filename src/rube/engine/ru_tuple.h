@@ -95,12 +95,20 @@ template < int K>
     auto        Var( void) const { return *const_cast<Tuple *>( this)->Ptr< K>(); }
 
 template < typename Lambda>
-    auto    Compose( const Lambda &param) const
+    auto    Compose( Lambda param) const
     {
-        auto    baseComp = Base::Compose( param);
-        auto    varComp = [=](auto... rest) { return param( Sz -1, m_Var, rest...);};
+        auto        baseComp = Base::Compose( param); 
+        auto        varComp = [=](auto... rest) { return param( uint32_t( Tuple::Sz -1), m_Var, rest...);};
         return Ru_TupleTools::Make( varComp, baseComp); 
     };
+
+    template < typename... X>
+    auto Invoke( X... args) const
+    {
+        auto    baseInv = Base::Invoke( args...);
+        auto    varInv = m_Var( args...);
+        return  Ru_TupleTools::Make( varInv, baseInv) ;
+    }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -142,11 +150,18 @@ template < int K>
     auto    Var( void) const { return m_Var; }
 
 template < typename Lambda>
-    auto    Compose( const Lambda &param) const
+    auto    Compose( Lambda param) const
     {
-        auto    varComp = [=](auto... rest) { return param( Sz -1, m_Var, rest...);};
+        auto    varComp = [=](auto... rest) { return param( uint32_t( 0), m_Var, rest...);};
         return  Ru_TupleTools::Make( varComp);
     };
+
+template < typename... X>
+    auto Invoke( X... args) const
+    {
+        auto    varInv = m_Var( args...);
+        return  Ru_TupleTools::Make( varInv) ;
+    }
 }; 
 
 //_____________________________________________________________________________________________________________________________
