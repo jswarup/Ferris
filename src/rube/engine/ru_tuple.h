@@ -46,6 +46,9 @@ template< typename... Types >
 	
 template< typename T, typename... BT >
     static constexpr auto  Make( T &&t1, Ru_Tuple< BT...> &&t2);
+
+template< typename... Types >
+    static constexpr auto   Ru_TupleTools::Dump( std::ostream &ostr, const  Ru_Tuple< Types...> &tuple);
 	
 };
 
@@ -188,5 +191,17 @@ constexpr auto  Ru_TupleTools::Make( T &&t1, Ru_Tuple< BT...> &&t2)
 	return Ru_Tuple< T, BT...>( std::forward<T>( t1), std::forward< Ru_Tuple< BT...> >( t2));
 }
 
+
+template< typename... Types >
+constexpr auto   Ru_TupleTools::Dump( std::ostream &ostr, const  Ru_Tuple< Types...> &tuple)
+{
+    return tuple.Compose( [&ostr]( uint32_t k, auto var) 
+    { 
+        if ( k == ( Ru_Tuple< Types...>::Sz -1)) 
+            ostr << "[ ";
+        ostr << var << (( k == 0) ? "] " : ", "); 
+        return true; 
+    });
+}
 
 //_____________________________________________________________________________________________________________________________
