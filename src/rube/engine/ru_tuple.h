@@ -54,9 +54,10 @@ template< typename T, typename... BT >
 template < typename T, typename... Rest>
 class   Ru_Tuple : public Ru_Tuple< Rest...>
 {
+public:
     T        m_Var;
    
-public:
+
     typedef T                     CType;
     typedef Ru_Tuple< T, Rest...> Tuple;
     typedef Ru_Tuple< Rest...>    Base;
@@ -76,8 +77,8 @@ public:
         : Base( rest...), m_Var( t)
     {}
 
-    Ru_Tuple( const Ru_Tuple< T> &t, const Base &base)
-        : Base( base), m_Var( t.Var< 0>()) 
+    Ru_Tuple( Ru_Tuple< T> &&t, Base &&base)
+        : Base( std::move( base)), m_Var( std::move( t.m_Var)) 
     {}
 
 template <class X>
@@ -113,9 +114,10 @@ template < typename Lambda>
 template < typename T >
 class   Ru_Tuple< T>
 {
-    T       m_Var;
+ public:
+   T       m_Var;
     
-public:
+
     typedef T                       CType;
     typedef Ru_Tuple< T>            Tuple;
     typedef void                    Base;
