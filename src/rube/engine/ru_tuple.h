@@ -45,10 +45,10 @@ template< typename... Types >
     static constexpr auto   Make( Types&&... args );
 	
 template< typename T, typename... BT >
-    static constexpr auto  Make( T &&t1, Ru_Tuple< BT...> &&t2);
+    static constexpr auto  	Make( T &&t1, Ru_Tuple< BT...> &&t2);
 
 template< typename... Types >
-    static constexpr auto   Ru_TupleTools::Dump( std::ostream &ostr, const  Ru_Tuple< Types...> &tuple);
+    static constexpr auto 	Dump( std::ostream &ostr, const  Ru_Tuple< Types...> &tuple);
 	
 };
 
@@ -105,7 +105,7 @@ template < typename Lambda>
     };
 
     template < typename... X>
-    auto Invoke( X... args) const
+    auto    Invoke( X... args) const
     {
         return  Ru_TupleTools::Make( m_Var( args...), Base::Invoke( args...)) ;
     }

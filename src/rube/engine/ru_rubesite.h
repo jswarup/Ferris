@@ -5,12 +5,14 @@
 
 //_____________________________________________________________________________________________________________________________
 
-template < typename T, bool in >
-class   Ru_Port : public Cv_DLink< Ru_Port < T, in>>
+template < typename T, bool InPortFlg >
+class   Ru_Port : public Cv_DLink< Ru_Port < T, InPortFlg>>
 {
-    typedef Ru_Port < T, in>  Port;
+    typedef Ru_Port < T, InPortFlg>  Port;
 
 public:
+    const static bool In = InPortFlg; 
+
     Ru_Port( void) 
     {}
 
@@ -79,7 +81,7 @@ struct Ru_TSite : public Ru_RubeSite
     typedef typename Module::Outlet     Outlet;
 
     Inlet                               m_Inlet;  
-    Outlet                              m_Outlet;  
+    Outlet                              m_Outlet;   
      
     Ru_TSite( Ru_RubeSite *master)
         : Ru_RubeSite( master)
@@ -90,10 +92,7 @@ struct Ru_TSite : public Ru_RubeSite
 
     template < int K>
     auto        OutPort( void) { return Ru_TupleIndex< Outlet, Outlet::Sz -1 -K>( &m_Outlet).PVar();  } 
-
-
-
-
+     
 };
 
 //_____________________________________________________________________________________________________________________________
