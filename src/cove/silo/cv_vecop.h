@@ -77,7 +77,7 @@ public:
     public: 
 
         Cv_Vecop( Vecop &&vec)
-            : Reduce( std::move( vec))
+            : m_Vec( std::move( vec))
         {}
 		
 		

@@ -12,7 +12,7 @@ void TestArena( void)
 {
     typedef  Cv_FileArena< uint32_t, false, 4, 5, 6>    Arena;
     
-    bool                                    freshFLg = false;
+    bool                                    freshFLg = true;
     Arena                                   arena( "test.sge", freshFLg);
 
     //typedef  Cr_Arena< uint32_t, false, 4, 5, 6>    Arena;
@@ -37,6 +37,8 @@ void TestArena( void)
 
 int main( int argc, char *argv[])
 {
+    TestArena();
+
     Ru_HalfAdder::Site   rr( nullptr) ;
     std::cout << "OK\n";
 

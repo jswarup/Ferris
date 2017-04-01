@@ -9,9 +9,11 @@ class Cv_PtrIteratorImpl
 public:
 
 template < class X>
-    struct iterator : std::iterator< std::forward_iterator_tag,  X>
+    struct iterator : public std::iterator< std::forward_iterator_tag,  X>
     {
-        typedef X  value_type;
+		typedef std::iterator< std::forward_iterator_tag,  X>	Base;
+		typedef X  												value_type;
+		typedef typename Base::reference						reference;
         
         X           *ptr;
         
@@ -28,14 +30,16 @@ template < class X>
 
 
 template < class X>
-    struct const_iterator : std::iterator< std::forward_iterator_tag, X>
+    struct const_iterator : public std::iterator< std::forward_iterator_tag, X>
     { 
-        typedef X  value_type;
+        typedef std::iterator< std::forward_iterator_tag,  X>	Base;
+		typedef X  												value_type;
+		typedef typename Base::reference						reference;
         
         const X     *ptr;
 
         explicit const_iterator (const X *p = nullptr) : ptr( p) {}
-        const_iterator( const iterator &i) : ptr( i.ptr) {}
+        const_iterator( const const_iterator &i) : ptr( i.ptr) {}
 
         reference operator*( void) { return ptr->val; }
 
@@ -60,11 +64,11 @@ template < class X>
 
     
 template < class X>
-    iterator< X>        At( uint32_t i) { return iterator< X>( static_cast< X *>( static_cast< Derived *>( this)->PtrAt< X>( i))); }
+    iterator< X>        At( uint32_t i) { return iterator< X>( static_cast< X *>( static_cast< Derived *>( this)->template PtrAt< X>( i))); }
 
 template < class X>
     const_iterator< X>  At( uint32_t i) const 
-        { return const_iterator< X>( static_cast< const X *>( static_cast< const Derived *>( this)->PtrAt< X>( i))); }
+        { return const_iterator< X>( static_cast< const X *>( static_cast< const Derived *>( this)->template PtrAt< X>( i))); }
 };
 
 //_____________________________________________________________________________________________________________________________

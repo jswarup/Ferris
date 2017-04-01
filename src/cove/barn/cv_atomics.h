@@ -113,7 +113,7 @@ public:
 
     void    Store( X *x) { m_X = x; }
     
-    bool    Busy( X *lock = LockValue()) const { m_X.load() == lock; }
+    bool    Busy( X *lock = LockValue()) const { m_X  == lock; }
     
     X       *Load( void) const { return m_X; }
 

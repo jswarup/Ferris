@@ -19,15 +19,25 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\src\cove\barn\cv_aid.h" />
+    <ClInclude Include="..\..\..\src\cove\barn\cv_atomics.h" />
     <ClInclude Include="..\..\..\src\cove\barn\cv_cexpr.h" />
+    <ClInclude Include="..\..\..\src\cove\barn\cv_frager.h" />
     <ClInclude Include="..\..\..\src\cove\barn\cv_include.h" />
     <ClInclude Include="..\..\..\src\cove\barn\cv_lackey.h" />
+    <ClInclude Include="..\..\..\src\cove\barn\cv_shared.h" />
+    <ClInclude Include="..\..\..\src\cove\silo\cv_arena.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_crate.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_cstr.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_dlinklist.h" />
+    <ClInclude Include="..\..\..\src\cove\silo\cv_slist.h" />
+    <ClInclude Include="..\..\..\src\cove\silo\cv_vecop.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\cove\barn\cv_aid.cpp" />
+    <ClCompile Include="..\..\..\src\cove\barn\cv_atomics.cpp" />
     <ClCompile Include="..\..\..\src\cove\barn\cv_include.cpp" />
+    <ClCompile Include="..\..\..\src\cove\silo\cv_arena.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\..\src\cove\CMakeLists.txt" />

@@ -27,7 +27,7 @@ uint32_t Cv_Aid::BinCoeff(uint32_t n, uint32_t k)
 
     for ( uint32_t i = 1; i <= k; i++, n--)
     {
-        if ( c / i > UINT_MAX / n) 
+        if ( c / i > CV_UINT32_MAX / n) 
             return 0;                       // 0 on overflow 
         c = c / i * n + c%i * n / i;            //split c*n/i into (c/i*i + c%i)*n/i 
     }

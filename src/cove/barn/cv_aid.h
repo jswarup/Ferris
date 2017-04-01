@@ -1,6 +1,7 @@
 //___________________________________________ cv_aid.h _________________________________________________________________________
 #pragma once
 
+#include		"cove/barn/cv_cexpr.h"
 
 //_____________________________________________________________________________________________________________________________
 
@@ -22,7 +23,7 @@ template < class Iterator>
     { 
         typedef typename Iterator::value_type ValueType;
 
-        ValueType     x = Cr_ConstExprLib::InitVal< ValueType>();
+        ValueType     x = Cv_CExpr::InitVal< ValueType>();
         for ( ; b != e; ++b) 
         	*b = x;
     }

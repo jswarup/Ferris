@@ -13,14 +13,14 @@
 
 //_____________________________________________________________________________________________________________________________
 
-template < class Arena, class LeafBooth>
+template < class Arena, class LeafStall>
 class Cv_Pin
 {
 protected:
-     typedef typename LeafBooth::ValueType   LeafType;
+     typedef typename LeafStall::ValueType   LeafType;
 
     Arena                   *m_Arena;
-    LeafBooth               *m_MemChunk;
+    LeafStall               *m_MemChunk;
     uint32_t                m_Index;
 
 public:
@@ -38,7 +38,7 @@ public:
         : Cv_Pin( m_Arena->Pin( m_Index))
     {}
     
-    Cv_Pin( Arena *arena, uint32_t index, LeafBooth *memChunk)
+    Cv_Pin( Arena *arena, uint32_t index, LeafStall *memChunk)
         : m_Arena( arena), m_Index( index), m_MemChunk( memChunk)
     {
         m_MemChunk->RaiseRef();
@@ -76,13 +76,13 @@ public:
         return *( ::new (this) Cv_Pin( a));
     }
     
-    operator LeafType       *( void)  { m_MemChunk->SetClean( false); return m_MemChunk->PtrAt< LeafType>( m_Index & LeafBooth::Mask); }
+    operator LeafType       *( void)  { m_MemChunk->SetClean( false); return m_MemChunk->template PtrAt< LeafType>( m_Index & LeafStall::Mask); }
 
-    operator const LeafType *( void) const { return m_MemChunk->PtrAt< LeafType>( m_Index & LeafBooth::Mask); }
+    operator const LeafType *( void) const { return m_MemChunk->template PtrAt< LeafType>( m_Index & LeafStall::Mask); }
     
     Cv_Pin  &operator++( void)
     {
-        if ( ++m_Index & LeafBooth::Mask)
+        if ( ++m_Index & LeafStall::Mask)
             return *this;
         *this = m_Arena->Pin( m_Index);
         return *this;
@@ -107,9 +107,9 @@ public:
     {
         return p.m_Index ==q.m_Index;
     }
-    LeafBooth    *Snitch( void)
+    LeafStall    *Snitch( void)
     {
-        LeafBooth    *memChunk = m_MemChunk;
+        LeafStall    *memChunk = m_MemChunk;
         m_MemChunk = nullptr; 
         m_Index = 0;
         return memChunk;
@@ -124,10 +124,12 @@ public:
 template < class Arg>
 class Cv_CallBacklog : public std::vector< std::function< bool ( Arg arg)>>
 {
-    bool        m_ProcessingFlg;
+	bool        m_ProcessingFlg;
 
 public:
-    Cv_CallBacklog( void)
+    typedef std::vector< std::function< bool ( Arg arg)>> 	Base;
+	
+	Cv_CallBacklog( void)
         : m_ProcessingFlg( false)
     {}
 
@@ -137,32 +139,34 @@ public:
             return;
         m_ProcessingFlg = true;
         std::vector< std::function< bool ( Arg arg)>>   duds;
-        while ( size())
+        while ( Base::size())
         {
-            auto    curr = back();
-            pop_back();
+            auto    curr = Base::back();
+            Base::pop_back();
             bool    res = curr( arg);
             if ( !res)
                duds.push_back( curr); 
         }
-        swap( duds);
+        Base::swap( duds);
         m_ProcessingFlg = false;
         return;
     }
 };
 
 //_____________________________________________________________________________________________________________________________
-
+// Declaration of MemStall..It holds pointer to a allocated page, and 16-bit info 
   
 template < class Arena>  
-class    Cv_MemBooth  : public Cv_Shared< Arena::MT>, public Cv_PtrIteratorImpl< Cv_MemBooth< Arena>>, public Arena::Janitor
+class    Cv_MemStall  : public Cv_Shared< Arena::MT>, public Cv_PtrIteratorImpl< Cv_MemStall< Arena>>, public Arena::Janitor
 {   
 protected:
-    Cv_Atomic< uint16_t, Arena::MT>        m_Info;
-    Cv_Atomic< void *, Arena::MT>          m_PagePtr;
+    Cv_Atomic< uint16_t, Arena::MT>        m_Info;                  // 15-bit for offset in Parent and 1-bit for clean status
+    Cv_Atomic< void *, Arena::MT>          m_PagePtr;               // pointer to the allocated page
     
 public:
-    Cv_MemBooth( void *pgPtr)
+	typedef Cv_Shared< Arena::MT>			BaseShared;
+	
+    Cv_MemStall( void *pgPtr)
 		:  m_Info( 0), m_PagePtr( pgPtr)
 	{}
     
@@ -177,12 +181,11 @@ template < class X>
 
 template < class X>
     X           *PtrAt( uint32_t i) { return &static_cast< X*>( m_PagePtr.Load())[ i]; }
-    void        *PtrAt( uint32_t i) { return &static_cast< uint8_t *>( m_PagePtr.Load())[ i]; }
 
 template < class X>
     void        SetAt( uint32_t i, const X &x) { static_cast< X*>( m_PagePtr.load())[ i] = x; }
 
-    bool        IsProcessed( void) const {  return IsClean() && !IsInUse(); }
+    bool        IsProcessed( void) const {  return IsClean() && !BaseShared::IsInUse(); }
 
     bool        IsShutdown( void) { return false; }
 };
@@ -190,13 +193,15 @@ template < class X>
 //_____________________________________________________________________________________________________________________________
 
 
-template < class Arena, class Parent, typename ValueType , uint32_t SzBits>
-class Cv_HeapBooth :  public Cv_Lackey< Parent>, public Cv_MemBooth< Arena>
+template < class Arena, class ParentStall, typename TValueType , uint32_t SzBits>
+class Cv_HeapStall :  public Cv_Lackey< ParentStall>, public Cv_MemStall< Arena>
 {
 public:
-    typedef Parent          Parent;
-    typedef ValueType       ValueType;
-    typedef Cv_HeapBooth     LeafBooth;
+	typedef Cv_MemStall< Arena>		BaseStall;
+
+    typedef ParentStall		Parent;
+    typedef TValueType    	ValueType;
+    typedef Cv_HeapStall    LeafStall;
     enum 
     { 
         SzArray         = Cv_CExpr::Pow2( SzBits),   
@@ -205,39 +210,39 @@ public:
         Mask            = Cv_CExpr::LowMask( SzMask),
     };
     
-	Cv_HeapBooth( Arena *arena, Parent *parent, uint16_t pParentlink, const ValueType &iVal = Cv_CExpr::InitVal< ValueType>())
-		: Cv_Lackey( parent), Cv_MemBooth( arena->AllocPage< PageSz>())	
+	Cv_HeapStall( Arena *arena, Parent *parent, uint16_t pParentlink, const ValueType &iVal = Cv_CExpr::InitVal< ValueType>())
+		: Cv_Lackey< ParentStall>( parent), Cv_MemStall< Arena>( arena->template AllocPage< PageSz>())	
     {
-        Cv_Aid::Set( At< ValueType>( 0), At< ValueType>( SzArray), iVal);
-        SetParentOff( pParentlink);
-        if ( m_Master)
-            m_Master->RaiseRef();
+        Cv_Aid::Set( this->template At< ValueType>( 0), this->template At< ValueType>( SzArray), iVal);
+        BaseStall::SetParentOff( pParentlink);
+        if ( this->m_Master)
+            this->m_Master->RaiseRef();
     }
 
     bool    Evict( Arena *arena)    
     {
-        if ( IsInUse())
+        if ( this->IsInUse())
             return false;
         
-        if ( !IsClean() && !arena->ScrubBooth( this, PageSz))
+        if ( !this->IsClean() && !arena->ScrubStall( this, PageSz))
             return false;
 
-        if ( !m_Master->DetachChild( arena, this))
+        if ( !this->m_Master->DetachChild( arena, this))
             return false;
 
-        if ( !m_Master->LowerRef())
-            arena->BackLog()->push_back( [ parent = m_Master](Arena *arena) { return  parent->Evict( arena); }); 
-        m_Master = nullptr;
+        if ( !this->m_Master->LowerRef())
+            arena->BackLog()->push_back( [ parent = this->m_Master](Arena *arena) { return  parent->Evict( arena); }); 
+        this->m_Master = nullptr;
 
-        arena->FreePage< PageSz>( m_PagePtr.SpinGrab( nullptr));
-        this->Cv_HeapBooth::~Cv_HeapBooth();
-        arena->Discard< sizeof( Cv_HeapBooth) >( this);
+        arena->template FreePage< PageSz>( this->m_PagePtr.SpinGrab( nullptr));
+        //this->Cv_HeapStall::~Cv_HeapStall();
+        arena->template Discard< Cv_HeapStall >( this);
         return true;
     }
 
     auto    Pin( Arena *arena, uint32_t l)  
     { 
-        return  Cv_Pin< Arena, Cv_HeapBooth>( arena, l, this); 
+        return  Cv_Pin< Arena, Cv_HeapStall>( arena, l, this); 
     }
 };
 
@@ -245,12 +250,14 @@ public:
 
 
 template < class Arena, class Parent, uint8_t SzBits, class SubChunk>
-class Cv_BranchBooth :  public Cv_HeapBooth< Arena, Parent, SubChunk *, SzBits>
+class Cv_BranchStall :  public Cv_HeapStall< Arena, Parent, SubChunk *, SzBits>
 {
 public:
-    typedef typename SubChunk::Parent       Derived;
-    typedef typename SubChunk::LeafBooth     LeafBooth; 
-    enum 
+    typedef Cv_HeapStall< Arena, Parent, SubChunk *, SzBits> 	BaseStall;
+	typedef typename SubChunk::Parent       					Derived;
+    typedef typename SubChunk::LeafStall     					LeafStall; 
+	
+	enum 
     { 
         SubChunkSz = sizeof( SubChunk), 
         SzMask = SubChunk::SzMask + SzBits,
@@ -258,36 +265,36 @@ public:
         Mask = Cv_CExpr::LowMask( SzMask), 
     };
 
-    Cv_BranchBooth( Arena *arena, Parent *parent, uint16_t pParentlink)
-		: Cv_HeapBooth( arena, parent, pParentlink, nullptr)
+    Cv_BranchStall( Arena *arena, Parent *parent, uint16_t pParentlink)
+		: BaseStall( arena, parent, pParentlink, nullptr)
 	{}
 
     auto    Pin( Arena *arena, uint32_t l)
     {
 	    uint16_t        childOff = uint16_t( (l & Mask) >> SubChunk::SzMask);               // we would not be index in 64k pointers ever
         CV_DEBUG_ASSERT( childOff < SzArray)
-	    SubChunk        **childLink = PtrAt< SubChunk *>( childOff);	                    // top SzBits bits only
+	    SubChunk        **childLink = this->template PtrAt< SubChunk *>( childOff);	                    // top SzBits bits only
         bool            heapFlg = arena->IsOnHeap( *childLink);
 
 	    if ( heapFlg)	                                                                    // The page in memory    	                                    
 	        return (*childLink)->Pin( arena, l);
 	  
-        SubChunk                    *subChunk =  new ( arena->Allocate< SubChunkSz>()) SubChunk( arena, static_cast< Derived*>( this), childOff);
+        SubChunk                    *subChunk =  new ( arena->template Allocate< SubChunkSz>()) SubChunk( arena, static_cast< Derived*>( this), childOff);
 
         if ( *childLink)
         {
             subChunk->PreserveRef( uint64_t( *childLink)); 
-            arena->ReloadBooth( subChunk, SubChunk::PageSz);
+            arena->ReloadStall( subChunk, SubChunk::PageSz);
         }	    
         *childLink = subChunk;		                                                        // change the childLink value
         auto    ptr = subChunk->Pin( arena, l);
         return ptr;
     }
     
-    bool    DetachChild( Arena *arena, Cv_MemBooth< Arena> *spot)
+    bool    DetachChild( Arena *arena, Cv_MemStall< Arena> *spot)
     {
         uint16_t        childOff = spot->ParentOff();
-        SubChunk        **childLink = PtrAt< SubChunk *>( childOff);
+        SubChunk        **childLink = this->template PtrAt< SubChunk *>( childOff);
         CV_ERROR_ASSERT( *childLink == spot)    
         *childLink = reinterpret_cast< SubChunk *>( spot->GrabRef()) ;
        
@@ -299,14 +306,17 @@ public:
 
 
 template< class Arena, class Parent, typename LeafType, uint8_t... Rest>
-class Cv_ArenaBooth;
+class Cv_ArenaStall;
 
 template < class Arena, class Parent, typename LeafType, uint8_t SzBits, uint8_t... Rest>
-class Cv_ArenaBooth< Arena, Parent, LeafType, SzBits, Rest...>  : public Cv_BranchBooth< Arena, Parent, SzBits, Cv_ArenaBooth< Arena, Cv_ArenaBooth< Arena, Parent, LeafType, SzBits, Rest...>, LeafType, Rest...> >
+class Cv_ArenaStall< Arena, Parent, LeafType, SzBits, Rest...>  : 
+	public Cv_BranchStall< Arena, Parent, SzBits, Cv_ArenaStall< Arena, Cv_ArenaStall< Arena, Parent, LeafType, SzBits, Rest...>, LeafType, Rest...> >
 {	
 public:
-    Cv_ArenaBooth( Arena *arena, Parent *parent, uint16_t pParentlink)
-        : Cv_BranchBooth( arena, parent, pParentlink)
+	typedef Cv_BranchStall< Arena, Parent, SzBits, Cv_ArenaStall< Arena, Cv_ArenaStall< Arena, Parent, LeafType, SzBits, Rest...>, LeafType, Rest...> >		BaseStall;
+	
+    Cv_ArenaStall( Arena *arena, Parent *parent, uint16_t pParentlink)
+        : BaseStall( arena, parent, pParentlink)
     {}
 };
 
@@ -314,12 +324,13 @@ public:
 
 
 template < class Arena, class Parent, typename LeafType, uint8_t SzBits>
-class Cv_ArenaBooth< Arena, Parent, LeafType, SzBits> : public  Cv_HeapBooth< Arena, Parent, LeafType, SzBits>
+class Cv_ArenaStall< Arena, Parent, LeafType, SzBits> : public  Cv_HeapStall< Arena, Parent, LeafType, SzBits>
 {	
 public:
-    
-    Cv_ArenaBooth( Arena *arena, Parent *parent, uint16_t pParentlink)
-        : Cv_HeapBooth( arena, parent, pParentlink, ValueType())
+    typedef Cv_HeapStall< Arena, Parent, LeafType, SzBits> 	BaseStall;
+	
+    Cv_ArenaStall( Arena *arena, Parent *parent, uint16_t pParentlink)
+        : BaseStall( arena, parent, pParentlink)
     {}
 };
 
@@ -356,43 +367,45 @@ template < uint32_t Key>
 //_____________________________________________________________________________________________________________________________
 
 
-template< class Arena, class LeafType, bool MT, uint8_t... Rest>
-class Cv_BaseArena : public Cv_Shared< MT>
+template< class Arena, class LeafType, bool MTh, uint8_t... Rest>
+class Cv_BaseArena : public Cv_Shared< MTh>
 {
 public:
-    class RootBooth : public Cv_ArenaBooth< Arena, Arena, LeafType, Rest...>  
+    class RootStall : public Cv_ArenaStall< Arena, Arena, LeafType, Rest...>  
     {
     public:
-        RootBooth( Arena *arena)
-            : Cv_ArenaBooth( arena, arena, 0)
+		typedef Cv_ArenaStall< Arena, Arena, LeafType, Rest...> 	BaseStall;
+		
+        RootStall( Arena *arena)
+            : BaseStall( arena, arena, 0)
         {}
     };
 
     enum 
     {
-        MT = MT,
+        MT = MTh,
     };
     
-    constexpr static uint32_t               SzMask( void) { return  RootBooth::SzMask; }
+    constexpr static uint32_t               SzMask( void) { return  RootStall::SzMask; }
     
 
 protected:
-    RootBooth                                           *m_TopBooth;
+    RootStall                                           *m_TopStall;
     Cv_CallBacklog< Arena *>                            m_FnBacklog;
     Cv_ObjectIndexor< Arena>                            m_PageSzIndexor;
 
 public:
     Cv_BaseArena( void)
     {
-        m_TopBooth = new (Allocate< sizeof( RootBooth)>()) RootBooth( static_cast< Arena*>( this));
+        m_TopStall = new (Allocate< sizeof( RootStall)>()) RootStall( static_cast< Arena*>( this));
     }
 
     bool    Evict( Arena *arena) { return true; }
-    bool    DetachChild( Arena *arena, Cv_MemBooth< Arena> *spot) { return true; }
+    bool    DetachChild( Arena *arena, Cv_MemStall< Arena> *spot) { return true; }
 
     bool    IsOnHeap( void *s) { return !!s; }
 
-    auto    Pin( uint32_t k)  { return m_TopBooth->Pin( static_cast< Arena*>( this), k); }
+    auto    Pin( uint32_t k)  { return m_TopStall->Pin( static_cast< Arena*>( this), k); }
 
     Cv_CallBacklog< Arena *>         *BackLog( void) { return &m_FnBacklog; }
 
@@ -403,8 +416,8 @@ template < uint32_t AllocSz>
         return obj;
     }
 
-template < uint32_t AllocSz>
-    void     Discard( void *obj)
+template < typename X>
+    void     Discard( X *obj)
     {
         delete [] obj;
         return;
@@ -413,7 +426,7 @@ template < uint32_t AllocSz>
 template < uint32_t PageSz>
     void    *AllocPage( void)
     {
-        uint32_t    m_PgIndex = m_PageSzIndexor.Index< PageSz>();
+        uint32_t    m_PgIndex = m_PageSzIndexor.template Index< PageSz>();
 	    void    *pg = new char[ PageSz];
         return pg;
     }
@@ -421,7 +434,7 @@ template < uint32_t PageSz>
 template < uint32_t PageSz>
     void    FreePage( void *pg)
     {
-        uint32_t    m_PgIndex = m_PageSzIndexor.Index< PageSz>();
+        uint32_t    m_PgIndex = m_PageSzIndexor.template Index< PageSz>();
 
 	    delete [] pg;
     }
@@ -433,11 +446,11 @@ template < uint32_t PageSz>
         uint64_t    GrabRef( void) const { return 0x0; }
     };
 
-    void    ReloadBooth( Cv_MemBooth< Arena> *spot, uint32_t pageSz)
+    void    ReloadStall( Cv_MemStall< Arena> *spot, uint32_t pageSz)
     {
     };
 
-    bool    ScrubBooth( Cv_MemBooth< Arena> *spot, uint32_t sz)
+    bool    ScrubStall( Cv_MemStall< Arena> *spot, uint32_t sz)
     {
         return true;
     }
@@ -460,27 +473,28 @@ class Cv_FileArena : public Cv_BaseArena< Cv_FileArena< LeafType, MT, Rest...>, 
     FILE    *m_Fp;
   
 public:
-    
+    typedef Cv_BaseArena< Cv_FileArena< LeafType, MT, Rest...>, LeafType, MT, Rest...> 		BaseArena;
+	
     Cv_FileArena( const char *nm, bool freshFlg)
     {
-        m_Fp = fopen( nm, !freshFlg && Cv_Aid::FileExists( nm) ? "r+b" :  "w+b");
-        m_TopBooth->m_FileOffset.Store( 0);
+        m_Fp = fopen( nm, !freshFlg && Cv_Aid::FileExists( nm) ? "r+b" :  "w+b");                   // if the file exists and user intends to use it
+        BaseArena::m_TopStall->m_FileOffset.Store( 0);                                                         // set the file-offset to zero
         fseek( m_Fp, 0L, SEEK_END );
-        if ( ftell( m_Fp))
-            ReloadBooth( m_TopBooth, RootBooth::PageSz);
+        if ( ftell( m_Fp))                                                                          // file has content
+            ReloadStall( BaseArena::m_TopStall, BaseArena::RootStall::PageSz);                                            // reload the root stall.
         else
-            ScrubBooth( m_TopBooth, RootBooth::PageSz);
+            ScrubStall( BaseArena::m_TopStall, BaseArena::RootStall::PageSz);
     }    
 
     Cv_FileArena( FILE  *f) 
         :  m_Fp( f)
     {
-        m_TopBooth->m_FileOffset.Store( 0);
+        BaseArena::m_TopStall->m_FileOffset.Store( 0);
         fseek( m_Fp, 0L, SEEK_END );
         if ( ftell( m_Fp))
-            ReloadBooth( m_TopBooth, RootBooth::PageSz);
+            ReloadStall( BaseArena::m_TopStall, BaseArena::RootStall::PageSz);
         else
-            ScrubBooth( m_TopBooth, RootBooth::PageSz);
+            ScrubStall( BaseArena::m_TopStall, BaseArena::RootStall::PageSz);
     }    
 
     class Janitor
@@ -501,32 +515,34 @@ public:
     //_____________________________________________________________________________________________________________________________
 
 
-    void    ReloadBooth( Cv_MemBooth< Cv_FileArena> *spot, uint32_t pageSz)
+    void    ReloadStall( Cv_MemStall< Cv_FileArena> *spot, uint32_t pageSz)
     {
         fseek( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );
         CV_DEBUG_ASSERT( spot->m_FileOffset.Load() == ftell( m_Fp))
-	    fread( spot->PtrAt( 0), 1, pageSz, m_Fp);
+	    size_t    nRd = fread( spot->template PtrAt< uint8_t>( 0), pageSz, 1, m_Fp);
+        CV_ERROR_ASSERT( nRd == 1)
         return;
     }
 
     //_____________________________________________________________________________________________________________________________
+    // sync up MemStall with file
 
-
-    bool    ScrubBooth( Cv_MemBooth< Cv_FileArena> *spot, uint32_t pageSz)
+    bool    ScrubStall( Cv_MemStall< Cv_FileArena> *spot, uint32_t pageSz)
     {
-
-        if ( spot->m_FileOffset.Load() == CV_UINT32_MAX) 
+        if ( spot->m_FileOffset.Load() == CV_UINT32_MAX)                                    // if has not been written to file write the chunk to file
 	    {
-            int     res = ::fseek( m_Fp, 0L, SEEK_END );
+            int     res = ::fseek( m_Fp, 0L, SEEK_END );                                    // go to the end of file
             CV_ERROR_ASSERT( res == 0)
-            spot->m_FileOffset.Store( uint32_t( ::ftell( m_Fp)));
-            fwrite(  spot->PtrAt( 0), 1, pageSz, m_Fp);
+            spot->m_FileOffset.Store( uint32_t( ::ftell( m_Fp)));                           // store the file-location in the Stall
+            size_t    nWr = fwrite(  spot->template PtrAt< uint8_t>( 0), 1, pageSz, m_Fp);           // write the chunk to file
+            CV_ERROR_ASSERT( nWr == 1)
             return true;
         } 
 
-        int         res = fseek( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );
+        int         res = fseek( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );               // go to the file-offset 
         CV_ERROR_ASSERT( res == 0)
-        fwrite( spot->PtrAt( 0), 1, pageSz,  m_Fp);
+        size_t      nWr = fwrite( spot->template PtrAt< uint8_t>( 0), pageSz, 1,  m_Fp);             // write the page content.
+        CV_ERROR_ASSERT( nWr == 1)
         return true;
     }
 };
@@ -572,35 +588,35 @@ class   Cv_ArenaStore
     Arena                                   *m_Arena;
     uint32_t                                m_ApprLeafSz;           // Num of leaves appropriasted
 
-    typedef typename Arena::RootBooth::LeafBooth         LeafBooth;
+    typedef typename Arena::RootStall::LeafStall         LeafStall;
     typedef typename Arena::LeafType                     LeafType;
 
     enum 
     {
-        SzArray     = LeafBooth::SzArray,                           // Num objects in leaf
-        SzBits      = Arena::RootBooth::SzMask,                     // Total bits supported..
-        SzTopBits   = SzBits - LeafBooth::SzBits,                   // Bits supported by branches
-        SzLeaf      = cv_constExprLib.Pow2( SzTopBits),             // Max number of leaves 
+        SzArray     = LeafStall::SzArray,                           // Num objects in leaf
+        SzBits      = Arena::RootStall::SzMask,                     // Total bits supported..
+        SzTopBits   = SzBits - LeafStall::SzBits,                   // Bits supported by branches
+        SzLeaf      = Cv_CExpr::Pow2( SzTopBits),             // Max number of leaves 
     };
 
     //----------------------------------------------------------------------
     
     void Appropriate( void)
     {
-	    LeafBooth    *leafBooth = m_Arena->Pin( m_ApprPageSz << LeafBooth::SzBits).Snitch();
+	    LeafStall    *leafStall = m_Arena->Pin( this->m_ApprPageSz << LeafStall::SzBits).Snitch();
         for ( uint32_t i = 0; i < SzArray; ++i)
         {
-            LeafType    *spot = leafBooth->PtrAt< LeafType>( SzArray -1 -i);
-            Atom        *atom = new ( spot) Atom( ( SzArray -1 -i) | m_ApprPageSz);
+            LeafType    *spot = leafStall->template PtrAt< LeafType>( SzArray -1 -i);
+            Atom        *atom = new ( spot) Atom( ( SzArray -1 -i) | this->m_ApprPageSz);
             m_FreeAtomStack.Push( atom);
         }
-        ++m_ApprPageSz;
+        ++this->m_ApprPageSz;
 
     }
 
 public:
     Cv_ArenaStore( Arena *arena)
-        : m_Arena( arena), m_ApprPageSz( 0)
+        : m_Arena( arena), m_ApprLeafSz( 0)
     {}
 
 template< class X>
