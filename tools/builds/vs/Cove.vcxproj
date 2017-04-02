@@ -24,9 +24,10 @@
     <ClInclude Include="..\..\..\src\cove\barn\cv_cexpr.h" />
     <ClInclude Include="..\..\..\src\cove\barn\cv_frager.h" />
     <ClInclude Include="..\..\..\src\cove\barn\cv_include.h" />
-    <ClInclude Include="..\..\..\src\cove\barn\cv_lackey.h" />
+    <ClInclude Include="..\..\..\src\cove\barn\cv_minion.h" />
     <ClInclude Include="..\..\..\src\cove\barn\cv_shared.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_arena.h" />
+    <ClInclude Include="..\..\..\src\cove\silo\cv_arenatools.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_crate.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_cstr.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_dlinklist.h" />

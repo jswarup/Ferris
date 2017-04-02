@@ -1,166 +1,25 @@
-//---------------------------------- cv_arena.h --------------------------------------------------
+//___________________________________ cv_arena.h _____________________________________________________________________________
 #pragma once
 
 //_____________________________________________________________________________________________________________________________
 
-#include	"cove/barn/cv_lackey.h" 
+#include	"cove/barn/cv_minion.h" 
 #include	"cove/barn/cv_stdsupport.h"
 #include	"cove/barn/cv_shared.h"
 #include	"cove/barn/cv_cexpr.h"
 #include	"cove/barn/cv_aid.h"
 #include	"cove/barn/cv_frager.h"
 #include	"cove/silo/cv_slist.h"
+#include	"cove/silo/cv_arenatools.h"
 
 //_____________________________________________________________________________________________________________________________
-
-template < class Arena, class LeafStall>
-class Cv_Pin
-{
-protected:
-     typedef typename LeafStall::ValueType   LeafType;
-
-    Arena                   *m_Arena;
-    LeafStall               *m_MemChunk;
-    uint32_t                m_Index;
-
-public:
-    typedef LeafType                    value_type;
-    typedef int                         difference_type;
-    typedef LeafType                    *pointer;
-    typedef LeafType                    &reference;
-    typedef std::input_iterator_tag     iterator_category;
-
-    Cv_Pin( void)
-        : m_Arena( nullptr), m_Index( 0), m_MemChunk( nullptr)
-    {}
-    
-    Cv_Pin( Arena *arena, uint32_t index)
-        : Cv_Pin( m_Arena->Pin( m_Index))
-    {}
-    
-    Cv_Pin( Arena *arena, uint32_t index, LeafStall *memChunk)
-        : m_Arena( arena), m_Index( index), m_MemChunk( memChunk)
-    {
-        m_MemChunk->RaiseRef();
-    }
-    
-    Cv_Pin( const Cv_Pin &a)
-        : m_Arena( a.m_Arena), m_Index( a.m_Index), m_MemChunk( a.m_MemChunk)
-    {
-        if ( m_MemChunk)
-            m_MemChunk->RaiseRef();
-    }
-
-    Cv_Pin( Cv_Pin &&a)
-        : m_Arena( a.m_Arena), m_Index( a.m_Index), m_MemChunk( a.m_MemChunk)
-    {
-        m_MemChunk = a.m_MemChunk;
-        a.m_MemChunk = nullptr; 
-        a.m_Index = 0;
-    }
-
-    ~Cv_Pin( void)
-    {
-        if ( m_MemChunk && !m_MemChunk->LowerRef())
-        {
-            m_Arena->BackLog()->push_back( [ memChunk = m_MemChunk](Arena *arena) { return  memChunk->Evict( arena); }); 
-            m_Arena->BackLog()->Process( m_Arena);
-        }      
-    }
-
-    Cv_Pin  &operator=( const Cv_Pin &a)
-    {
-        if ( this == &a)
-            return *this;
-        this->Cv_Pin::~Cv_Pin();
-        return *( ::new (this) Cv_Pin( a));
-    }
-    
-    operator LeafType       *( void)  { m_MemChunk->SetClean( false); return m_MemChunk->template PtrAt< LeafType>( m_Index & LeafStall::Mask); }
-
-    operator const LeafType *( void) const { return m_MemChunk->template PtrAt< LeafType>( m_Index & LeafStall::Mask); }
-    
-    Cv_Pin  &operator++( void)
-    {
-        if ( ++m_Index & LeafStall::Mask)
-            return *this;
-        *this = m_Arena->Pin( m_Index);
-        return *this;
-    }
-
-    Cv_Pin  &operator+=( int k)
-    {
-        *this = m_Arena->Pin( m_Index + k);
-        return *this;
-    }
-
-    friend Cv_Pin  operator+( const Cv_Pin  &p, int k)
-    {
-        return Cv_Pin( p.m_Arena->Pin( p.m_Index + k));
-    }
-
-    friend int  operator-( const Cv_Pin  &p, const Cv_Pin  &q)
-    {
-        return p.m_Index -q.m_Index;
-    }
-    friend bool  operator==( const Cv_Pin  &p, const Cv_Pin  &q)
-    {
-        return p.m_Index ==q.m_Index;
-    }
-    LeafStall    *Snitch( void)
-    {
-        LeafStall    *memChunk = m_MemChunk;
-        m_MemChunk = nullptr; 
-        m_Index = 0;
-        return memChunk;
-    }
-
-    friend void swap(Cv_Pin& lhs, Cv_Pin& rhs);
-};
-
-//_____________________________________________________________________________________________________________________________
-
-
-template < class Arg>
-class Cv_CallBacklog : public std::vector< std::function< bool ( Arg arg)>>
-{
-	bool        m_ProcessingFlg;
-
-public:
-    typedef std::vector< std::function< bool ( Arg arg)>> 	Base;
-	
-	Cv_CallBacklog( void)
-        : m_ProcessingFlg( false)
-    {}
-
-    void    Process( Arg arg)
-    {
-        if ( m_ProcessingFlg)
-            return;
-        m_ProcessingFlg = true;
-        std::vector< std::function< bool ( Arg arg)>>   duds;
-        while ( Base::size())
-        {
-            auto    curr = Base::back();
-            Base::pop_back();
-            bool    res = curr( arg);
-            if ( !res)
-               duds.push_back( curr); 
-        }
-        Base::swap( duds);
-        m_ProcessingFlg = false;
-        return;
-    }
-};
-
-//_____________________________________________________________________________________________________________________________
-// Declaration of MemStall..It holds pointer to a allocated page, and 16-bit info 
+// Declaration of MemStall..It holds pointer to a allocated page, and 16-bit info ..
   
 template < class Arena>  
 class    Cv_MemStall  : public Cv_Shared< Arena::MT>, public Cv_PtrIteratorImpl< Cv_MemStall< Arena>>, public Arena::Janitor
 {   
 protected:
-    Cv_Atomic< uint16_t, Arena::MT>        m_Info;                  // 15-bit for offset in Parent and 1-bit for clean status
+    Cv_Atomic< uint16_t, Arena::MT>        m_Info;                  // 15-bit for offset in Parent and 1-bit for clean status; Max of 32K addresses support
     Cv_Atomic< void *, Arena::MT>          m_PagePtr;               // pointer to the allocated page
     
 public:
@@ -175,6 +34,7 @@ public:
     
     bool        IsClean( void) const { return Cv_Frager< 0, 1>( m_Info.Load()).Get(); }
     void        SetClean( bool t) { m_Info.Store( Cv_Frager< 0, 1>( m_Info.Load()).Set( t)); }
+    bool        IsProcessed( void) const {  return IsClean() && !BaseShared::IsInUse(); }
 
 template < class X>
     const X     &AccAt( uint32_t i) const { return static_cast< X*>( m_PagePtr.Load())[ i]; }
@@ -185,69 +45,76 @@ template < class X>
 template < class X>
     void        SetAt( uint32_t i, const X &x) { static_cast< X*>( m_PagePtr.load())[ i] = x; }
 
-    bool        IsProcessed( void) const {  return IsClean() && !BaseShared::IsInUse(); }
-
-    bool        IsShutdown( void) { return false; }
 };
 
 //_____________________________________________________________________________________________________________________________
+// HeapStall is a heap construct, 
+// Declaration parameter:
+//      ParentStall : the parent stall refering it.
+//      TValueType : Pages hold the objects of of this type
+//      SzBits : Number of bits used to address the objects
 
 
 template < class Arena, class ParentStall, typename TValueType , uint32_t SzBits>
-class Cv_HeapStall :  public Cv_Lackey< ParentStall>, public Cv_MemStall< Arena>
+class Cv_HeapStall :  public Cv_Minion< ParentStall>, public Cv_MemStall< Arena>
 {
 public:
 	typedef Cv_MemStall< Arena>		BaseStall;
+    typedef ParentStall		        Parent;
+    typedef TValueType    	        ValueType;
+    typedef Cv_HeapStall            LeafStall;
 
-    typedef ParentStall		Parent;
-    typedef TValueType    	ValueType;
-    typedef Cv_HeapStall    LeafStall;
     enum 
     { 
-        SzArray         = Cv_CExpr::Pow2( SzBits),   
-        PageSz          = sizeof( ValueType) * SzArray,
-        SzMask          = SzBits,
-        Mask            = Cv_CExpr::LowMask( SzMask),
+        SzArray         = Cv_CExpr::Pow2( SzBits),                          // size of the array
+        PageSz          = sizeof( ValueType) * SzArray,                     // size of the page
+        SzMask          = SzBits,                                           // Size of mask
+        Mask            = Cv_CExpr::LowMask( SzMask),                       // bitmask used  used to extract the index in the page.
     };
     
 	Cv_HeapStall( Arena *arena, Parent *parent, uint16_t pParentlink, const ValueType &iVal = Cv_CExpr::InitVal< ValueType>())
-		: Cv_Lackey< ParentStall>( parent), Cv_MemStall< Arena>( arena->template AllocPage< PageSz>())	
+		: Cv_Minion< ParentStall>( parent), 
+          Cv_MemStall< Arena>( arena->template AllocPage< PageSz>())	
     {
-        Cv_Aid::Set( this->template At< ValueType>( 0), this->template At< ValueType>( SzArray), iVal);
-        BaseStall::SetParentOff( pParentlink);
-        if ( this->m_Master)
-            this->m_Master->RaiseRef();
+        Cv_Aid::Set( this->template At< ValueType>( 0), this->template At< ValueType>( SzArray), iVal);     // Initialize the entire array by given iVal
+        BaseStall::SetParentOff( pParentlink);                              // Store the parent offset
+        if ( this->GetOwner())                                              // It has a parent then then raise reference so that parent does not get deleted.
+            this->GetOwner()->RaiseRef();
     }
 
+    ~Cv_HeapStall( void)
+    {
+            
+    }
     bool    Evict( Arena *arena)    
     {
-        if ( this->IsInUse())
+        if ( this->IsInUse())                                               // No eviction
             return false;
         
-        if ( !this->IsClean() && !arena->ScrubStall( this, PageSz))
-            return false;
-
-        if ( !this->m_Master->DetachChild( arena, this))
-            return false;
+        if ( !this->IsClean())                                              // if not clean scrub it by writing to file if Arena is attached to file
+            arena->ScrubStall( this, PageSz);
+            
+        this->GetOwner()->DetachChild( arena, this);                        // Tell parent to detach this stall
         
+        if ( !this->GetOwner()->LowerRef())                                 // lower parent reference and if parent is to evicted add it to backlog
+            arena->BackLog()->push_back( [ parent = this->GetOwner()](Arena *arena) { return  parent->Evict( arena); }); 
 
-        if ( !this->m_Master->LowerRef())
-            arena->BackLog()->push_back( [ parent = this->m_Master](Arena *arena) { return  parent->Evict( arena); }); 
-        this->m_Master = nullptr;
-        arena->template FreePage< PageSz>( this->m_PagePtr.SpinGrab( nullptr));
-        this->Cv_HeapStall::~Cv_HeapStall();
-        arena->Discard( this); 
+        this->SetOwner( nullptr);                                           //  clean up the owner reference
+
+        arena->template FreePage< PageSz>( this->m_PagePtr.SpinGrab( nullptr)); // free the page
+        this->Cv_HeapStall::~Cv_HeapStall();                                // destroy the stall
+        arena->Discard( this);                                              // discard the struct 
         return true;
     }
 
     auto    Pin( Arena *arena, uint32_t l)  
     { 
-        return  Cv_Pin< Arena, Cv_HeapStall>( arena, l, this); 
+        return  Cv_Pin< Arena, Cv_HeapStall>( arena, l, this);              // pin an object  in the heap
     }
 };
 
 //_____________________________________________________________________________________________________________________________
-
+// Branch stall are special HeapStall that store pointers to HeapStalls or offsets in the file
 
 template < class Arena, class Parent, uint8_t SzBits, class SubChunk>
 class Cv_BranchStall :  public Cv_HeapStall< Arena, Parent, SubChunk *, SzBits>
@@ -273,7 +140,7 @@ public:
     {
         uint16_t        childOff = uint16_t( (l & Mask) >> SubChunk::SzMask);               // we would not be index in 64k pointers ever
         CV_DEBUG_ASSERT( childOff < SzArray)
-	    SubChunk        **childLink = this->template PtrAt< SubChunk *>( childOff);	                    // top SzBits bits only
+	    SubChunk        **childLink = this->template PtrAt< SubChunk *>( childOff);	        // top SzBits bits only
         bool            heapFlg = arena->IsOnHeap( *childLink);
 
 	    if ( heapFlg)	                                                                    // The page in memory    	                                    
@@ -291,14 +158,14 @@ public:
         return ptr;
     }
     
-    bool    DetachChild( Arena *arena, Cv_MemStall< Arena> *spot)
+    void    DetachChild( Arena *arena, Cv_MemStall< Arena> *st)                         // detach a child stall      
     {
-        SubChunk        *stall = static_cast< SubChunk *>( spot);
+        SubChunk        *stall = static_cast< SubChunk *>( st);
         uint16_t        childOff = stall->ParentOff();
         SubChunk        **childLink = this->template PtrAt< SubChunk *>( childOff);
         CV_ERROR_ASSERT( *childLink == stall)    
-        *childLink = reinterpret_cast< SubChunk *>( spot->GrabRef()) ;
-        return true;
+        *childLink = reinterpret_cast< SubChunk *>( stall->GrabRef()) ;                 // store the child file reference.         
+        return;
     }
 };
 
@@ -336,36 +203,6 @@ public:
 
 //_____________________________________________________________________________________________________________________________
 
-template < class Label>
-class Cv_ObjectIndexor : public std::vector< uint32_t>
-{
-    struct  IndexUpdate
-    {
-        uint32_t    iVal;
-
-        IndexUpdate( Cv_ObjectIndexor *indexor, uint32_t x)
-            : iVal( uint32_t( indexor->size()))
-        {
-            indexor->push_back( x);
-        }
-         
-        operator uint32_t( void) { return  iVal; }
-    };
-
-public:
-
-template < uint32_t Key>
-    uint32_t Index( void)
-    {
-        static IndexUpdate    s_Index( this, Key);
-        return s_Index;
-    }
-
-    
-};
-
-//_____________________________________________________________________________________________________________________________
-
 
 template< class Arena, class LeafType, bool MTh, uint8_t... Rest>
 class Cv_BaseArena : public Cv_Shared< MTh>
@@ -398,15 +235,10 @@ public:
     Cv_BaseArena( void)
         : m_TopStall( nullptr)
     {
-     //   m_TopStall = new (Allocate< sizeof( RootStall)>()) RootStall( static_cast< Arena*>( this));
     }
 
     bool    Evict( Arena *arena) { return true; }
-    bool    DetachChild( Arena *arena, Cv_MemStall< Arena> *spot) 
-    { 
-        m_TopStall = nullptr;
-        return true; 
-    }
+    void    DetachChild( Arena *arena, Cv_MemStall< Arena> *spot)  {  m_TopStall = nullptr; }
 
     bool    IsOnHeap( void *s) { return !!s; }
 
@@ -464,9 +296,9 @@ template < uint32_t PageSz>
     {
     };
 
-    bool    ScrubStall( Cv_MemStall< Arena> *spot, uint32_t sz)
+    void    ScrubStall( Cv_MemStall< Arena> *spot, uint32_t sz)
     {
-        return true;
+        return;
     }
 };
 
@@ -544,7 +376,7 @@ public:
     //_____________________________________________________________________________________________________________________________
     // sync up MemStall with file
 
-    bool    ScrubStall( Cv_MemStall< Cv_FileArena> *spot, uint32_t pageSz)
+    void    ScrubStall( Cv_MemStall< Cv_FileArena> *spot, uint32_t pageSz)
     {
         if ( spot->m_FileOffset.Load() == CV_UINT32_MAX)                                    // if has not been written to file write the chunk to file
 	    {
@@ -553,14 +385,14 @@ public:
             spot->m_FileOffset.Store( uint32_t( ::ftell( m_Fp)));                           // store the file-location in the Stall
             size_t    nWr = fwrite(  spot->template PtrAt< uint8_t>( 0), 1, pageSz, m_Fp);           // write the chunk to file
             CV_ERROR_ASSERT( nWr == 1)
-            return true;
+            return;
         } 
 
         int         res = fseek( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );               // go to the file-offset 
         CV_ERROR_ASSERT( res == 0)
         size_t      nWr = fwrite( spot->template PtrAt< uint8_t>( 0), pageSz, 1,  m_Fp);             // write the page content.
         CV_ERROR_ASSERT( nWr == 1)
-        return true;
+        return;
     }
 };
 

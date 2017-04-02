@@ -63,12 +63,12 @@ public:
 
 //_____________________________________________________________________________________________________________________________
 
-struct Ru_RubeSite : public Cv_Lackey< Ru_RubeSite>
+struct Ru_RubeSite : public Cv_Minion< Ru_RubeSite>
 {
  
 public:
     Ru_RubeSite( Ru_RubeSite *master )
-        : Cv_Lackey< Ru_RubeSite>( master) 
+        : Cv_Minion< Ru_RubeSite>( master) 
     {}
 };
 
