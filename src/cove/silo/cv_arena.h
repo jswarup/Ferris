@@ -229,14 +229,14 @@ public:
 
         if ( !this->m_Master->DetachChild( arena, this))
             return false;
+        
 
         if ( !this->m_Master->LowerRef())
             arena->BackLog()->push_back( [ parent = this->m_Master](Arena *arena) { return  parent->Evict( arena); }); 
         this->m_Master = nullptr;
-
         arena->template FreePage< PageSz>( this->m_PagePtr.SpinGrab( nullptr));
-        //this->Cv_HeapStall::~Cv_HeapStall();
-        arena->template Discard< Cv_HeapStall >( this);
+        this->Cv_HeapStall::~Cv_HeapStall();
+        arena->Discard( this); 
         return true;
     }
 
@@ -271,7 +271,7 @@ public:
 
     auto    Pin( Arena *arena, uint32_t l)
     {
-	    uint16_t        childOff = uint16_t( (l & Mask) >> SubChunk::SzMask);               // we would not be index in 64k pointers ever
+        uint16_t        childOff = uint16_t( (l & Mask) >> SubChunk::SzMask);               // we would not be index in 64k pointers ever
         CV_DEBUG_ASSERT( childOff < SzArray)
 	    SubChunk        **childLink = this->template PtrAt< SubChunk *>( childOff);	                    // top SzBits bits only
         bool            heapFlg = arena->IsOnHeap( *childLink);
@@ -293,11 +293,11 @@ public:
     
     bool    DetachChild( Arena *arena, Cv_MemStall< Arena> *spot)
     {
-        uint16_t        childOff = spot->ParentOff();
+        SubChunk        *stall = static_cast< SubChunk *>( spot);
+        uint16_t        childOff = stall->ParentOff();
         SubChunk        **childLink = this->template PtrAt< SubChunk *>( childOff);
-        CV_ERROR_ASSERT( *childLink == spot)    
+        CV_ERROR_ASSERT( *childLink == stall)    
         *childLink = reinterpret_cast< SubChunk *>( spot->GrabRef()) ;
-       
         return true;
     }
 };
@@ -396,16 +396,30 @@ protected:
 
 public:
     Cv_BaseArena( void)
+        : m_TopStall( nullptr)
     {
-        m_TopStall = new (Allocate< sizeof( RootStall)>()) RootStall( static_cast< Arena*>( this));
+     //   m_TopStall = new (Allocate< sizeof( RootStall)>()) RootStall( static_cast< Arena*>( this));
     }
 
     bool    Evict( Arena *arena) { return true; }
-    bool    DetachChild( Arena *arena, Cv_MemStall< Arena> *spot) { return true; }
+    bool    DetachChild( Arena *arena, Cv_MemStall< Arena> *spot) 
+    { 
+        m_TopStall = nullptr;
+        return true; 
+    }
 
     bool    IsOnHeap( void *s) { return !!s; }
 
-    auto    Pin( uint32_t k)  { return m_TopStall->Pin( static_cast< Arena*>( this), k); }
+
+    RootStall   *FetchTopStall( void)
+    {
+        if ( !m_TopStall)
+            m_TopStall = new (Allocate< sizeof( RootStall)>()) RootStall( static_cast< Arena*>( this));
+        return m_TopStall;
+    }
+
+    auto    Pin( uint32_t k)  { return static_cast< Arena *>( this)->FetchTopStall()->Pin( static_cast< Arena*>( this), k); }
+
 
     Cv_CallBacklog< Arena *>         *BackLog( void) { return &m_FnBacklog; }
 
@@ -416,10 +430,10 @@ template < uint32_t AllocSz>
         return obj;
     }
 
-template < typename X>
-    void     Discard( X *obj)
+ 
+    void     Discard( void *obj)
     {
-        delete [] obj;
+        delete [] ( char *)  obj;
         return;
     }
 
@@ -436,7 +450,7 @@ template < uint32_t PageSz>
     {
         uint32_t    m_PgIndex = m_PageSzIndexor.template Index< PageSz>();
 
-	    delete [] pg;
+	    delete [] ( char *) pg;
     }
     class Janitor
     {
@@ -474,28 +488,31 @@ class Cv_FileArena : public Cv_BaseArena< Cv_FileArena< LeafType, MT, Rest...>, 
   
 public:
     typedef Cv_BaseArena< Cv_FileArena< LeafType, MT, Rest...>, LeafType, MT, Rest...> 		BaseArena;
-	
+	typedef typename BaseArena::RootStall                                                   RootStall;
+
     Cv_FileArena( const char *nm, bool freshFlg)
     {
         m_Fp = fopen( nm, !freshFlg && Cv_Aid::FileExists( nm) ? "r+b" :  "w+b");                   // if the file exists and user intends to use it
-        BaseArena::m_TopStall->m_FileOffset.Store( 0);                                                         // set the file-offset to zero
-        fseek( m_Fp, 0L, SEEK_END );
-        if ( ftell( m_Fp))                                                                          // file has content
-            ReloadStall( BaseArena::m_TopStall, BaseArena::RootStall::PageSz);                                            // reload the root stall.
-        else
-            ScrubStall( BaseArena::m_TopStall, BaseArena::RootStall::PageSz);
     }    
 
     Cv_FileArena( FILE  *f) 
         :  m_Fp( f)
+    {}    
+    RootStall   *FetchTopStall( void)
     {
-        BaseArena::m_TopStall->m_FileOffset.Store( 0);
-        fseek( m_Fp, 0L, SEEK_END );
-        if ( ftell( m_Fp))
-            ReloadStall( BaseArena::m_TopStall, BaseArena::RootStall::PageSz);
-        else
-            ScrubStall( BaseArena::m_TopStall, BaseArena::RootStall::PageSz);
-    }    
+        if ( !BaseArena::m_TopStall)
+        {
+            RootStall   *rootStall =  BaseArena::FetchTopStall();
+            rootStall->m_FileOffset.Store( 0);
+            fseek( m_Fp, 0L, SEEK_END );
+            if ( ftell( m_Fp))
+                ReloadStall( rootStall, BaseArena::RootStall::PageSz);
+            else
+                ScrubStall( rootStall, BaseArena::RootStall::PageSz);
+        }
+        return BaseArena::m_TopStall;
+    }
+
 
     class Janitor
     {
