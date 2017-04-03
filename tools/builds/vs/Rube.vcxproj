@@ -23,7 +23,6 @@
     <ClInclude Include="..\..\..\src\rube\blocks\ru_gates.h" />
     <ClInclude Include="..\..\..\src\rube\engine\ru_rubereactor.h" />
     <ClInclude Include="..\..\..\src\rube\engine\ru_rubesite.h" />
-    <ClInclude Include="..\..\..\src\rube\engine\ru_tuple.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\rube\barn\ru_include.cpp" />

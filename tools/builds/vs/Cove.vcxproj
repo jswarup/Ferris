@@ -32,6 +32,8 @@
     <ClInclude Include="..\..\..\src\cove\silo\cv_cstr.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_dlinklist.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_slist.h" />
+    <ClInclude Include="..\..\..\src\cove\silo\cv_stadium.h" />
+    <ClInclude Include="..\..\..\src\cove\silo\cv_tuple.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_vecop.h" />
   </ItemGroup>
   <ItemGroup>

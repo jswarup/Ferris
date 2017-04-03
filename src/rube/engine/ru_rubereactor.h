@@ -1,7 +1,7 @@
 //----------------------------------------- ru_rubereactor.h --------------------------------------------------------------------
 #pragma once
 
-#include    "rube/engine/ru_tuple.h"
+#include    "cove/silo/cv_tuple.h"
 
 //_____________________________________________________________________________________________________________________________
 
@@ -22,17 +22,17 @@ public:
 
 
 template < typename... T>
-class   Ru_Ingress : public Ru_Tuple< Ru_Slot< T>... >
+class   Ru_Ingress : public Cv_Tuple< Ru_Slot< T>... >
 {
 
 public:
-    typedef Ru_Tuple< Ru_Slot< T>...>  	Base;
+    typedef Cv_Tuple< Ru_Slot< T>...>  	Base;
 
     Ru_Ingress( void)
     {}
 
     template < int K>
-    auto        Port( void) { return Ru_TupleIndex< Base, K>( this).PVar(); } 
+    auto        Port( void) { return Cv_TupleIndex< Base, K>( this).PVar(); } 
 };
 
 
@@ -40,17 +40,17 @@ public:
 
 
 template < typename... T>
-class   Ru_Outgress : public Ru_Tuple< Ru_Slot< T>... >
+class   Ru_Outgress : public Cv_Tuple< Ru_Slot< T>... >
 {
     
 public:
-	typedef Ru_Tuple< Ru_Slot< T>...> 	Base;
+	typedef Cv_Tuple< Ru_Slot< T>...> 	Base;
 	
     Ru_Outgress( void)
     {}
 
     template < int K>
-    auto        Port( void) { return Ru_TupleIndex< Base, K>( this).PVar(); } 
+    auto        Port( void) { return Cv_TupleIndex< Base, K>( this).PVar(); } 
 };
 
 //_____________________________________________________________________________________________________________________________

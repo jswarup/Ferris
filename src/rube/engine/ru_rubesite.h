@@ -1,7 +1,7 @@
 //----------------------------------------- ru_rubesite.h --------------------------------------------------------------------
 #pragma once
 
-#include    "rube/engine/ru_tuple.h"
+#include    "cove/silo/cv_tuple.h"
 
 //_____________________________________________________________________________________________________________________________
 
@@ -29,17 +29,17 @@ public:
 
 
 template < typename... T>
-class   Ru_Inlet : public Ru_Tuple< Ru_Port< T, true>...>
+class   Ru_Inlet : public Cv_Tuple< Ru_Port< T, true>...>
 { 
 public:
-    typedef Ru_Tuple< Ru_Port< T, true>...>     Base;
-    typedef Ru_Tuple< T...>                     Tuple;
+    typedef Cv_Tuple< Ru_Port< T, true>...>     Base;
+    typedef Cv_Tuple< T...>                     Tuple;
     
     Ru_Inlet( void)
     {}
 
     template < int K>
-    auto        Port( void) { return Ru_TupleIndex< Base,  Base::Sz -1 -K>( this).PVar(); }
+    auto        Port( void) { return Cv_TupleIndex< Base,  Base::Sz -1 -K>( this).PVar(); }
      
 };
 
@@ -47,18 +47,18 @@ public:
 //_____________________________________________________________________________________________________________________________
 
 template < typename... T>
-class   Ru_Outlet : public Ru_Tuple< Ru_Port< T, false>...>
+class   Ru_Outlet : public Cv_Tuple< Ru_Port< T, false>...>
 { 
     
 public:
-    typedef Ru_Tuple< Ru_Port< T, false>...> 	Base;
-    typedef Ru_Tuple< T...>  			Tuple;
+    typedef Cv_Tuple< Ru_Port< T, false>...> 	Base;
+    typedef Cv_Tuple< T...>  			Tuple;
 
     Ru_Outlet( void)
     {}
 
     template < int K>
-    auto        Port( void) { return Ru_TupleIndex< Base, Base::Sz -1 -K>( this).PVar(); }
+    auto        Port( void) { return Cv_TupleIndex< Base, Base::Sz -1 -K>( this).PVar(); }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -88,10 +88,10 @@ struct Ru_TSite : public Ru_RubeSite
     {}
 
     template < int K>
-    auto        InPort( void) { return Ru_TupleIndex< Inlet, Inlet::Sz -1 -K>( &m_Inlet).PVar();  }
+    auto        InPort( void) { return Cv_TupleIndex< Inlet, Inlet::Sz -1 -K>( &m_Inlet).PVar();  }
 
     template < int K>
-    auto        OutPort( void) { return Ru_TupleIndex< Outlet, Outlet::Sz -1 -K>( &m_Outlet).PVar();  } 
+    auto        OutPort( void) { return Cv_TupleIndex< Outlet, Outlet::Sz -1 -K>( &m_Outlet).PVar();  } 
      
 };
 
@@ -109,16 +109,16 @@ struct Ru_Site : public Ru_TSite< Module>
 //_____________________________________________________________________________________________________________________________
 
 template < typename...  T>
-struct Ru_Compound : public Ru_Tuple< Ru_Site< T>...>
+struct Ru_Compound : public Cv_Tuple< Ru_Site< T>...>
 {
-    typedef Ru_Tuple< Ru_Site< T>...>  Base;
+    typedef Cv_Tuple< Ru_Site< T>...>  Base;
 
     Ru_Compound( Ru_RubeSite *master)
         : Base( master)
     {}
 
 template < int K>
-    auto    Child( void)  { return Ru_TupleIndex< Base, Base::Sz -1 -K>( this).PVar(); }
+    auto    Child( void)  { return Cv_TupleIndex< Base, Base::Sz -1 -K>( this).PVar(); }
 };
 
 //_____________________________________________________________________________________________________________________________

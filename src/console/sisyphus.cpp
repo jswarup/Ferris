@@ -42,12 +42,12 @@ int main( int argc, char *argv[])
     Ru_HalfAdder::Site   rr( nullptr) ;
     std::cout << "OK\n";
 
-    auto    b = Ru_TupleTools::Make( 2, 4, 7);
+    auto    b = Cv_TupleTools::Make( 2, 4, 7);
     auto    lm = []( uint32_t k, auto var, auto... args) 
     { 
         std::cout << var; 
-        auto    a = Ru_TupleTools::Make( args...);
-        auto    d = Ru_TupleTools::Dump( std::cout, a);
+        auto    a = Cv_TupleTools::Make( args...);
+        auto    d = Cv_TupleTools::Dump( std::cout, a);
         d.Invoke();
         return true; 
     };   
