@@ -16,12 +16,12 @@ public:
     Ru_Port( void) 
     {}
 
-   void     Join( Ru_Port *port)
+    Port    *Join( Ru_Port *port)
     {
         Cv_DList< Port>  list1( Cv_DLink< Port>::GetHeadLink());
         Cv_DList< Port>  list2( port->GetHeadLink());
         list1.Transfer( &list2); 
-        return ;
+        return list1.GetHead();
     }
 };
   

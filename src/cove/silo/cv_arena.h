@@ -187,8 +187,6 @@ public:
     {}
 };
 
-//_____________________________________________________________________________________________________________________________
-
 
 template < class Arena, class Parent, typename LeafType, uint8_t SzBits>
 class Cv_ArenaStall< Arena, Parent, LeafType, SzBits> : public  Cv_HeapStall< Arena, Parent, LeafType, SzBits>
@@ -208,16 +206,8 @@ template< class Arena, class LeafType, bool MTh, uint8_t... Rest>
 class Cv_BaseArena : public Cv_Shared< MTh>
 {
 public:
-    class RootStall : public Cv_ArenaStall< Arena, Arena, LeafType, Rest...>  
-    {
-    public:
-		typedef Cv_ArenaStall< Arena, Arena, LeafType, Rest...> 	BaseStall;
-		
-        RootStall( Arena *arena)
-            : BaseStall( arena, arena, 0)
-        {}
-    };
-
+    typedef Cv_ArenaStall< Arena, Arena, LeafType, Rest...>     RootStall;
+    
     enum 
     {
         MT = MTh,
@@ -245,8 +235,9 @@ public:
 
     RootStall   *FetchTopStall( void)
     {
+        Arena       *arena = static_cast< Arena*>( this);
         if ( !m_TopStall)
-            m_TopStall = new (Allocate< sizeof( RootStall)>()) RootStall( static_cast< Arena*>( this));
+            m_TopStall = new (Allocate< sizeof( RootStall)>()) RootStall( arena, arena, 0);
         return m_TopStall;
     }
 

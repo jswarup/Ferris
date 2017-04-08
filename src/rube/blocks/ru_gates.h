@@ -21,7 +21,7 @@ struct Ru_AndGate
 
 struct Ru_XorGate
 {
-    typedef Ru_Inlet< bool, int>       Inlet;
+    typedef Ru_Inlet< bool, bool>       Inlet;
     typedef Ru_Outlet< bool>            Outlet;   
     typedef Ru_Site< Ru_XorGate>        Site;
     

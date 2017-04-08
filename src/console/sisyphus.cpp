@@ -5,6 +5,7 @@
 #include    "rube/blocks/ru_gates.h"
 #include    "cove/silo/cv_vecop.h"
 #include    "cove/silo/cv_arena.h"
+#include    "cove/silo/cv_stadium.h"
 
 //_____________________________________________________________________________________________________________________________
 
@@ -34,11 +35,8 @@ void TestArena( void)
 
 //_____________________________________________________________________________________________________________________________
 
-
-int main( int argc, char *argv[])
+void    TestAdder( void)
 {
-    TestArena();
-
     Ru_HalfAdder::Site   rr( nullptr) ;
     std::cout << "OK\n";
 
@@ -61,7 +59,25 @@ int main( int argc, char *argv[])
     auto    v2 = Cv_VecOp::Make( v1, []( auto val) { return 7 * val; });
     auto    v3 = Cv_VecOp::Make( v2, []( auto val) { return 11 * val; });
 
-     
+    return;
+}
+
+//_____________________________________________________________________________________________________________________________
+
+void    TestStadia( void)
+{
+       return;
+}
+
+//_____________________________________________________________________________________________________________________________
+
+
+int main( int argc, char *argv[])
+{
+    TestArena();
+    TestAdder();
+    TestStadia();
+
     return 0;
 }
 
