@@ -16,7 +16,7 @@
 // Declaration of MemStall..It holds pointer to a allocated page, and 16-bit info ..
   
 template < class Arena>  
-class    Cv_MemStall  : public Cv_Shared< Arena::MT>, public Cv_PtrIteratorImpl< Cv_MemStall< Arena>>, public Arena::Janitor
+class    Cv_MemStall  : public Arena::Janitor
 {   
 protected:
     Cv_Atomic< uint16_t, Arena::MT>        m_Info;                  // 15-bit for offset in Parent and 1-bit for clean status; Max of 32K addresses support
@@ -56,7 +56,8 @@ template < class X>
 
 
 template < class Arena, class ParentStall, typename TValueType , uint32_t SzBits>
-class Cv_HeapStall :  public Cv_Minion< ParentStall>, public Cv_MemStall< Arena>
+class Cv_HeapStall :  public Cv_Minion< ParentStall>, public Cv_MemStall< Arena>, public Cv_Shared< Arena::MT>, 
+                      public Cv_PtrIteratorImpl< Cv_HeapStall< Arena, ParentStall, TValueType, SzBits>>
 {
 public:
 	typedef Cv_MemStall< Arena>		BaseStall;
