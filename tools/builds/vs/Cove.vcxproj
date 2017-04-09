@@ -31,6 +31,7 @@
     <ClInclude Include="..\..\..\src\cove\silo\cv_crate.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_cstr.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_dlinklist.h" />
+    <ClInclude Include="..\..\..\src\cove\silo\cv_iota.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_slist.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_stadium.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_tuple.h" />
@@ -41,6 +42,7 @@
     <ClCompile Include="..\..\..\src\cove\barn\cv_atomics.cpp" />
     <ClCompile Include="..\..\..\src\cove\barn\cv_include.cpp" />
     <ClCompile Include="..\..\..\src\cove\silo\cv_arena.cpp" />
+    <ClCompile Include="..\..\..\src\cove\silo\cv_iota.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\..\src\cove\CMakeLists.txt" />

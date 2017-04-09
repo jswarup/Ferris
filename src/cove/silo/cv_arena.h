@@ -92,7 +92,7 @@ template < class X>
 };
 
 //_____________________________________________________________________________________________________________________________
-// Branch stall are special HeapStall that store pointers to HeapStalls or offsets in the file
+// BranchStall are special HeapStall that store pointers to HeapStalls or offsets in the file
 
 template < class Arena, class Parent, uint8_t SzBits, class SubChunk>
 class Cv_BranchStall :  public Cv_HeapStall< Arena, Parent, SubChunk *, SzBits>
