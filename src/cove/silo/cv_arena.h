@@ -13,12 +13,10 @@
 #include	"cove/silo/cv_arenatools.h"
 
 //_____________________________________________________________________________________________________________________________
-// HeapStall is a heap construct, 
-// Declaration parameter:
+// HeapStall is a heap construct;  Declaration parameter
 //      ParentStall : the parent stall refering it.
 //      TValueType : Pages hold the objects of of this type
 //      SzBits : Number of bits used to address the objects
-
 
 template < class Arena, class ParentStall, typename TValueType , uint32_t SzBits>
 class Cv_HeapStall : public Cv_Shared< Arena::MT>, public Cv_Minion< ParentStall>, public Arena::Janitor,
@@ -27,7 +25,7 @@ class Cv_HeapStall : public Cv_Shared< Arena::MT>, public Cv_Minion< ParentStall
 public:
     enum
     {
-        SzArray = Cv_CExpr::Pow2(SzBits),                          	// size of the array
+        SzArray = Cv_CExpr::Pow2( SzBits),                          	// size of the array
         PageSz = sizeof(TValueType) * SzArray,                     	// size of the page
         SzMask = SzBits,                                           	// Size of mask
         Mask = Cv_CExpr::LowMask(SzMask),                       	// bitmask used  used to extract the index in the page.
@@ -38,10 +36,11 @@ public:
     typedef TValueType    	                ValueType;
     typedef Cv_HeapStall                    LeafStall; 
     
- 
+protected:
     Cv_Atomic< uint16_t, Arena::MT>        m_Info;                 	// 15-bit for offset in Parent and 1-bit for clean status; Max of 32K addresses support 
     uint8_t                                m_Page[ PageSz];
 
+public:
 	Cv_HeapStall( Parent *parent, uint16_t pParentlink, const ValueType &iVal = Cv_CExpr::InitVal< ValueType>())
 		: Cv_Minion< ParentStall>( parent), m_Info(0)
     {
@@ -52,9 +51,7 @@ public:
     }
 
     ~Cv_HeapStall( void)
-    {
-            
-    }
+    {}
 
     uint16_t    ParentOff(void) const { return Cv_Frager< 1, 15>(m_Info.Load()).Get(); }
     void        SetParentOff(uint16_t off) { m_Info.Store(Cv_Frager< 1, 15>(m_Info.Load()).Set(off)); }
@@ -63,32 +60,29 @@ public:
     void        SetClean(bool t) { m_Info.Store(Cv_Frager< 0, 1>(m_Info.Load()).Set(t)); }
     bool        IsProcessed(void) const { return IsClean() && !this->IsInUse(); }
 
-    template < class X>
+template < class X>
     const X     &AccAt(uint32_t i) const { return reinterpret_cast< X*>( &m_Page[0])[i]; }
 
-    template < class X>
+template < class X>
     X           *PtrAt(uint32_t i) { return &reinterpret_cast< X*>( &m_Page[0])[i]; }
 
-    template < class X>
+template < class X>
     void        SetAt(uint32_t i, const X &x) { reinterpret_cast< X*>( &m_Page[0])[i] = x; }
 
     bool    Evict( Arena *arena)    
     {
         if ( this->IsInUse())                                               // No eviction
             return false;
-        
+            
         if ( !this->IsClean())                                              // if not clean scrub it by writing to file if Arena is attached to file
-            arena->ScrubStall( this, PageSz);
+            arena->ScrubStall( this);
             
         this->GetOwner()->DetachChild( arena, this);                        // Tell parent to detach this stall
         
         if ( !this->GetOwner()->LowerRef())                                 // lower parent reference and if parent is to evicted add it to backlog
             arena->BackLog()->push_back( [ parent = this->GetOwner()](Arena *arena) { return  parent->Evict( arena); }); 
 
-        this->SetOwner( nullptr);                                           //  clean up the owner reference
-         
-        this->Cv_HeapStall::~Cv_HeapStall();                                // destroy the stall
-        arena->template Discard< PageSz>( this);                                              // discard the struct 
+        arena->Discard( this);                                              // discard the struct 
         return true;
     }
 
@@ -131,12 +125,12 @@ public:
 	    if ( heapFlg)	                                                                    // The page in memory    	                                    
 	        return (*childLink)->Pin( arena, l);
 	  
-        SubChunk                    *subChunk =  new ( arena->template Allocate< SubChunkSz>()) SubChunk( static_cast< Derived*>( this), childOff);
+        SubChunk        *subChunk =  arena->template Allocate< SubChunk>( static_cast< Derived*>( this), childOff);
 
         if ( *childLink)
         {
             subChunk->PreserveRef( uint64_t( *childLink)); 
-            arena->ReloadStall( subChunk, SubChunk::PageSz);
+            arena->ReloadStall( subChunk);
         }	    
         *childLink = subChunk;		                                                        // change the childLink value
         auto    ptr = subChunk->Pin( arena, l);
@@ -223,7 +217,7 @@ public:
     {
         Arena       *arena = static_cast< Arena*>( this);
         if ( !m_TopStall)
-            m_TopStall = new (Allocate< sizeof( RootStall)>()) RootStall( arena, 0);
+            m_TopStall =  Allocate< RootStall>( arena, 0);
         return m_TopStall;
     }
 
@@ -232,17 +226,17 @@ public:
 
     Cv_CallBacklog< Arena *>         *BackLog( void) { return &m_FnBacklog; }
 
-template < uint32_t AllocSz>
-    void     *Allocate( void)
+template < typename Stall, typename... X>
+    Stall     *Allocate( X... x)
     {
-        void    *obj = new char[ AllocSz];
+        Stall *obj = new Stall( x...);
         return obj;
     }
 
-template < uint32_t AllocSz>
-    void     Discard( void *obj)
+template < typename Stall>
+    void     Discard( Stall *obj)
     {
-        delete [] ( char *)  obj;
+        delete obj;
         return;
     }
 
@@ -303,9 +297,9 @@ public:
             rootStall->m_FileOffset.Store( 0);
             fseek( m_Fp, 0L, SEEK_END );
             if ( ftell( m_Fp))
-                ReloadStall( rootStall, BaseArena::RootStall::PageSz);
+                ReloadStall( rootStall );
             else
-                ScrubStall( rootStall, BaseArena::RootStall::PageSz);
+                ScrubStall( rootStall);
         }
         return BaseArena::m_TopStall;
     }
@@ -329,11 +323,11 @@ public:
     //_____________________________________________________________________________________________________________________________
 
 template < typename MemStall>
-    void    ReloadStall( MemStall  *spot, uint32_t pageSz)
+    void    ReloadStall( MemStall  *spot)
     {
         fseek( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );
         CV_DEBUG_ASSERT( spot->m_FileOffset.Load() == ftell( m_Fp))
-	    size_t    nRd = fread( spot->template PtrAt< uint8_t>( 0), pageSz, 1, m_Fp);
+	    size_t    nRd = fread( spot->template PtrAt< uint8_t>( 0), MemStall::PageSz, 1, m_Fp);
         CV_ERROR_ASSERT( nRd == 1)
         return;
     }
@@ -342,21 +336,21 @@ template < typename MemStall>
     // sync up MemStall with file
 
 template < typename MemStall>
-    void    ScrubStall( MemStall  *spot, uint32_t pageSz)
+    void    ScrubStall( MemStall  *spot)
     {
         if ( spot->m_FileOffset.Load() == CV_UINT32_MAX)                                    // if has not been written to file write the chunk to file
 	    {
             int     res = ::fseek( m_Fp, 0L, SEEK_END );                                    // go to the end of file
             CV_ERROR_ASSERT( res == 0)
             spot->m_FileOffset.Store( uint32_t( ::ftell( m_Fp)));                           // store the file-location in the Stall
-            size_t    nWr = fwrite(  spot->template PtrAt< uint8_t>( 0), 1, pageSz, m_Fp);           // write the chunk to file
+            size_t    nWr = fwrite(  spot->template PtrAt< uint8_t>( 0), 1, MemStall::PageSz, m_Fp);           // write the chunk to file
             CV_ERROR_ASSERT( nWr == 1)
             return;
         } 
 
         int         res = fseek( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );               // go to the file-offset 
         CV_ERROR_ASSERT( res == 0)
-        size_t      nWr = fwrite( spot->template PtrAt< uint8_t>( 0), pageSz, 1,  m_Fp);             // write the page content.
+        size_t      nWr = fwrite( spot->template PtrAt< uint8_t>( 0), MemStall::PageSz, 1,  m_Fp);             // write the page content.
         CV_ERROR_ASSERT( nWr == 1)
         return;
     }
