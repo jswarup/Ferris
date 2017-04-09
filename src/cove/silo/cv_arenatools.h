@@ -4,7 +4,7 @@
 //_____________________________________________________________________________________________________________________________
 
 template < class Arena, class LeafStall>
-class Cv_Pin
+class Cv_Spot
 {
 protected:
      typedef typename LeafStall::ValueType   LeafType;
@@ -20,28 +20,28 @@ public:
     typedef LeafType                    &reference;
     typedef std::input_iterator_tag     iterator_category;
 
-    Cv_Pin( void)
+    Cv_Spot( void)
         : m_Arena( nullptr), m_Index( 0), m_MemChunk( nullptr)
     {}
     
-    Cv_Pin( Arena *arena, uint32_t index)
-        : Cv_Pin( m_Arena->Pin( m_Index))
+    Cv_Spot( Arena *arena, uint32_t index)
+        : Cv_Spot( m_Arena->Spot( m_Index))
     {}
     
-    Cv_Pin( Arena *arena, uint32_t index, LeafStall *memChunk)
+    Cv_Spot( Arena *arena, uint32_t index, LeafStall *memChunk)
         : m_Arena( arena), m_Index( index), m_MemChunk( memChunk)
     {
         m_MemChunk->RaiseRef();
     }
     
-    Cv_Pin( const Cv_Pin &a)
+    Cv_Spot( const Cv_Spot &a)
         : m_Arena( a.m_Arena), m_Index( a.m_Index), m_MemChunk( a.m_MemChunk)
     {
         if ( m_MemChunk)
             m_MemChunk->RaiseRef();
     }
 
-    Cv_Pin( Cv_Pin &&a)
+    Cv_Spot(Cv_Spot &&a)
         : m_Arena( a.m_Arena), m_Index( a.m_Index), m_MemChunk( a.m_MemChunk)
     {
         m_MemChunk = a.m_MemChunk;
@@ -49,7 +49,7 @@ public:
         a.m_Index = 0;
     }
 
-    ~Cv_Pin( void)
+    ~Cv_Spot( void)
     {
         if ( m_MemChunk && !m_MemChunk->LowerRef())
         {
@@ -58,42 +58,42 @@ public:
         }      
     }
 
-    Cv_Pin  &operator=( const Cv_Pin &a)
+    Cv_Spot  &operator=( const Cv_Spot &a)
     {
         if ( this == &a)
             return *this;
-        this->Cv_Pin::~Cv_Pin();
-        return *( ::new (this) Cv_Pin( a));
+        this->Cv_Spot::~Cv_Spot();
+        return *( ::new (this) Cv_Spot( a));
     }
     
     operator LeafType       *( void)  { m_MemChunk->SetClean( false); return m_MemChunk->template PtrAt< LeafType>( m_Index & LeafStall::Mask); }
 
     operator const LeafType *( void) const { return m_MemChunk->template PtrAt< LeafType>( m_Index & LeafStall::Mask); }
     
-    Cv_Pin  &operator++( void)
+    Cv_Spot  &operator++( void)
     {
         if ( ++m_Index & LeafStall::Mask)
             return *this;
-        *this = m_Arena->Pin( m_Index);
+        *this = m_Arena->Spot( m_Index);
         return *this;
     }
 
-    Cv_Pin  &operator+=( int k)
+    Cv_Spot  &operator+=( int k)
     {
-        *this = m_Arena->Pin( m_Index + k);
+        *this = m_Arena->Spot( m_Index + k);
         return *this;
     }
 
-    friend Cv_Pin  operator+( const Cv_Pin  &p, int k)
+    friend Cv_Spot  operator+( const Cv_Spot  &p, int k)
     {
-        return Cv_Pin( p.m_Arena->Pin( p.m_Index + k));
+        return Cv_Spot( p.m_Arena->Spot( p.m_Index + k));
     }
 
-    friend int  operator-( const Cv_Pin  &p, const Cv_Pin  &q)
+    friend int  operator-( const Cv_Spot  &p, const Cv_Spot  &q)
     {
         return p.m_Index -q.m_Index;
     }
-    friend bool  operator==( const Cv_Pin  &p, const Cv_Pin  &q)
+    friend bool  operator==( const Cv_Spot  &p, const Cv_Spot  &q)
     {
         return p.m_Index ==q.m_Index;
     }
@@ -105,7 +105,7 @@ public:
         return memChunk;
     }
 
-    friend void swap(Cv_Pin& lhs, Cv_Pin& rhs);
+    friend void swap(Cv_Spot& lhs, Cv_Spot& rhs);
 };
 
 //_____________________________________________________________________________________________________________________________

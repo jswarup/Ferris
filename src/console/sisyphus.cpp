@@ -22,12 +22,12 @@ void TestArena( void)
     uint32_t                            szVec = 1 << Arena::SzMask();
     if ( freshFLg)
     {
-        auto        pin1 = arena.Pin( 0);
+        auto        pin1 = arena.Spot( 0);
         for ( uint32_t i = 0; i < szVec; ++i, ++pin1)
             *pin1 = i;
     }
     std::vector< uint32_t>      vec( szVec);
-    auto                        pin2 = arena.Pin( 0);
+    auto                        pin2 = arena.Spot( 0);
     for ( uint32_t i = 0; i < vec.size(); ++i, ++pin2)
         vec[ vec.size() -1 -i] = ( *pin2);
     return;

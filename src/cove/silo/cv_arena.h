@@ -25,13 +25,12 @@ class Cv_HeapStall : public Cv_Shared< Arena::MT>, public Cv_Minion< ParentStall
 public:
     enum
     {
-        SzArray = Cv_CExpr::Pow2( SzBits),                          	// size of the array
+        SzArray = Cv_CExpr::Pow2( SzBits),                          // size of the supported array
         PageSz = sizeof(TValueType) * SzArray,                     	// size of the page
         SzMask = SzBits,                                           	// Size of mask
         Mask = Cv_CExpr::LowMask(SzMask),                       	// bitmask used  used to extract the index in the page.
     };
     
- 
     typedef ParentStall		                Parent;
     typedef TValueType    	                ValueType;
     typedef Cv_HeapStall                    LeafStall; 
@@ -53,12 +52,12 @@ public:
     ~Cv_HeapStall( void)
     {}
 
-    uint16_t    ParentOff(void) const { return Cv_Frager< 1, 15>(m_Info.Load()).Get(); }
-    void        SetParentOff(uint16_t off) { m_Info.Store(Cv_Frager< 1, 15>(m_Info.Load()).Set(off)); }
+    uint16_t    ParentOff( void) const { return Cv_Frager< 1, 15>(m_Info.Load()).Get(); }
+    void        SetParentOff( uint16_t off) { m_Info.Store(Cv_Frager< 1, 15>(m_Info.Load()).Set(off)); }
 
-    bool        IsClean(void) const { return Cv_Frager< 0, 1>(m_Info.Load()).Get(); }
-    void        SetClean(bool t) { m_Info.Store(Cv_Frager< 0, 1>(m_Info.Load()).Set(t)); }
-    bool        IsProcessed(void) const { return IsClean() && !this->IsInUse(); }
+    bool        IsClean( void) const { return Cv_Frager< 0, 1>(m_Info.Load()).Get(); }
+    void        SetClean( bool t) { m_Info.Store(Cv_Frager< 0, 1>(m_Info.Load()).Set(t)); }
+     
 
 template < class X>
     const X     &AccAt(uint32_t i) const { return reinterpret_cast< X*>( &m_Page[0])[i]; }
@@ -71,24 +70,24 @@ template < class X>
 
     bool    Evict( Arena *arena)    
     {
-        if ( this->IsInUse())                                               // No eviction
+        if ( this->IsInUse())                                       // No eviction
             return false;
             
-        if ( !this->IsClean())                                              // if not clean scrub it by writing to file if Arena is attached to file
+        if ( !this->IsClean())                                      // if not clean scrub it by writing to file if Arena is attached to file
             arena->ScrubStall( this);
             
-        this->GetOwner()->DetachChild( arena, this);                        // Tell parent to detach this stall
+        this->GetOwner()->DetachChild( arena, this);                // Get parent to detach this stall
         
-        if ( !this->GetOwner()->LowerRef())                                 // lower parent reference and if parent is to evicted add it to backlog
-            arena->BackLog()->push_back( [ parent = this->GetOwner()](Arena *arena) { return  parent->Evict( arena); }); 
+        if ( !this->GetOwner()->LowerRef())                         // lower parent reference and if parent is to evicted add it to backlog
+            arena->BackLog()->push_back( [ parent = this->GetOwner()]( Arena *arena) { return  parent->Evict( arena); }); 
 
-        arena->Discard( this);                                              // discard the struct 
+        arena->Discard( this);                                      // discard the struct 
         return true;
     }
 
-    auto    Pin( Arena *arena, uint32_t l)  
+    auto    Spot( Arena *arena, uint32_t l)
     { 
-        return  Cv_Pin< Arena, Cv_HeapStall>( arena, l, this);              // pin an object  in the heap
+        return  Cv_Spot< Arena, Cv_HeapStall>( arena, l, this);      // pin an object  in the heap
     }
 };
 
@@ -115,7 +114,7 @@ public:
 		: BaseStall( parent, pParentlink, nullptr)
 	{}
 
-    auto    Pin( Arena *arena, uint32_t l)
+    auto    Spot( Arena *arena, uint32_t l)
     {
         uint16_t        childOff = uint16_t( (l & Mask) >> SubChunk::SzMask);               // we would not be index in 64k pointers ever
         CV_DEBUG_ASSERT( childOff < SzArray)
@@ -123,34 +122,32 @@ public:
         bool            heapFlg = arena->IsOnHeap( *childLink);
 
 	    if ( heapFlg)	                                                                    // The page in memory    	                                    
-	        return (*childLink)->Pin( arena, l);
+	        return (*childLink)->Spot( arena, l);
 	  
-        SubChunk        *subChunk =  arena->template Allocate< SubChunk>( static_cast< Derived*>( this), childOff);
+        
+        SubChunk        *subChunk =  arena->template Allocate< SubChunk>( static_cast< Derived*>( this), childOff);     // Page is not in memory, allocate memory for the page
 
-        if ( *childLink)
+        if ( *childLink)                                                                    // page on file
         {
-            subChunk->PreserveRef( uint64_t( *childLink)); 
-            arena->ReloadStall( subChunk);
+            subChunk->PreserveRef( uint64_t( *childLink));                                  // preserve the file offset in subChunk
+            arena->ReloadStall( subChunk);                                                  // load the data from the offset
         }	    
-        *childLink = subChunk;		                                                        // change the childLink value
-        auto    ptr = subChunk->Pin( arena, l);
-        return ptr;
+        *childLink = subChunk;		                                                        // change the childLink value 
+        return subChunk->Spot(arena, l);
     }
 
 template < typename MemStall>    
-    void    DetachChild( Arena *arena, MemStall *st)                         // detach a child stall      
-    {
-        SubChunk        *stall = static_cast< SubChunk *>( st);
+    void    DetachChild( Arena *arena, MemStall *stall)                                     // detach a child stall      
+    { 
         uint16_t        childOff = stall->ParentOff();
         SubChunk        **childLink = this->template PtrAt< SubChunk *>( childOff);
         CV_ERROR_ASSERT( *childLink == stall)    
-        *childLink = reinterpret_cast< SubChunk *>( stall->GrabRef()) ;                 // store the child file reference.         
+        *childLink = reinterpret_cast< SubChunk *>( stall->GrabRef()) ;                     // store the child file reference.         
         return;
     }
 };
 
 //_____________________________________________________________________________________________________________________________
-
 
 template< class Arena, class Parent, typename LeafType, uint8_t... Rest>
 class Cv_ArenaStall;
@@ -179,8 +176,7 @@ public:
     {}
 };
 
-//_____________________________________________________________________________________________________________________________
-
+//_____________________________________________________________________________________________________________________________ 
 
 template< class Arena, class LeafType, bool MTh, uint8_t... Rest>
 class Cv_BaseArena : public Cv_Shared< MTh>
@@ -194,8 +190,7 @@ public:
     };
     
     constexpr static uint32_t               SzMask( void) { return  RootStall::SzMask; }
-    
-
+     
 protected:
     RootStall                                           *m_TopStall;
     Cv_CallBacklog< Arena *>                            m_FnBacklog;
@@ -207,10 +202,10 @@ public:
     {
     }
 
-    bool    Evict( Arena *arena) { return true; }
-    void    DetachChild( Arena *arena, void *spot)  {  m_TopStall = nullptr; }
+    bool        Evict( Arena *arena) { return true; }
+    void        DetachChild( Arena *arena, void *spot)  {  m_TopStall = nullptr; }
 
-    bool    IsOnHeap( void *s) { return !!s; }
+    bool        IsOnHeap( void *s) { return !!s; }
 
 
     RootStall   *FetchTopStall( void)
@@ -221,7 +216,7 @@ public:
         return m_TopStall;
     }
 
-    auto    Pin( uint32_t k)  { return static_cast< Arena *>( this)->FetchTopStall()->Pin( static_cast< Arena*>( this), k); }
+    auto    Spot( uint32_t k)  { return static_cast< Arena *>( this)->FetchTopStall()->Spot( static_cast< Arena*>( this), k); }
 
 
     Cv_CallBacklog< Arena *>         *BackLog( void) { return &m_FnBacklog; }
@@ -229,18 +224,15 @@ public:
 template < typename Stall, typename... X>
     Stall     *Allocate( X... x)
     {
-        Stall *obj = new Stall( x...);
-        return obj;
+        return new Stall(x...);
     }
 
 template < typename Stall>
     void     Discard( Stall *obj)
     {
         delete obj;
-        return;
     }
 
- 
     class Janitor
     {
     public:
@@ -252,7 +244,7 @@ template < typename Stall>
 template < typename MemStall>
     void    ReloadStall( MemStall *spot, uint32_t pageSz)
     {
-    };
+    }
 
 template < typename MemStall>
     void    ScrubStall( MemStall *spot, uint32_t sz)
@@ -289,6 +281,7 @@ public:
     Cv_FileArena( FILE  *f) 
         :  m_Fp( f)
     {}    
+	
     RootStall   *FetchTopStall( void)
     {
         if ( !BaseArena::m_TopStall)
@@ -352,96 +345,6 @@ template < typename MemStall>
         CV_ERROR_ASSERT( res == 0)
         size_t      nWr = fwrite( spot->template PtrAt< uint8_t>( 0), MemStall::PageSz, 1,  m_Fp);             // write the page content.
         CV_ERROR_ASSERT( nWr == 1)
-        return;
-    }
-};
-
-//_____________________________________________________________________________________________________________________________
-
-
-template < class X>
-class Cv_Spot
-{
-protected: 
-    X           *m_Ptr;
-    uint32_t    m_Index;
-    
-public:
-    Cv_Spot( X *ptr, uint32_t index)
-        :  m_Ptr( ptr), m_Index( index)  
-    {}  
-
-    operator X *( void) { return m_Ptr; }
-
-    X           *Ptr( void) const { return m_Ptr; }
-    uint32_t    Index( void) const { return m_Index; }
-};
-
-//_____________________________________________________________________________________________________________________________
-
-
-template < class Arena>
-class   Cv_ArenaStore
-{
-
-    struct  Atom : public Cv_Link< Atom> 
-    {
-        uint32_t    m_Index;
-        
-        Atom( uint32_t index)
-            : m_Index( index)
-        {}
-    };
-
-    Cv_LinkStack< Atom>                     m_FreeAtomStack;        // stack of free atoms
-    Arena                                   *m_Arena;
-    uint32_t                                m_ApprLeafSz;           // Num of leaves appropriasted
-
-    typedef typename Arena::RootStall::LeafStall         LeafStall;
-    typedef typename Arena::LeafType                     LeafType;
-
-    enum 
-    {
-        SzArray     = LeafStall::SzArray,                           // Num objects in leaf
-        SzBits      = Arena::RootStall::SzMask,                     // Total bits supported..
-        SzTopBits   = SzBits - LeafStall::SzBits,                   // Bits supported by branches
-        SzLeaf      = Cv_CExpr::Pow2( SzTopBits),             // Max number of leaves 
-    };
-
-    //----------------------------------------------------------------------
-    
-    void Appropriate( void)
-    {
-	    LeafStall    *leafStall = m_Arena->Pin( this->m_ApprPageSz << LeafStall::SzBits).Snitch();
-        for ( uint32_t i = 0; i < SzArray; ++i)
-        {
-            LeafType    *spot = leafStall->template PtrAt< LeafType>( SzArray -1 -i);
-            Atom        *atom = new ( spot) Atom( ( SzArray -1 -i) | this->m_ApprPageSz);
-            m_FreeAtomStack.Push( atom);
-        }
-        ++this->m_ApprPageSz;
-
-    }
-
-public:
-    Cv_ArenaStore( Arena *arena)
-        : m_Arena( arena), m_ApprLeafSz( 0)
-    {}
-
-template< class X>
-    Cv_Spot< X>     Allocate( void) 
-    { 
-        Atom    *atom =  m_FreeAtomStack.Top() ? m_FreeAtomStack.Pop() : ( Appropriate(), m_FreeAtomStack.Pop());
-        return Cv_Spot< X>( reinterpret_cast< X *>( atom), atom->m_Index);
-    }
-
-template< class X>
-	void            Discard( Cv_Spot< X> *p) 
-    { 
-        Atom        *atom = reinterpret_cast< Atom*>( p->m_Ptr);
-        atom->m_Index = p->Index();
-        m_FreeAtomStack.Push( atom); 
-        *p = Cv_Spot< X>( nullptr, 0);
         return;
     }
 };
