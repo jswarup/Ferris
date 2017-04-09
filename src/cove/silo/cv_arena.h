@@ -13,41 +13,6 @@
 #include	"cove/silo/cv_arenatools.h"
 
 //_____________________________________________________________________________________________________________________________
-// Declaration of MemStall..It holds pointer to a allocated page, and 16-bit info ..
-  
-template < class Arena>  
-class    Cv_MemStall  : public Cv_Shared< Arena::MT>, public Cv_PtrIteratorImpl< Cv_MemStall< Arena>>, public Arena::Janitor
-{   
-protected:
-    Cv_Atomic< uint16_t, Arena::MT>        m_Info;                  // 15-bit for offset in Parent and 1-bit for clean status; Max of 32K addresses support
-    Cv_Atomic< void *, Arena::MT>          m_PagePtr;               // pointer to the allocated page
-    
-public:
-	typedef Cv_Shared< Arena::MT>			BaseShared;
-	
-    Cv_MemStall( void *pgPtr)
-		:  m_Info( 0), m_PagePtr( pgPtr)
-	{}
-    
-    uint16_t    ParentOff( void) const { return Cv_Frager< 1, 15>( m_Info.Load()).Get(); }
-    void        SetParentOff( uint16_t off) { m_Info.Store( Cv_Frager< 1, 15>( m_Info.Load()).Set( off)); }
-    
-    bool        IsClean( void) const { return Cv_Frager< 0, 1>( m_Info.Load()).Get(); }
-    void        SetClean( bool t) { m_Info.Store( Cv_Frager< 0, 1>( m_Info.Load()).Set( t)); }
-    bool        IsProcessed( void) const {  return IsClean() && !BaseShared::IsInUse(); }
-
-template < class X>
-    const X     &AccAt( uint32_t i) const { return static_cast< X*>( m_PagePtr.Load())[ i]; }
-
-template < class X>
-    X           *PtrAt( uint32_t i) { return &static_cast< X*>( m_PagePtr.Load())[ i]; }
-
-template < class X>
-    void        SetAt( uint32_t i, const X &x) { static_cast< X*>( m_PagePtr.load())[ i] = x; }
-
-};
-
-//_____________________________________________________________________________________________________________________________
 // HeapStall is a heap construct, 
 // Declaration parameter:
 //      ParentStall : the parent stall refering it.
@@ -56,31 +21,33 @@ template < class X>
 
 
 template < class Arena, class ParentStall, typename TValueType , uint32_t SzBits>
-class Cv_HeapStall :  public Cv_Minion< ParentStall>, public Cv_MemStall< Arena>
+class Cv_HeapStall : public Cv_Shared< Arena::MT>, public Cv_Minion< ParentStall>, public Arena::Janitor,
+                     public Cv_PtrIteratorImpl< Cv_HeapStall< Arena, ParentStall, TValueType, SzBits>>
 {
 public:
-	typedef Cv_MemStall< Arena>		BaseStall;
-    typedef ParentStall		        Parent;
-    typedef TValueType    	        ValueType;
-    typedef Cv_HeapStall            LeafStall;
-
-    enum 
-    { 
-        SzArray         = Cv_CExpr::Pow2( SzBits),                          // size of the array
-        PageSz          = sizeof( ValueType) * SzArray,                     // size of the page
-        SzMask          = SzBits,                                           // Size of mask
-        Mask            = Cv_CExpr::LowMask( SzMask),                       // bitmask used  used to extract the index in the page.
+    enum
+    {
+        SzArray = Cv_CExpr::Pow2(SzBits),                          	// size of the array
+        PageSz = sizeof(TValueType) * SzArray,                     	// size of the page
+        SzMask = SzBits,                                           	// Size of mask
+        Mask = Cv_CExpr::LowMask(SzMask),                       	// bitmask used  used to extract the index in the page.
     };
     
-    uint8_t                         m_Page[ PageSz];
+ 
+    typedef ParentStall		                Parent;
+    typedef TValueType    	                ValueType;
+    typedef Cv_HeapStall                    LeafStall; 
+    
+ 
+    Cv_Atomic< uint16_t, Arena::MT>        m_Info;                 	// 15-bit for offset in Parent and 1-bit for clean status; Max of 32K addresses support 
+    uint8_t                                m_Page[ PageSz];
 
 	Cv_HeapStall( Parent *parent, uint16_t pParentlink, const ValueType &iVal = Cv_CExpr::InitVal< ValueType>())
-		: Cv_Minion< ParentStall>( parent), 
-          Cv_MemStall< Arena>( m_Page)
+		: Cv_Minion< ParentStall>( parent), m_Info(0)
     {
         Cv_Aid::Set( this->template At< ValueType>( 0), this->template At< ValueType>( SzArray), iVal);     // Initialize the entire array by given iVal
-        BaseStall::SetParentOff( pParentlink);                              // Store the parent offset
-        if ( this->GetOwner())                                              // It has a parent then then raise reference so that parent does not get deleted.
+        SetParentOff( pParentlink);                          		// Store the parent offset
+        if ( this->GetOwner())                                      // It has a parent then then raise reference so that parent does not get deleted.
             this->GetOwner()->RaiseRef();
     }
 
@@ -88,6 +55,23 @@ public:
     {
             
     }
+
+    uint16_t    ParentOff(void) const { return Cv_Frager< 1, 15>(m_Info.Load()).Get(); }
+    void        SetParentOff(uint16_t off) { m_Info.Store(Cv_Frager< 1, 15>(m_Info.Load()).Set(off)); }
+
+    bool        IsClean(void) const { return Cv_Frager< 0, 1>(m_Info.Load()).Get(); }
+    void        SetClean(bool t) { m_Info.Store(Cv_Frager< 0, 1>(m_Info.Load()).Set(t)); }
+    bool        IsProcessed(void) const { return IsClean() && !this->IsInUse(); }
+
+    template < class X>
+    const X     &AccAt(uint32_t i) const { return reinterpret_cast< X*>( &m_Page[0])[i]; }
+
+    template < class X>
+    X           *PtrAt(uint32_t i) { return &reinterpret_cast< X*>( &m_Page[0])[i]; }
+
+    template < class X>
+    void        SetAt(uint32_t i, const X &x) { reinterpret_cast< X*>( &m_Page[0])[i] = x; }
+
     bool    Evict( Arena *arena)    
     {
         if ( this->IsInUse())                                               // No eviction
@@ -102,10 +86,9 @@ public:
             arena->BackLog()->push_back( [ parent = this->GetOwner()](Arena *arena) { return  parent->Evict( arena); }); 
 
         this->SetOwner( nullptr);                                           //  clean up the owner reference
-
-        arena->template FreePage< PageSz>( this->m_PagePtr.SpinGrab( nullptr)); // free the page
+         
         this->Cv_HeapStall::~Cv_HeapStall();                                // destroy the stall
-        arena->Discard( this);                                              // discard the struct 
+        arena->template Discard< PageSz>( this);                                              // discard the struct 
         return true;
     }
 
@@ -159,8 +142,9 @@ public:
         auto    ptr = subChunk->Pin( arena, l);
         return ptr;
     }
-    
-    void    DetachChild( Arena *arena, Cv_MemStall< Arena> *st)                         // detach a child stall      
+
+template < typename MemStall>    
+    void    DetachChild( Arena *arena, MemStall *st)                         // detach a child stall      
     {
         SubChunk        *stall = static_cast< SubChunk *>( st);
         uint16_t        childOff = stall->ParentOff();
@@ -255,28 +239,14 @@ template < uint32_t AllocSz>
         return obj;
     }
 
- 
+template < uint32_t AllocSz>
     void     Discard( void *obj)
     {
         delete [] ( char *)  obj;
         return;
     }
 
-template < uint32_t PageSz>
-    void    *AllocPage( void)
-    {
-        uint32_t    m_PgIndex = m_PageSzIndexor.template Index< PageSz>();
-	    void    *pg = new char[ PageSz];
-        return pg;
-    }
-
-template < uint32_t PageSz>
-    void    FreePage( void *pg)
-    {
-        uint32_t    m_PgIndex = m_PageSzIndexor.template Index< PageSz>();
-
-	    delete [] ( char *) pg;
-    }
+ 
     class Janitor
     {
     public:
@@ -285,11 +255,13 @@ template < uint32_t PageSz>
         uint64_t    GrabRef( void) const { return 0x0; }
     };
 
-    void    ReloadStall( Cv_MemStall< Arena> *spot, uint32_t pageSz)
+template < typename MemStall>
+    void    ReloadStall( MemStall *spot, uint32_t pageSz)
     {
     };
 
-    void    ScrubStall( Cv_MemStall< Arena> *spot, uint32_t sz)
+template < typename MemStall>
+    void    ScrubStall( MemStall *spot, uint32_t sz)
     {
         return;
     }
@@ -356,8 +328,8 @@ public:
 
     //_____________________________________________________________________________________________________________________________
 
-
-    void    ReloadStall( Cv_MemStall< Cv_FileArena> *spot, uint32_t pageSz)
+template < typename MemStall>
+    void    ReloadStall( MemStall  *spot, uint32_t pageSz)
     {
         fseek( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );
         CV_DEBUG_ASSERT( spot->m_FileOffset.Load() == ftell( m_Fp))
@@ -369,7 +341,8 @@ public:
     //_____________________________________________________________________________________________________________________________
     // sync up MemStall with file
 
-    void    ScrubStall( Cv_MemStall< Cv_FileArena> *spot, uint32_t pageSz)
+template < typename MemStall>
+    void    ScrubStall( MemStall  *spot, uint32_t pageSz)
     {
         if ( spot->m_FileOffset.Load() == CV_UINT32_MAX)                                    // if has not been written to file write the chunk to file
 	    {
