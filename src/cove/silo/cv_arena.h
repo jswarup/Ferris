@@ -16,7 +16,7 @@
 // Declaration of MemStall..It holds pointer to a allocated page, and 16-bit info ..
   
 template < class Arena>  
-class    Cv_MemStall  : public Arena::Janitor
+class    Cv_MemStall  : public Cv_Shared< Arena::MT>, public Cv_PtrIteratorImpl< Cv_MemStall< Arena>>, public Arena::Janitor
 {   
 protected:
     Cv_Atomic< uint16_t, Arena::MT>        m_Info;                  // 15-bit for offset in Parent and 1-bit for clean status; Max of 32K addresses support
@@ -56,8 +56,7 @@ template < class X>
 
 
 template < class Arena, class ParentStall, typename TValueType , uint32_t SzBits>
-class Cv_HeapStall :  public Cv_Minion< ParentStall>, public Cv_MemStall< Arena>, public Cv_Shared< Arena::MT>, 
-                      public Cv_PtrIteratorImpl< Cv_HeapStall< Arena, ParentStall, TValueType, SzBits>>
+class Cv_HeapStall :  public Cv_Minion< ParentStall>, public Cv_MemStall< Arena>
 {
 public:
 	typedef Cv_MemStall< Arena>		BaseStall;
@@ -73,9 +72,11 @@ public:
         Mask            = Cv_CExpr::LowMask( SzMask),                       // bitmask used  used to extract the index in the page.
     };
     
-	Cv_HeapStall( Arena *arena, Parent *parent, uint16_t pParentlink, const ValueType &iVal = Cv_CExpr::InitVal< ValueType>())
+    uint8_t                         m_Page[ PageSz];
+
+	Cv_HeapStall( Parent *parent, uint16_t pParentlink, const ValueType &iVal = Cv_CExpr::InitVal< ValueType>())
 		: Cv_Minion< ParentStall>( parent), 
-          Cv_MemStall< Arena>( arena->template AllocPage< PageSz>())	
+          Cv_MemStall< Arena>( m_Page)
     {
         Cv_Aid::Set( this->template At< ValueType>( 0), this->template At< ValueType>( SzArray), iVal);     // Initialize the entire array by given iVal
         BaseStall::SetParentOff( pParentlink);                              // Store the parent offset
@@ -133,8 +134,8 @@ public:
         Mask = Cv_CExpr::LowMask( SzMask), 
     };
 
-    Cv_BranchStall( Arena *arena, Parent *parent, uint16_t pParentlink)
-		: BaseStall( arena, parent, pParentlink, nullptr)
+    Cv_BranchStall( Parent *parent, uint16_t pParentlink)
+		: BaseStall( parent, pParentlink, nullptr)
 	{}
 
     auto    Pin( Arena *arena, uint32_t l)
@@ -147,7 +148,7 @@ public:
 	    if ( heapFlg)	                                                                    // The page in memory    	                                    
 	        return (*childLink)->Pin( arena, l);
 	  
-        SubChunk                    *subChunk =  new ( arena->template Allocate< SubChunkSz>()) SubChunk( arena, static_cast< Derived*>( this), childOff);
+        SubChunk                    *subChunk =  new ( arena->template Allocate< SubChunkSz>()) SubChunk( static_cast< Derived*>( this), childOff);
 
         if ( *childLink)
         {
@@ -183,8 +184,8 @@ class Cv_ArenaStall< Arena, Parent, LeafType, SzBits, Rest...>  :
 public:
 	typedef Cv_BranchStall< Arena, Parent, SzBits, Cv_ArenaStall< Arena, Cv_ArenaStall< Arena, Parent, LeafType, SzBits, Rest...>, LeafType, Rest...> >		BaseStall;
 	
-    Cv_ArenaStall( Arena *arena, Parent *parent, uint16_t pParentlink)
-        : BaseStall( arena, parent, pParentlink)
+    Cv_ArenaStall( Parent *parent, uint16_t pParentlink)
+        : BaseStall( parent, pParentlink)
     {}
 };
 
@@ -195,8 +196,8 @@ class Cv_ArenaStall< Arena, Parent, LeafType, SzBits> : public  Cv_HeapStall< Ar
 public:
     typedef Cv_HeapStall< Arena, Parent, LeafType, SzBits> 	BaseStall;
 	
-    Cv_ArenaStall( Arena *arena, Parent *parent, uint16_t pParentlink)
-        : BaseStall( arena, parent, pParentlink)
+    Cv_ArenaStall( Parent *parent, uint16_t pParentlink)
+        : BaseStall( parent, pParentlink)
     {}
 };
 
@@ -229,7 +230,7 @@ public:
     }
 
     bool    Evict( Arena *arena) { return true; }
-    void    DetachChild( Arena *arena, Cv_MemStall< Arena> *spot)  {  m_TopStall = nullptr; }
+    void    DetachChild( Arena *arena, void *spot)  {  m_TopStall = nullptr; }
 
     bool    IsOnHeap( void *s) { return !!s; }
 
@@ -238,7 +239,7 @@ public:
     {
         Arena       *arena = static_cast< Arena*>( this);
         if ( !m_TopStall)
-            m_TopStall = new (Allocate< sizeof( RootStall)>()) RootStall( arena, arena, 0);
+            m_TopStall = new (Allocate< sizeof( RootStall)>()) RootStall( arena, 0);
         return m_TopStall;
     }
 
