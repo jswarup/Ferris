@@ -63,13 +63,13 @@ uint32_t    Cv_IotaDef::MemSize( uint32_t sz, BitWidth wdIndex)
 {
     switch ( wdIndex)
     {
-        case BitWidth_1  : return Cv_IotaTrailImpl< BitWidth_1 >::MemSize( sz);
-        case BitWidth_2  : return Cv_IotaTrailImpl< BitWidth_2 >::MemSize( sz);
-        case BitWidth_4  : return Cv_IotaTrailImpl< BitWidth_4 >::MemSize( sz);
-        case BitWidth_8  : return Cv_IotaTrailImpl< BitWidth_8 >::MemSize( sz);
-        case BitWidth_16 : return Cv_IotaTrailImpl< BitWidth_16>::MemSize( sz);
-        case BitWidth_32 : return Cv_IotaTrailImpl< BitWidth_32>::MemSize( sz);
-        case BitWidth_64 : return Cv_IotaTrailImpl< BitWidth_64>::MemSize( sz);
+        case BitWidth_1  : return Cv_IotaImpl< BitWidth_1 >::MemSize( sz);
+        case BitWidth_2  : return Cv_IotaImpl< BitWidth_2 >::MemSize( sz);
+        case BitWidth_4  : return Cv_IotaImpl< BitWidth_4 >::MemSize( sz);
+        case BitWidth_8  : return Cv_IotaImpl< BitWidth_8 >::MemSize( sz);
+        case BitWidth_16 : return Cv_IotaImpl< BitWidth_16>::MemSize( sz);
+        case BitWidth_32 : return Cv_IotaImpl< BitWidth_32>::MemSize( sz);
+        case BitWidth_64 : return Cv_IotaImpl< BitWidth_64>::MemSize( sz);
         default:  break;
     }
     return 0;

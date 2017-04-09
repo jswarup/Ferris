@@ -48,14 +48,14 @@ struct  Cv_IotaDef
 //_____________________________________________________________________________________________________________________________
 
 template < Cv_IotaDef::BitWidth BW>
-struct  Cv_IotaTrailImpl
+struct  Cv_IotaImpl
 {};
 
 
 //_____________________________________________________________________________________________________________________________
 
 template <>
-struct  Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_1>
+struct  Cv_IotaImpl< Cv_IotaDef::BitWidth_1>
 {
 template < uint32_t I>
     static uint8_t    Get( uint8_t v) { return ( v >> I) & 0x1; }
@@ -103,7 +103,7 @@ template < uint32_t I>
 //_____________________________________________________________________________________________________________________________
 
 template <>
-struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_2>
+struct Cv_IotaImpl< Cv_IotaDef::BitWidth_2>
 {
 template < uint32_t I>
     static uint8_t  Get( uint8_t v) { return ( v >> ( 2 * I)) & 0x3; }
@@ -142,7 +142,7 @@ template < uint32_t I>
 //_____________________________________________________________________________________________________________________________
 
 template <>
-struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_4>
+struct Cv_IotaImpl< Cv_IotaDef::BitWidth_4>
 {
     uint8_t         GetAt( uint32_t i) const { return ( i % 2 ? ( reinterpret_cast< const uint8_t*>(this)[ i / 2] >> 4) : reinterpret_cast< const uint8_t*>(this)[ i / 2]) & 0xF; }
     void            SetAt( uint32_t i, uint64_t v)  { reinterpret_cast< uint8_t*>(this)[ i / 2 ] = uint8_t(( i % 2) ? (( v << 4) | (reinterpret_cast< uint8_t*>(this)[ i / 2 ] & 0x0F)) :  ((reinterpret_cast< uint8_t*>(this)[ i / 2 ] & 0xF0) | v));  }
@@ -152,7 +152,7 @@ struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_4>
 //_____________________________________________________________________________________________________________________________
 
 template <>
-struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_8>
+struct Cv_IotaImpl< Cv_IotaDef::BitWidth_8>
 {
     uint8_t         GetAt( uint32_t i) const  { return reinterpret_cast< const uint8_t*>(this)[ i]; }
     void            SetAt( uint32_t i, uint64_t v) { reinterpret_cast< uint8_t*>(this)[ i] = uint8_t( v); }
@@ -162,7 +162,7 @@ struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_8>
 //_____________________________________________________________________________________________________________________________
 
 template <>
-struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_16>
+struct Cv_IotaImpl< Cv_IotaDef::BitWidth_16>
 {
     uint16_t        GetAt( uint32_t i) const  { return reinterpret_cast< const uint16_t*>(this)[ i]; }
     void            SetAt( uint32_t i, uint64_t v) { reinterpret_cast< uint16_t*>(this)[ i] = uint16_t( v); }
@@ -172,7 +172,7 @@ struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_16>
 //_____________________________________________________________________________________________________________________________
 
 template <>
-struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_32>
+struct Cv_IotaImpl< Cv_IotaDef::BitWidth_32>
 {
     uint32_t        GetAt( uint32_t i) const  { return reinterpret_cast< const uint32_t*>(this)[ i]; }
     void            SetAt( uint32_t i, uint64_t v) { reinterpret_cast< uint32_t*>(this)[ i] = uint32_t( v); }
@@ -182,7 +182,7 @@ struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_32>
 //_____________________________________________________________________________________________________________________________
 
 template <>
-struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_64>
+struct Cv_IotaImpl< Cv_IotaDef::BitWidth_64>
 {
     uint64_t        GetAt( uint32_t i) const  { return reinterpret_cast< const uint16_t*>(this)[ i]; }
     void            SetAt( uint32_t i, uint64_t v) { reinterpret_cast< uint64_t*>(this)[ i] = uint64_t( v); }
@@ -192,9 +192,9 @@ struct Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_64>
 //_____________________________________________________________________________________________________________________________
 
 template <  Cv_IotaDef::BitWidth BW>
-struct Cv_IotaTrail  : public Cv_IotaTrailImpl< BW>
+struct Cv_Iota  : public Cv_IotaImpl< BW>
 {
-    void            SetZero( uint32_t sz) { memset( this, 0, Cv_IotaTrailImpl< BW>::MemSize( sz));  }  
+    void            SetZero( uint32_t sz) { memset( this, 0, Cv_IotaImpl< BW>::MemSize( sz));  }  
 
 template< class Iter>
     void    DoCopy( const Iter &b, const Iter &e)
@@ -208,47 +208,47 @@ template< class Iter>
 //_____________________________________________________________________________________________________________________________
 
 template < uint32_t Sz, uint32_t Wd>
-struct Fe_IArray 
+struct Cv_IArray 
 {};
 
 template < uint32_t Sz>
-struct Fe_IArray< Sz, 1> : public Cv_IotaTrail< Cv_IotaDef::BitWidth_1>
+struct Cv_IArray< Sz, 1> : public Cv_Iota< Cv_IotaDef::BitWidth_1>
 {
     uint8_t     m_Array[ ( Sz + 7)/8];
 };
 
 template < uint32_t Sz>
-struct Fe_IArray< Sz, 2> : public Cv_IotaTrail< Cv_IotaDef::BitWidth_2>
+struct Cv_IArray< Sz, 2> : public Cv_Iota< Cv_IotaDef::BitWidth_2>
 {
     uint8_t     m_Array[ ( Sz + 3)/4];
 };
 
 template < uint32_t Sz>
-struct Fe_IArray< Sz, 4>  : public Cv_IotaTrail< Cv_IotaDef::BitWidth_4>
+struct Cv_IArray< Sz, 4>  : public Cv_Iota< Cv_IotaDef::BitWidth_4>
 {
     uint8_t     m_Array[ ( Sz + 1)/2];
 };
 
 template < uint32_t Sz>
-struct Fe_IArray< Sz, 8> : public Cv_IotaTrail< Cv_IotaDef::BitWidth_8>
+struct Cv_IArray< Sz, 8> : public Cv_Iota< Cv_IotaDef::BitWidth_8>
 {
      uint8_t    m_Array[ Sz];
 };
 
 template < uint32_t Sz>
-struct Fe_IArray< Sz, 16>  : public Cv_IotaTrail< Cv_IotaDef::BitWidth_16>
+struct Cv_IArray< Sz, 16>  : public Cv_Iota< Cv_IotaDef::BitWidth_16>
 {
     uint16_t    m_Array[ Sz];
 };
 
 template < uint32_t Sz>
-struct Fe_IArray< Sz, 32> : public Cv_IotaTrail< Cv_IotaDef::BitWidth_32>
+struct Cv_IArray< Sz, 32> : public Cv_Iota< Cv_IotaDef::BitWidth_32>
 {
     uint32_t    m_Array[ Sz];
 };
 
 template < uint32_t Sz>  
-struct Fe_IArray< Sz, 64>  :  public Cv_IotaTrail< Cv_IotaDef::BitWidth_64>
+struct Cv_IArray< Sz, 64>  :  public Cv_Iota< Cv_IotaDef::BitWidth_64>
 {
     uint64_t    m_Array[ Sz];
 };
@@ -262,13 +262,13 @@ public:
     {
         switch ( bw)
         {
-            case 1 :  return reinterpret_cast< Cv_IotaTrailImpl< BitWidth_1>  *>( iarr)->GetAt( i);
-            case 2 :  return reinterpret_cast< Cv_IotaTrailImpl< BitWidth_2>  *>( iarr)->GetAt( i);
-            case 3 :  return reinterpret_cast< Cv_IotaTrailImpl< BitWidth_4>  *>( iarr)->GetAt( i);
-            case 4 :  return reinterpret_cast< Cv_IotaTrailImpl< BitWidth_8>  *>( iarr)->GetAt( i);
-            case 5 :  return reinterpret_cast< Cv_IotaTrailImpl< BitWidth_16> *>( iarr)->GetAt( i);
-            case 6 :  return reinterpret_cast< Cv_IotaTrailImpl< BitWidth_32> *>( iarr)->GetAt( i);
-            case 7 :  return reinterpret_cast< Cv_IotaTrailImpl< BitWidth_64> *>( iarr)->GetAt( i);
+            case 1 :  return reinterpret_cast< Cv_IotaImpl< BitWidth_1>  *>( iarr)->GetAt( i);
+            case 2 :  return reinterpret_cast< Cv_IotaImpl< BitWidth_2>  *>( iarr)->GetAt( i);
+            case 3 :  return reinterpret_cast< Cv_IotaImpl< BitWidth_4>  *>( iarr)->GetAt( i);
+            case 4 :  return reinterpret_cast< Cv_IotaImpl< BitWidth_8>  *>( iarr)->GetAt( i);
+            case 5 :  return reinterpret_cast< Cv_IotaImpl< BitWidth_16> *>( iarr)->GetAt( i);
+            case 6 :  return reinterpret_cast< Cv_IotaImpl< BitWidth_32> *>( iarr)->GetAt( i);
+            case 7 :  return reinterpret_cast< Cv_IotaImpl< BitWidth_64> *>( iarr)->GetAt( i);
             default:  break;
         }
         return 0;
@@ -278,13 +278,13 @@ public:
     {
         switch ( bw)
         {
-            case 1 :  reinterpret_cast< Cv_IotaTrailImpl<  Cv_IotaDef::BitWidth_1> *>( iarr)->SetAt( i, v); return;
-            case 2 :  reinterpret_cast< Cv_IotaTrailImpl<  Cv_IotaDef::BitWidth_2> *>( iarr)->SetAt( i, v); return;
-            case 3 :  reinterpret_cast< Cv_IotaTrailImpl<  Cv_IotaDef::BitWidth_4> *>( iarr)->SetAt( i, v); return;
-            case 4 :  reinterpret_cast< Cv_IotaTrailImpl<  Cv_IotaDef::BitWidth_8> *>( iarr)->SetAt( i, v); return;
-            case 5 :  reinterpret_cast< Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_16> *>( iarr)->SetAt( i, v); return;
-            case 6 :  reinterpret_cast< Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_32> *>( iarr)->SetAt( i, v); return;
-            case 7 :  reinterpret_cast< Cv_IotaTrailImpl< Cv_IotaDef::BitWidth_64> *>( iarr)->SetAt( i, v); return;
+            case 1 :  reinterpret_cast< Cv_IotaImpl<  Cv_IotaDef::BitWidth_1> *>( iarr)->SetAt( i, v); return;
+            case 2 :  reinterpret_cast< Cv_IotaImpl<  Cv_IotaDef::BitWidth_2> *>( iarr)->SetAt( i, v); return;
+            case 3 :  reinterpret_cast< Cv_IotaImpl<  Cv_IotaDef::BitWidth_4> *>( iarr)->SetAt( i, v); return;
+            case 4 :  reinterpret_cast< Cv_IotaImpl<  Cv_IotaDef::BitWidth_8> *>( iarr)->SetAt( i, v); return;
+            case 5 :  reinterpret_cast< Cv_IotaImpl< Cv_IotaDef::BitWidth_16> *>( iarr)->SetAt( i, v); return;
+            case 6 :  reinterpret_cast< Cv_IotaImpl< Cv_IotaDef::BitWidth_32> *>( iarr)->SetAt( i, v); return;
+            case 7 :  reinterpret_cast< Cv_IotaImpl< Cv_IotaDef::BitWidth_64> *>( iarr)->SetAt( i, v); return;
             default:  break;
         }
         return;
