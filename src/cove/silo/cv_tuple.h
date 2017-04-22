@@ -98,6 +98,9 @@ template < int K>
 template < int K>
     auto        Var( void) const { return *const_cast<Tuple *>( this)->Ptr< K>(); }
 
+template < int K>
+    auto        Var( void)  { return *const_cast<Tuple *>( this)->Ptr< K>(); }
+
 template < typename Lambda>
     auto    Compose( Lambda param) const
     {
@@ -149,6 +152,9 @@ template <class X>
 
 template < int K>
     auto    Var( void) const { return m_Var; }
+
+template < int K>
+    auto    &Var( void) const { return m_Var; }
 
 template < typename Lambda>
     auto    Compose( Lambda param) const
@@ -203,5 +209,18 @@ constexpr auto   Cv_TupleTools::Dump( std::ostream &ostr, const  Cv_Tuple< Types
         return true; 
     });
 }
+
+//_____________________________________________________________________________________________________________________________
+
+template < typename X>
+class Cv_Twin : public Cv_Tuple< X, X>
+{
+public:
+    auto    First( void) const { return this->template Var< 0>(); }
+    void    SetFirst( const X &x) { this->template Var< 0>() = x; }
+    
+    auto    Second( void) const { return this->template Var< 1>(); }
+    void    SetSecond( const X &x) { this->template Var< 1>() = x; } 
+};
 
 //_____________________________________________________________________________________________________________________________

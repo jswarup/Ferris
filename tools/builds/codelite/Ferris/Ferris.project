@@ -33,6 +33,13 @@
       <File Name="../../../../src/cove/barn/cv_frager.h"/>
       <File Name="../../../../src/cove/barn/cv_shared.h"/>
       <File Name="../../../../src/cove/barn/cv_stdsupport.h"/>
+      <File Name="../../../../src/cove/barn/cv_compare.h"/>
+      <File Name="../../../../src/cove/barn/cv_minion.h"/>
+      <File Name="../../../../src/cove/barn/cv_ptr.h"/>
+      <File Name="../../../../src/cove/barn/cv_trail.cpp"/>
+      <File Name="../../../../src/cove/barn/cv_trail.h"/>
+      <File Name="../../../../src/cove/barn/xd_cxxopts.h"/>
+      <File Name="../../../../src/cove/barn/xd_valuestr.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="silo">
       <File Name="../../../../src/cove/silo/cv_crate.h"/>
@@ -42,6 +49,30 @@
       <File Name="../../../../src/cove/silo/cv_arena.h"/>
       <File Name="../../../../src/cove/silo/cv_slist.h"/>
       <File Name="../../../../src/cove/silo/cv_vecop.h"/>
+      <File Name="../../../../src/cove/silo/cv_arena1.h"/>
+      <File Name="../../../../src/cove/silo/cv_arenatools.h"/>
+      <File Name="../../../../src/cove/silo/cv_iota.cpp"/>
+      <File Name="../../../../src/cove/silo/cv_iota.h"/>
+      <File Name="../../../../src/cove/silo/cv_pack.h"/>
+      <File Name="../../../../src/cove/silo/cv_stadium.h"/>
+      <File Name="../../../../src/cove/silo/cv_traversor.h"/>
+      <File Name="../../../../src/cove/silo/cv_tuple.h"/>
+      <File Name="../../../../src/cove/silo/cv_typebouqet.cpp"/>
+      <File Name="../../../../src/cove/silo/cv_typebouqet.h"/>
+      <File Name="../../../../src/cove/silo/cv_typecask.cpp"/>
+      <File Name="../../../../src/cove/silo/cv_typecask.h"/>
+      <File Name="../../../../src/cove/silo/cv_typechest.h"/>
+      <File Name="../../../../src/cove/silo/cv_typeusher.cpp"/>
+      <File Name="../../../../src/cove/silo/cv_typeusher.h"/>
+    </VirtualDirectory>
+    <VirtualDirectory Name="flux">
+      <File Name="../../../../src/cove/flux/cv_flume.cpp"/>
+      <File Name="../../../../src/cove/flux/cv_flume.h"/>
+      <File Name="../../../../src/cove/flux/cv_spritz.cpp"/>
+      <File Name="../../../../src/cove/flux/cv_spritz.h"/>
+      <File Name="../../../../src/cove/flux/cv_xdoclistener.h"/>
+      <File Name="../../../../src/cove/flux/cv_xmlencoder.cpp"/>
+      <File Name="../../../../src/cove/flux/cv_xmlencoder.h"/>
     </VirtualDirectory>
   </VirtualDirectory>
   <Description/>

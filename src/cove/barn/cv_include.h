@@ -56,6 +56,20 @@
 
 #define CV_CONCAT(s,t)      CV_MAKESTR(s##t)
 
+#ifdef _MSC_VER
+
+#pragma warning( disable :4355)
+#pragma warning( disable :4996)
+
+#define CV_FUNCNAME()       Cv_CStr( __FUNCTION__)
+
+#else
+
+#define CV_FUNCNAME()       Cv_Aid::TrimFuncName( __PRETTY_FUNCTION__)
+
+#endif
+
+
 template < typename T>
 T       *cv_pcast( const void *data) { return static_cast< T *>( const_cast< void *>( data)); }
 

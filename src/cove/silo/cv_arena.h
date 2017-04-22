@@ -58,15 +58,17 @@ public:
     bool        IsClean( void) const { return Cv_Frager< 0, 1>(m_Info.Load()).Get(); }
     void        SetClean( bool t) { m_Info.Store(Cv_Frager< 0, 1>(m_Info.Load()).Set(t)); }
      
+template < class X>
+    X           *PagePtr( void) const {  return reinterpret_cast< X*>( ( void *) &m_Page[ 0]); }
 
 template < class X>
-    const X     &AccAt(uint32_t i) const { return reinterpret_cast< X*>( &m_Page[0])[i]; }
+    const X     &AccAt(uint32_t i) const { return PagePtr< X>()[i]; }
 
 template < class X>
-    X           *PtrAt(uint32_t i) { return &reinterpret_cast< X*>( &m_Page[0])[i]; }
+    X           *PtrAt(uint32_t i) { return &( PagePtr< X>())[i]; }
 
 template < class X>
-    void        SetAt(uint32_t i, const X &x) { reinterpret_cast< X*>( &m_Page[0])[i] = x; }
+    void        SetAt(uint32_t i, const X &x) { PagePtr< X>()[i] = x; }
 
     bool    Evict( Arena *arena)    
     {
