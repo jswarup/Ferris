@@ -109,9 +109,9 @@ struct Ru_Site : public Ru_TSite< Module>
 //_____________________________________________________________________________________________________________________________
 
 template < typename...  T>
-struct Ru_Compound : public Cv_Tuple< Ru_Site< T>...>
+struct Ru_Compound : public Cv_Tuple< typename T::Site...>
 {
-    typedef Cv_Tuple< Ru_Site< T>...>  Base;
+    typedef Cv_Tuple< typename T::Site...>  Base;
 
     Ru_Compound( Ru_RubeSite *master)
         : Base( master)

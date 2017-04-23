@@ -3,18 +3,17 @@
 
 //_____________________________________________________________________________________________________________________________
 
-#include	"cove/barn/cv_minion.h" 
-#include	"cove/barn/cv_stdsupport.h"
-#include	"cove/barn/cv_shared.h"
-#include	"cove/barn/cv_cexpr.h"
-#include	"cove/barn/cv_aid.h"
-#include	"cove/barn/cv_frager.h"
-#include	"cove/silo/cv_slist.h" 
-#include    "cove/silo/cv_tuple.h"
-
+#include    "cove/silo/cv_arena.h"
+#include    "cove/silo/cv_extent.h"
 //_____________________________________________________________________________________________________________________________
 
 
+class Cv_Stadium 
+{
+        Cv_FileArena< uint64_t, true, 10, 10, 12>   m_FileArena;
+        Cv_Extent< uint32_t>                        m_Extent;
+       
+};
 
 //_____________________________________________________________________________________________________________________________
 

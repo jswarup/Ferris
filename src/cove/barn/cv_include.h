@@ -62,10 +62,14 @@
 #pragma warning( disable :4996)
 
 #define CV_FUNCNAME()       Cv_CStr( __FUNCTION__)
+#define CV_FSEEK            _fseeki64
+#define CV_FTELL            _ftelli64
 
 #else
 
 #define CV_FUNCNAME()       Cv_Aid::TrimFuncName( __PRETTY_FUNCTION__)
+#define CV_FSEEK            fseek
+#define CV_FTELL            ftell
 
 #endif
 

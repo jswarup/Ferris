@@ -6,6 +6,7 @@
 #include    "cove/silo/cv_vecop.h"
 #include    "cove/silo/cv_arena.h"
 #include    "cove/silo/cv_stadium.h"
+#include    "cove/net/cv_graphnode.h"
 
 //_____________________________________________________________________________________________________________________________
 
@@ -13,8 +14,9 @@ void TestArena( void)
 {
     typedef  Cv_FileArena< uint32_t, false, 4, 5, 6>    Arena;
     
-    bool                                    freshFLg = true;
-    Arena                                   arena( "test.sge", freshFLg);
+    bool            freshFLg = true;
+    FILE            *fp = fopen( "test.sge", !freshFLg && Cv_Aid::FileExists( "test.sge") ? "r+b" :  "w+b");                   // if the file exists and user intends to use it
+    Arena           arena( fp, 0);
 
     //typedef  Cr_Arena< uint32_t, false, 4, 5, 6>    Arena;
     //Arena                                           arena;
@@ -38,6 +40,12 @@ void TestArena( void)
 void    TestAdder( void)
 {
     Ru_HalfAdder::Site   rr( nullptr) ;
+}
+
+//_____________________________________________________________________________________________________________________________
+
+void    TestVecOp( void)
+{
     std::cout << "OK\n";
 
     auto    b = Cv_TupleTools::Make( 2, 4, 7);

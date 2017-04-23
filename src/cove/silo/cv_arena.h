@@ -152,28 +152,28 @@ template < typename MemStall>
 //_____________________________________________________________________________________________________________________________
 
 template< class Arena, class Parent, typename LeafType, uint8_t... Rest>
-class Cv_ArenaStall;
+class Cv_MemStall;
 
 template < class Arena, class Parent, typename LeafType, uint8_t SzBits, uint8_t... Rest>
-class Cv_ArenaStall< Arena, Parent, LeafType, SzBits, Rest...>  : 
-	public Cv_BranchStall< Arena, Parent, SzBits, Cv_ArenaStall< Arena, Cv_ArenaStall< Arena, Parent, LeafType, SzBits, Rest...>, LeafType, Rest...> >
+class Cv_MemStall< Arena, Parent, LeafType, SzBits, Rest...>  : 
+	public Cv_BranchStall< Arena, Parent, SzBits, Cv_MemStall< Arena, Cv_MemStall< Arena, Parent, LeafType, SzBits, Rest...>, LeafType, Rest...> >
 {	
 public:
-	typedef Cv_BranchStall< Arena, Parent, SzBits, Cv_ArenaStall< Arena, Cv_ArenaStall< Arena, Parent, LeafType, SzBits, Rest...>, LeafType, Rest...> >		BaseStall;
+	typedef Cv_BranchStall< Arena, Parent, SzBits, Cv_MemStall< Arena, Cv_MemStall< Arena, Parent, LeafType, SzBits, Rest...>, LeafType, Rest...> >		BaseStall;
 	
-    Cv_ArenaStall( Parent *parent, uint16_t pParentlink)
+    Cv_MemStall( Parent *parent, uint16_t pParentlink)
         : BaseStall( parent, pParentlink)
     {}
 };
 
 
 template < class Arena, class Parent, typename LeafType, uint8_t SzBits>
-class Cv_ArenaStall< Arena, Parent, LeafType, SzBits> : public  Cv_HeapStall< Arena, Parent, LeafType, SzBits>
+class Cv_MemStall< Arena, Parent, LeafType, SzBits> : public  Cv_HeapStall< Arena, Parent, LeafType, SzBits>
 {	
 public:
     typedef Cv_HeapStall< Arena, Parent, LeafType, SzBits> 	BaseStall;
 	
-    Cv_ArenaStall( Parent *parent, uint16_t pParentlink)
+    Cv_MemStall( Parent *parent, uint16_t pParentlink)
         : BaseStall( parent, pParentlink)
     {}
 };
@@ -184,7 +184,7 @@ template< class Arena, class LeafType, bool MTh, uint8_t... Rest>
 class Cv_BaseArena : public Cv_Shared< MTh>
 {
 public:
-    typedef Cv_ArenaStall< Arena, Arena, LeafType, Rest...>     RootStall;
+    typedef Cv_MemStall< Arena, Arena, LeafType, Rest...>     RootStall;
     
     enum 
     {
@@ -269,19 +269,22 @@ class Cv_Arena : public Cv_BaseArena< Cv_Arena< LeafType, MT, Rest...>, LeafType
 template< class LeafType, bool MT, uint8_t... Rest>
 class Cv_FileArena : public Cv_BaseArena< Cv_FileArena< LeafType, MT, Rest...>, LeafType, MT, Rest...>
 {
-    FILE    *m_Fp;
-  
+    FILE        *m_Fp;
+    uint64_t    m_Offset;
+
 public:
     typedef Cv_BaseArena< Cv_FileArena< LeafType, MT, Rest...>, LeafType, MT, Rest...> 		BaseArena;
 	typedef typename BaseArena::RootStall                                                   RootStall;
 
-    Cv_FileArena( const char *nm, bool freshFlg)
+/*
+    Cv_FileArena( const char *nm, uint64_t offset = )
+        : m_Offset( 0)
     {
-        m_Fp = fopen( nm, !freshFlg && Cv_Aid::FileExists( nm) ? "r+b" :  "w+b");                   // if the file exists and user intends to use it
+        
     }    
-
-    Cv_FileArena( FILE  *f) 
-        :  m_Fp( f)
+*/
+    Cv_FileArena( FILE  *f, uint64_t offset = CV_UINT64_MAX) 
+        :  m_Fp( f), m_Offset( offset)
     {}    
 	
     RootStall   *FetchTopStall( void)
@@ -289,12 +292,18 @@ public:
         if ( !BaseArena::m_TopStall)
         {
             RootStall   *rootStall =  BaseArena::FetchTopStall();
-            rootStall->m_FileOffset.Store( 0);
-            fseek( m_Fp, 0L, SEEK_END );
-            if ( ftell( m_Fp))
-                ReloadStall( rootStall );
-            else
+            if ( m_Offset == CV_UINT64_MAX)
+            {
+                int     res = CV_FSEEK( m_Fp, 0L, SEEK_END );
+                CV_ERROR_ASSERT( res == 0)
+                rootStall->m_FileOffset.Store( m_Offset = CV_FTELL( m_Fp));
                 ScrubStall( rootStall);
+            } else 
+            {
+                CV_FSEEK( m_Fp, m_Offset, SEEK_SET); 
+                rootStall->m_FileOffset.Store( m_Offset);
+                ReloadStall( rootStall );
+            }
         }
         return BaseArena::m_TopStall;
     }
@@ -303,12 +312,12 @@ public:
     class Janitor
     {
     public:
-        Cv_Atomic< uint32_t, MT>        m_FileOffset;
+        Cv_Atomic< uint64_t, MT>        m_FileOffset;
             
         Janitor( void) 
-            : m_FileOffset( CV_UINT32_MAX) {}
+            : m_FileOffset( CV_UINT64_MAX) {}
 
-        void        PreserveRef( uint64_t off)     {  m_FileOffset.Store( !off ? CV_UINT32_MAX : ( off & ~0x1)); }
+        void        PreserveRef( uint64_t off)     {  m_FileOffset.Store( !off ? CV_UINT64_MAX : ( off & ~0x1)); }
         uint64_t    GrabRef( void) const { return m_FileOffset.Load() | 0x1; }
     };
 
@@ -320,8 +329,8 @@ public:
 template < typename MemStall>
     void    ReloadStall( MemStall  *spot)
     {
-        fseek( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );
-        CV_DEBUG_ASSERT( spot->m_FileOffset.Load() == ftell( m_Fp))
+        CV_FSEEK( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );
+        CV_DEBUG_ASSERT( spot->m_FileOffset.Load() == CV_FTELL( m_Fp))
 	    size_t    nRd = fread( spot->template PtrAt< uint8_t>( 0), MemStall::PageSz, 1, m_Fp);
         CV_ERROR_ASSERT( nRd == 1)
         return;
@@ -333,17 +342,17 @@ template < typename MemStall>
 template < typename MemStall>
     void    ScrubStall( MemStall  *spot)
     {
-        if ( spot->m_FileOffset.Load() == CV_UINT32_MAX)                                    // if has not been written to file write the chunk to file
+        if ( spot->m_FileOffset.Load() == CV_UINT64_MAX)                                    // if has not been written to file write the chunk to file
 	    {
-            int     res = ::fseek( m_Fp, 0L, SEEK_END );                                    // go to the end of file
+            int     res = CV_FSEEK( m_Fp, 0L, SEEK_END );                                    // go to the end of file
             CV_ERROR_ASSERT( res == 0)
-            spot->m_FileOffset.Store( uint32_t( ::ftell( m_Fp)));                           // store the file-location in the Stall
+            spot->m_FileOffset.Store( CV_FTELL( m_Fp));                           // store the file-location in the Stall
             size_t    nWr = fwrite(  spot->template PtrAt< uint8_t>( 0), 1, MemStall::PageSz, m_Fp);           // write the chunk to file
             CV_ERROR_ASSERT( nWr == 1)
             return;
         } 
 
-        int         res = fseek( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );               // go to the file-offset 
+        int         res = CV_FSEEK( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );               // go to the file-offset 
         CV_ERROR_ASSERT( res == 0)
         size_t      nWr = fwrite( spot->template PtrAt< uint8_t>( 0), MemStall::PageSz, 1,  m_Fp);             // write the page content.
         CV_ERROR_ASSERT( nWr == 1)
