@@ -11,20 +11,14 @@ protected:
 	X		m_End;		// exclusive
 
 public:
-	//---------------------------------------------------------------------------------------------
-
 	Cv_Range( const X &begin, const X &end)
 		: m_Begin( begin), m_End( end) 
 	{}
-
-	//_____________________________________________________________________________________________________________________________
 
 
 	Cv_Range( const Cv_Range &ex)
 		: m_Begin( ex.m_Begin), m_End( ex.m_End) 
 	{}
-
-	//_____________________________________________________________________________________________________________________________
 
 	
 	const X		&Begin( void) const { return m_Begin; }
@@ -32,42 +26,29 @@ public:
 
     X           Length( void) const { return m_End - m_Begin; }
 
-	//_____________________________________________________________________________________________________________________________
+	bool 		IsInside( const X &x) const { return ( m_Begin <= x) && ( x < m_End); }     // is value within the range
 
-
-	bool 		IsInside( const X &x) const { return ( m_Begin <= x) && ( x < m_End); }
-
-	//_____________________________________________________________________________________________________________________________
-
-
-	bool operator==( const Cv_Range< X> &ex) const { return ( m_Begin == ex.m_Begin) && ( m_End == ex.m_End); }
-
-	//_____________________________________________________________________________________________________________________________
+	bool    operator==( const Cv_Range< X> &ex) const { return ( m_Begin == ex.m_Begin) && ( m_End == ex.m_End); }  // are the range same
 
 	
-	friend std::ostream &operator<<( std::ostream &os, const Cv_Range< X> &range)
+    friend std::ostream &operator<<( std::ostream &os, const Cv_Range< X> &range)           // dump the Range
 	{
 		os << "[ " << range.Begin() << " : " << range.End() << "]";
 		return os;
 	}
 
-    //_____________________________________________________________________________________________________________________________
-
-	
-	struct Cmp
+    struct Cmp
     {
-	    bool operator()( const Cv_Range< X> &ex1, const Cv_Range< X> &ex2) const 
+	    bool operator()( const Cv_Range< X> &ex1, const Cv_Range< X> &ex2) const            // ranges are ordered by their initial values.
         { 
             return ex1.Begin() < ex2.Begin(); 
         }
     };
     
-    //_____________________________________________________________________________________________________________________________
-
 };
 
 //_____________________________________________________________________________________________________________________________
-
+// Extent store the subsets of the one-dimensional integer line.
 
 template < class X>
 class Cv_Extent : public std::vector< Cv_Range< X> >
@@ -79,15 +60,13 @@ public:
 
     struct CmpExtent
     {
-	    bool operator()( const Cv_Range< X> &ex1, const Cv_Range< X> &ex2) const 
+	    bool operator()( const Cv_Range< X> &ex1, const Cv_Range< X> &ex2) const            // if begin are same check the end
         { 
             return ( ex1.Begin() < ex2.Begin()) || !(ex1.Begin() > ex2.Begin()) ||  ( ex1.End() < ex2.End()); 
         }
     };
     
-    //_____________________________________________________________________________________________________________________________
-
-
+    
 	Iterator		Find( X x, bool *pFound, Iterator f)
 	{
 		*pFound = false;
@@ -97,12 +76,12 @@ public:
 
 		if ( p == Base::end()) 						// not found
 		{
-			if (( p != Base::begin()) && ( *pFound = ( x < ( p -1)->End())))	// test predecessor
+			if (( p != Base::begin()) && ( *pFound = ( x < ( p -1)->End())))	// test if it lies within the last
 				return ( p -1);
-			return p;							// *pFound = false;
+			return p;							    // *pFound = false;
 		}
 		if ( (*pFound = ( p->Begin() == x)))		// x matches begin
-			return p;							// *pFound = true;
+			return p;							    // *pFound = true;
 		
 		// case where begin > x 
 		if ( p == Base::begin())						// we do not have anything before

@@ -10,8 +10,12 @@
 
 class Cv_Stadium 
 {
-        Cv_FileArena< uint64_t, true, 10, 10, 12>   m_FileArena;
-        Cv_Extent< uint32_t>                        m_Extent;
+    Cv_FileArena< uint64_t, true, 10, 10, 12>   m_FileArena;
+    Cv_Extent< uint32_t>                        m_Extent;
+public:
+    Cv_Stadium( void)
+    {}
+    
        
 };
 
