@@ -44,6 +44,7 @@
     <ClInclude Include="..\..\..\src\cove\silo\cv_typechest.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_typeusher.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_vecop.h" />
+    <ClInclude Include="..\..\..\src\cove\silo\cv_vector.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\cove\barn\cv_aid.cpp" />

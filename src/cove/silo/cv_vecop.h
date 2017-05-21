@@ -21,21 +21,21 @@ public:
             : m_Vec( vec), m_Lambda( lambda)
         {}
 		
-        uint32_t    Size( void) { return  m_Vec.Size(); }
+        uint32_t    Size( void) { return  m_Vec.size(); }
 
         auto        GetLambda( void) const { return m_Lambda; } 
- /*
+  
     template < typename... X>
-        auto    Reduce( X... args) const
+        auto        Reduce( X... args) const
         {
-            std::vector< decltype( m_Lambda)>   retVec( m_Vec.Size()); 
+            std::vector< decltype( m_Lambda)>   retVec( m_Vec.size()); 
             for ( uint32_t i = 0; i < retVec.size(); ++i)
             {
                 auto    redVec = m_Vec.Reduce( args...);
             }
             return  retVec;
         }
-   */ 
+  
     };
 
     //_____________________________________________________________________________________________________________________________
@@ -59,7 +59,7 @@ public:
         auto        GetLambda( void) const { return m_Lambda; } 
 
     template < typename... X>
-        auto    Reduce( X... args) const
+        auto        Reduce( X... args) const
         {
             auto                    redVec = m_Vec.Reduce( args...);
             std::vector< decltype( m_Lambda)>   retVec( m_Vec.Size()); 

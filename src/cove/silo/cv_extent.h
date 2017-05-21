@@ -28,109 +28,70 @@ public:
 
 	bool 		IsInside( const X &x) const { return ( m_Begin <= x) && ( x < m_End); }     // is value within the range
 
-	bool    operator==( const Cv_Range< X> &ex) const { return ( m_Begin == ex.m_Begin) && ( m_End == ex.m_End); }  // are the range same
-
+    int32_t     Compare( const Cv_Range &a) const
+                {  return ( m_Begin == a.m_Begin) ? (( m_End == a.m_End) ? 0 : (( m_End < a.m_End) ? -1 : 1)) : (( m_Begin < a.m_Begin) ? -1 : 1); }
 	
     friend std::ostream &operator<<( std::ostream &os, const Cv_Range< X> &range)           // dump the Range
 	{
 		os << "[ " << range.Begin() << " : " << range.End() << "]";
 		return os;
 	}
-
-    struct Cmp
-    {
-	    bool operator()( const Cv_Range< X> &ex1, const Cv_Range< X> &ex2) const            // ranges are ordered by their initial values.
-        { 
-            return ex1.Begin() < ex2.Begin(); 
-        }
-    };
-    
 };
 
 //_____________________________________________________________________________________________________________________________
 // Extent store the subsets of the one-dimensional integer line.
 
 template < class X>
-class Cv_Extent : public std::vector< Cv_Range< X> >
+class Cv_Extent  
 {
-public:
-	typedef typename std::vector< Cv_Range< X> >          			Base;
-	typedef typename std::vector< Cv_Range< X> >::iterator          Iterator;
-	typedef typename std::vector< Cv_Range< X> >::const_iterator	CIterator;
+    std::vector< X>         m_Knots;
+    std::vector< bool>      m_AllocBits;
+    
+public: 
 
-    struct CmpExtent
+	Cv_Extent( void)
     {
-	    bool operator()( const Cv_Range< X> &ex1, const Cv_Range< X> &ex2) const            // if begin are same check the end
-        { 
-            return ( ex1.Begin() < ex2.Begin()) || !(ex1.Begin() > ex2.Begin()) ||  ( ex1.End() < ex2.End()); 
+        m_Knots.push_back( X( 0));                                                  // [ 0, ) is free
+        m_AllocBits.push_back( false);
+    }   
+    
+    X   Allocate( uint32_t sz)
+    {
+        for ( uint32_t i = 0, k = 1; i < m_AllocBits.size(); ++i, ++k)              // i => interval, k = i +1 
+        {
+            if ( m_AllocBits[ i])                                                   // [ K[i], ] is is not free, continue
+                continue;   
+
+            if (( k == m_AllocBits.size()) || ( sz < ( m_Knots[ k] -m_Knots[ i])))  // if we are at the last interval, it is by default free and  infinite.
+            {                                                                       // or the gap for the free is big enough. 
+                CV_ERROR_ASSERT( i == 0 || m_AllocBits[ i -1])                      // assert either it is first interval or pervious one was not free.    
+                X       x = m_Knots[ i];
+                m_Knots[ i] += sz;
+                return x;
+            }
+            if ( ( m_Knots[ k] -m_Knots[ i]) < sz)
+                continue;
+
+            CV_ERROR_ASSERT( m_AllocBits[ k])                                      // the next interval is occupied
+            X       x = m_Knots[ i];
+            m_Knots.erase(  m_Knots.begin() +i);
+            m_AllocBits.erase(  m_AllocBits.begin() +i);
+            return x;
         }
-    };
-    
-    
-	Iterator		Find( X x, bool *pFound, Iterator f)
-	{
-		*pFound = false;
-		
-		Cv_Range< X>	range( x, x +1);
-		Iterator		p = std::lower_bound( f, Base::end(), range, CmpExtent());
+        return X( -1);
+    }
 
-		if ( p == Base::end()) 						// not found
-		{
-			if (( p != Base::begin()) && ( *pFound = ( x < ( p -1)->End())))	// test if it lies within the last
-				return ( p -1);
-			return p;							    // *pFound = false;
-		}
-		if ( (*pFound = ( p->Begin() == x)))		// x matches begin
-			return p;							    // *pFound = true;
-		
-		// case where begin > x 
-		if ( p == Base::begin())						// we do not have anything before
-			return p;
-		if ( !!( *pFound = ( x  < ( p -1)->End())))	// begin of Prev < x : check if it contains x
-			return p -1;						// *pFound = true;
-		return p;
-	}
-
-	Iterator		Find( X x, bool *pFound) { return Find( x, pFound, Base::begin()); }
-
-	//_____________________________________________________________________________________________________________________________
-
-	
-	Iterator	Insert( const Cv_Range< X> &range)
-	{
-		bool			fFound = false;
-		Iterator		fIt = Find( range.Begin(), &fFound, Base::begin());
-		
-		if ( fIt == Base::end())						// insert if not found..
-			return Base::insert( fIt, range);			// fFound is false anyway 
-
-		if ( !fFound && fIt != Base::begin() &&		// move fIt to predecessor if range sticks to its End.
-			( fFound = (( fIt -1)->End() == range.Begin())))
-			--fIt;
-
-		bool			lFound = false;
-		Iterator		lIt = Find( range.End() -1, &lFound, fIt);
-
-		if ( !fFound && !lFound && ( fIt == lIt))	// range is an isolated entry
-			return Base::insert( fIt, range);
-
-		// update the first and remove the rest
-		*fIt = Cv_Range< X>( fFound ? fIt->Begin() : range.Begin(), lFound ? lIt->End() : range.End());
-		if ( lFound)
-			++lIt;
-		return Base::erase( ++fIt, lIt);			
-	}
-
-	//_____________________________________________________________________________________________________________________________
-
-	
-	friend std::ostream &operator<<( std::ostream &os, const Cv_Extent< X> &ex)
-	{
-		for ( CIterator it = ex.begin(); it != ex.end(); ++it)
-			os << *it << ",";
-		os << std::endl;
-		return os;
-	}
+    X   Deallocate( X x, uint32_t sz)
+    {
+        std::vector< X>::iterator   it = std::lower_bound( m_Knots.begin(), m_Knots.end(), x);
+        CV_ERROR_ASSERT( it != m_Knots.end());
+        if ( *it == x)
+        {
+            auto    i =  it -m_Knots.begin();
+            CV_ERROR_ASSERT(  m_AllocBits[ i])  
+                
+        }
+    }
 };
 
 //_____________________________________________________________________________________________________________________________
