@@ -13,7 +13,11 @@
 
 void TestArena( void)
 {
-    typedef  Cv_FileArena< uint32_t, false, 4, 5, 6>    Arena;
+    struct ArenaTraits
+    {
+
+    } ;
+    typedef  Cv_FileArena< ArenaTraits, uint32_t, false, 4, 5, 6>    Arena;
     
     bool            freshFLg = true;
     FILE            *fp = fopen( "test.sge", !freshFLg && Cv_Aid::FileExists( "test.sge") ? "r+b" :  "w+b");                   // if the file exists and user intends to use it
@@ -61,15 +65,19 @@ void    TestVecOp( void)
     auto    b = Cv_TupleTools::Make( 2, 4, 7);
     auto    c = b.Compose( lm);
     auto    d = c.Invoke( 6, 5);  
-    
+
     std::vector< int>   vec = { 1, 2, 4, 7};
     Cv_Vector< int>     cvec( vec);
-    cvec.Compose( lm);
+ 
+    auto                test = Cv_VectorTools::Construct( lm);
+
+ /*   cvec.Compose( lm);
+
 
     auto    v1 = Cv_VecOp::Make( vec, []( auto val) { return 3 * val; });
     auto    v2 = Cv_VecOp::Make( v1, []( auto val) { return 7 * val; });
     auto    v3 = Cv_VecOp::Make( v2, []( auto val) { return 11 * val; });
-
+ */
     return;
 } 
 
@@ -90,7 +98,7 @@ int main( int argc, char *argv[])
     TestArena();
     TestAdder();
     TestExtent();
-
+    TestVecOp();
     return 0;
 }
 
