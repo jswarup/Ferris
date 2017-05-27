@@ -19,7 +19,7 @@
 //      SzBits : Number of bits used to address the objects
 
 template < class ArenaTraits, class Arena, class ParentStall, typename TValueType , uint32_t SzBits>
-class Cv_HeapStall : public Cv_Shared< Arena::MT>, public Cv_Minion< ParentStall>, public Arena::Janitor,
+class Cv_HeapStall : public Cv_Shared< ArenaTraits::MT>, public Cv_Minion< ParentStall>, public Arena::Janitor,
                      public Cv_PtrIteratorImpl< Cv_HeapStall< ArenaTraits, Arena, ParentStall, TValueType, SzBits>>
 {
 public:
@@ -36,8 +36,8 @@ public:
     typedef Cv_HeapStall                    LeafStall; 
     
 protected:
-    Cv_Atomic< uint16_t, Arena::MT>        m_Info;                 	// 15-bit for offset in Parent and 1-bit for clean status; Max of 32K addresses support 
-    uint8_t                                m_Page[ PageSz];
+    Cv_Atomic< uint16_t, ArenaTraits::MT>   m_Info;                 	// 15-bit for offset in Parent and 1-bit for clean status; Max of 32K addresses support 
+    uint8_t                                 m_Page[ PageSz];
 
 public:
 	Cv_HeapStall( Parent *parent, uint16_t pParentlink, const ValueType &iVal = Cv_CExpr::InitVal< ValueType>())
@@ -180,16 +180,13 @@ public:
 
 //_____________________________________________________________________________________________________________________________ 
 
-template< class ArenaTraits, class Arena, class LeafType, bool MTh, uint8_t... Rest>
-class Cv_BaseArena : public Cv_Shared< MTh>
+template< class ArenaTraits, class Arena, class LeafType, uint8_t... Rest>
+class Cv_BaseArena : public Cv_Shared< ArenaTraits::MT>
 {
 public:
     typedef Cv_MemStall< ArenaTraits, Arena, Arena, LeafType, Rest...>     RootStall;
     
-    enum 
-    {
-        MT = MTh,
-    };
+ 
     
     constexpr static uint32_t               SzMask( void) { return  RootStall::SzMask; }
      
@@ -258,22 +255,22 @@ template < typename MemStall>
 //_____________________________________________________________________________________________________________________________
 
 
-template< class ArenaTraits, class LeafType, bool MT, uint8_t... Rest>
-class Cv_Arena : public Cv_BaseArena< ArenaTraits, Cv_Arena< ArenaTraits,  LeafType, MT, Rest...>, LeafType, MT, Rest...>
+template< class ArenaTraits, class LeafType, uint8_t... Rest>
+class Cv_Arena : public Cv_BaseArena< ArenaTraits, Cv_Arena< ArenaTraits,  LeafType, Rest...>, LeafType, Rest...>
 {
 };
 
 //_____________________________________________________________________________________________________________________________
 
 
-template< class ArenaTraits, class LeafType, bool MT, uint8_t... Rest>
-class Cv_FileArena : public Cv_BaseArena< ArenaTraits, Cv_FileArena< ArenaTraits, LeafType, MT, Rest...>, LeafType, MT, Rest...>
+template< class ArenaTraits, class LeafType, uint8_t... Rest>
+class Cv_FileArena : public Cv_BaseArena< ArenaTraits, Cv_FileArena< ArenaTraits, LeafType, Rest...>, LeafType, Rest...>
 {
     FILE        *m_Fp;
     uint64_t    m_Offset;
 
 public:
-    typedef Cv_BaseArena< ArenaTraits, Cv_FileArena< ArenaTraits, LeafType, MT, Rest...>, LeafType, MT, Rest...> 		BaseArena;
+    typedef Cv_BaseArena< ArenaTraits, Cv_FileArena< ArenaTraits, LeafType, Rest...>, LeafType, Rest...> 		BaseArena;
 	typedef typename BaseArena::RootStall                                                   RootStall;
 
 /*
@@ -312,7 +309,7 @@ public:
     class Janitor
     {
     public:
-        Cv_Atomic< uint64_t, MT>        m_FileOffset;
+        Cv_Atomic< uint64_t, ArenaTraits::MT>        m_FileOffset;
             
         Janitor( void) 
             : m_FileOffset( CV_UINT64_MAX) {}
