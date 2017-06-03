@@ -306,21 +306,6 @@ public:
     }
 
 
-    class Janitor
-    {
-    public:
-        Cv_Atomic< uint64_t,  MT>        m_FileOffset;
-            
-        Janitor( void) 
-            : m_FileOffset( CV_UINT64_MAX) {}
-
-        void        PreserveRef( uint64_t off)     {  m_FileOffset.Store( !off ? CV_UINT64_MAX : ( off & ~0x1)); }
-        uint64_t    GrabRef( void) const { return m_FileOffset.Load() | 0x1; }
-    };
-
-
-    bool    IsOnHeap(  void *s) { return !!s && !( uint64_t( s) & 0x1); }
-
     //_____________________________________________________________________________________________________________________________
 
 template < typename MemStall>
@@ -355,6 +340,25 @@ template < typename MemStall>
         CV_ERROR_ASSERT( nWr == 1)
         return;
     }
+
+    //_____________________________________________________________________________________________________________________________
+
+    class Janitor
+    {
+    public:
+        Cv_Atomic< uint64_t,  MT>        m_FileOffset;
+            
+        Janitor( void) 
+            : m_FileOffset( CV_UINT64_MAX) {}
+
+        void        PreserveRef( uint64_t off)     {  m_FileOffset.Store( !off ? CV_UINT64_MAX : ( off & ~0x1)); }
+        uint64_t    GrabRef( void) const { return m_FileOffset.Load() | 0x1; }
+    };
+
+    
+    bool    IsOnHeap(  void *s) { return !!s && !( uint64_t( s) & 0x1); }
+
+    
 };
 
 //_____________________________________________________________________________________________________________________________
