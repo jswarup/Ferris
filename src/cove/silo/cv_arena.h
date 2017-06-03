@@ -18,9 +18,9 @@
 //      TValueType : Pages hold the objects of of this type
 //      SzBits : Number of bits used to address the objects
 
-template < class ArenaTraits, class Arena, class ParentStall, typename TValueType , uint32_t SzBits>
-class Cv_HeapStall : public Cv_Shared< ArenaTraits::MT>, public Cv_Minion< ParentStall>, public Arena::Janitor,
-                     public Cv_PtrIteratorImpl< Cv_HeapStall< ArenaTraits, Arena, ParentStall, TValueType, SzBits>>
+template < class Arena, class ParentStall, typename TValueType , uint32_t SzBits>
+class Cv_HeapStall : public Cv_Shared< Arena::MT>, public Cv_Minion< ParentStall>, public Arena::Janitor,
+                     public Cv_PtrIteratorImpl< Cv_HeapStall< Arena, ParentStall, TValueType, SzBits>>
 {
 public:
     enum
@@ -36,7 +36,7 @@ public:
     typedef Cv_HeapStall                    LeafStall; 
     
 protected:
-    Cv_Atomic< uint16_t, ArenaTraits::MT>   m_Info;                 	// 15-bit for offset in Parent and 1-bit for clean status; Max of 32K addresses support 
+    Cv_Atomic< uint16_t, Arena::MT>   m_Info;                 	// 15-bit for offset in Parent and 1-bit for clean status; Max of 32K addresses support 
     uint8_t                                 m_Page[ PageSz];
 
 public:
@@ -96,11 +96,11 @@ template < class X>
 //_____________________________________________________________________________________________________________________________
 // BranchStall are special HeapStall that store pointers to HeapStalls or offsets in the file
 
-template < class ArenaTraits, class Arena, class Parent, uint8_t SzBits, class SubChunk>
-class Cv_BranchStall :  public Cv_HeapStall< ArenaTraits, Arena, Parent, SubChunk *, SzBits>
+template < class Arena, class Parent, uint8_t SzBits, class SubChunk>
+class Cv_BranchStall :  public Cv_HeapStall< Arena, Parent, SubChunk *, SzBits>
 {
 public:
-    typedef Cv_HeapStall< ArenaTraits, Arena, Parent, SubChunk *, SzBits> 	BaseStall;
+    typedef Cv_HeapStall< Arena, Parent, SubChunk *, SzBits> 	BaseStall;
 	typedef typename SubChunk::Parent       					Derived;
     typedef typename SubChunk::LeafStall     					LeafStall; 
 	
@@ -151,15 +151,15 @@ template < typename MemStall>
 
 //_____________________________________________________________________________________________________________________________
 
-template< class ArenaTraits, class Arena, class Parent, uint8_t... Rest>
+template< class Arena, class Parent, uint8_t... Rest>
 class Cv_MemStall;
 
-template < class ArenaTraits, class Arena, class Parent, uint8_t SzBits, uint8_t... Rest>
-class Cv_MemStall< ArenaTraits, Arena, Parent, SzBits, Rest...>  : 
-	public Cv_BranchStall< ArenaTraits, Arena, Parent, SzBits, Cv_MemStall< ArenaTraits, Arena, Cv_MemStall< ArenaTraits, Arena, Parent, SzBits, Rest...>, Rest...> >
+template < class Arena, class Parent, uint8_t SzBits, uint8_t... Rest>
+class Cv_MemStall< Arena, Parent, SzBits, Rest...>  : 
+	public Cv_BranchStall< Arena, Parent, SzBits, Cv_MemStall< Arena, Cv_MemStall< Arena, Parent, SzBits, Rest...>, Rest...> >
 {	
 public:
-	typedef Cv_BranchStall< ArenaTraits, Arena, Parent, SzBits, Cv_MemStall< ArenaTraits, Arena, Cv_MemStall< ArenaTraits, Arena, Parent, SzBits, Rest...>, Rest...> >		BaseStall;
+	typedef Cv_BranchStall< Arena, Parent, SzBits, Cv_MemStall< Arena, Cv_MemStall< Arena, Parent, SzBits, Rest...>, Rest...> >		BaseStall;
 	
     Cv_MemStall( Parent *parent, uint16_t pParentlink)
         : BaseStall( parent, pParentlink)
@@ -167,11 +167,11 @@ public:
 };
 
 
-template < class ArenaTraits, class Arena, class Parent, uint8_t SzBits>
-class Cv_MemStall< ArenaTraits, Arena, Parent, SzBits> : public  Cv_HeapStall< ArenaTraits, Arena, Parent, typename ArenaTraits::LeafType, SzBits>
+template < class Arena, class Parent, uint8_t SzBits>
+class Cv_MemStall< Arena, Parent, SzBits> : public  Cv_HeapStall< Arena, Parent, typename Arena::LeafType, SzBits>
 {	
 public:
-    typedef Cv_HeapStall< ArenaTraits, Arena, Parent, typename ArenaTraits::LeafType, SzBits> 	BaseStall;
+    typedef Cv_HeapStall< Arena, Parent, typename Arena::LeafType, SzBits> 	BaseStall;
 	
     Cv_MemStall( Parent *parent, uint16_t pParentlink)
         : BaseStall( parent, pParentlink)
@@ -180,15 +180,17 @@ public:
 
 //_____________________________________________________________________________________________________________________________ 
 
-template< class ArenaTraits, class Arena, uint8_t... Rest>
-class Cv_BaseArena : public Cv_Shared< ArenaTraits::MT>
+template< class Arena, bool M, uint8_t... Rest>
+class Cv_BaseArena : public Cv_Shared<  M>
 {
 public:
-    typedef Cv_MemStall< ArenaTraits, Arena, Arena, Rest...>     RootStall;
+    enum {
+        MT = M
+    };
+
+    typedef Cv_MemStall< Arena, Arena, Rest...>     RootStall;
     
- 
-    
-    constexpr static uint32_t               SzMask( void) { return  RootStall::SzMask; }
+constexpr static uint32_t               SzMask( void) { return  RootStall::SzMask; }
      
 protected:
     RootStall                                           *m_TopStall;
@@ -255,31 +257,29 @@ template < typename MemStall>
 //_____________________________________________________________________________________________________________________________
 
 
-template< class ArenaTraits, uint8_t... Rest>
-class Cv_Arena : public Cv_BaseArena< ArenaTraits, Cv_Arena< ArenaTraits, Rest...>, Rest...>
+template< typename Leaf, bool M, uint8_t... Rest>
+class Cv_Arena : public Cv_BaseArena< Cv_Arena< Leaf, M, Rest...>, M, Rest...>
 {
+    typedef Leaf    LeafType;
 };
+
 
 //_____________________________________________________________________________________________________________________________
 
 
-template< class ArenaTraits, uint8_t... Rest>
-class Cv_FileArena : public Cv_BaseArena< ArenaTraits, Cv_FileArena< ArenaTraits, Rest...>, Rest...>
+template< typename Leaf, bool M, uint8_t... Rest>
+class Cv_FileArena : public Cv_BaseArena< Cv_FileArena< Leaf, M, Rest...>, M, Rest...>
 {
     FILE        *m_Fp;
     uint64_t    m_Offset;
 
 public:
-    typedef Cv_BaseArena< ArenaTraits, Cv_FileArena< ArenaTraits, Rest...>, Rest...> 		BaseArena;
-	typedef typename BaseArena::RootStall                                                   RootStall;
+    typedef Leaf    LeafType; 
 
-/*
-    Cv_FileArena( const char *nm, uint64_t offset = )
-        : m_Offset( 0)
-    {
-        
-    }    
-*/
+    typedef Cv_BaseArena< Cv_FileArena< Leaf, M, Rest...>, M, Rest...>      BaseArena;
+	typedef typename BaseArena::RootStall                                   RootStall;
+
+  
     Cv_FileArena( FILE  *f, uint64_t offset = CV_UINT64_MAX) 
         :  m_Fp( f), m_Offset( offset)
     {}    
@@ -309,7 +309,7 @@ public:
     class Janitor
     {
     public:
-        Cv_Atomic< uint64_t, ArenaTraits::MT>        m_FileOffset;
+        Cv_Atomic< uint64_t,  MT>        m_FileOffset;
             
         Janitor( void) 
             : m_FileOffset( CV_UINT64_MAX) {}

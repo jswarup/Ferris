@@ -13,14 +13,7 @@
 
 void TestArena( void)
 {
-    struct ArenaTraits
-    {
-        typedef uint32_t    LeafType;
-        enum {
-            MT = false
-        };
-    } ;
-    typedef  Cv_FileArena< ArenaTraits, 4, 5, 6>    Arena;
+    typedef  Cv_FileArena< uint32_t, false, 4, 5, 6>    Arena;
     
     bool            freshFLg = true;
     FILE            *fp = fopen( "test.sge", !freshFLg && Cv_Aid::FileExists( "test.sge") ? "r+b" :  "w+b");                   // if the file exists and user intends to use it
