@@ -24,7 +24,10 @@ public:
     
     virtual    bool        Write( const void *buf, uint32_t sz) = 0;
 
-    virtual    void         FlushAll( void)  = 0;
+    virtual    void        FlushAll( void)  = 0;
+    
+    virtual   uint32_t    SaveBuffer( uint32_t fOff, const void *buf, uint32_t sz) = 0;
+    virtual   void        RestoreBuffer( uint32_t fOff, void *buf, uint32_t sz) = 0;
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -42,13 +45,12 @@ protected:
     FILE        *m_Fp;
     Facet       m_Facet;
     uint32_t    m_Offset;
-    uint32_t    m_Size;
-
+    
 public:
     Cv_FileSpritz( const Cv_CStr &fname, Facet facet);
     ~Cv_FileSpritz( void);
 
-    uint32_t    Size( void) const { return m_Size; }
+    uint32_t    Size( void) const;
 
     uint32_t    Offset( void) const { return m_Offset; }
 
@@ -61,6 +63,10 @@ public:
     bool        Write( const void *buf, uint32_t sz);
 
     void        FlushAll( void);
+
+    uint32_t    SaveBuffer( uint32_t fOff, const void *buf, uint32_t sz);
+
+    void        RestoreBuffer( uint32_t fOff, void *buf, uint32_t sz);
 };
 
 //_____________________________________________________________________________________________________________________________

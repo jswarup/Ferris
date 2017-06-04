@@ -6,9 +6,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifndef CV_WINDOWS
-#include <unistd.h>
-#endif
 
 //_____________________________________________________________________________________________________________________________
 
@@ -29,10 +26,6 @@ Cv_FileSpritz::Cv_FileSpritz( const Cv_CStr &fname, Facet facet)
         m_Fp = fopen( fname.CStr(), "rb");
     else if ( m_Facet & WriteTrim)
         m_Fp = fopen( fname.CStr(), "w+b");
-
-    struct stat     st;
-    fstat( fileno( m_Fp), &st);
-    m_Size = st.st_size;
 }
 
 //_____________________________________________________________________________________________________________________________
@@ -47,29 +40,30 @@ Cv_FileSpritz::~Cv_FileSpritz( void)
     
 void        Cv_FileSpritz::SetOffset( uint32_t k)
 {
-    if ( k < m_Size)
+    uint32_t    fSz = Size();
+    if ( k < fSz)
     {
         m_Offset = k;
         fseek( m_Fp, k, SEEK_SET);
     }
     else
     {
-        m_Offset = m_Size;
+        m_Offset = fSz;
         fseek( m_Fp, 0L, SEEK_END);
     }
-    if (( m_Facet == ReadOnly) || ( k <= m_Size) || ( k == CV_UINT32_MAX))
+    if (( m_Facet == ReadOnly) || ( k <= fSz) || ( k == CV_UINT32_MAX))
         return;
     uint8_t     t[ 4096];
     t[ 0] = 1;
     uint32_t    sz = 4096;
-    for ( uint32_t rem = k -m_Size, wrSz = 0; rem; rem -=wrSz)
+    for ( uint32_t rem = k -fSz, wrSz = 0; rem; rem -=wrSz)
     {
         wrSz = rem > sz ? sz : rem;
         if ( t [ 0])
             memset( t, 0, wrSz);  
         fwrite( t, wrSz, 1, m_Fp);
     }
-    m_Offset = m_Size = k;
+    m_Offset = k;
     return;
 }
 
@@ -78,8 +72,8 @@ void        Cv_FileSpritz::SetOffset( uint32_t k)
 uint32_t    Cv_FileSpritz::EnsureSize( uint32_t sz)
 {
     uint32_t    curOff = m_Offset;
-    uint32_t    retOff = m_Size;
-    SetOffset( m_Size + sz);
+    uint32_t    retOff = Size();
+    SetOffset( retOff + sz);
     SetOffset( curOff);
     return retOff;
 }
@@ -107,6 +101,37 @@ bool    Cv_FileSpritz::Write( const void *buf, uint32_t sz)
 void  Cv_FileSpritz::FlushAll( void)
 {   
     fflush( m_Fp);
+    return;
+}
+
+//_____________________________________________________________________________________________________________________________
+
+uint32_t    Cv_FileSpritz::Size( void) const 
+{   
+    int     res = CV_FSEEK( m_Fp, 0L, SEEK_END );                                    // go to the end of file
+    CV_ERROR_ASSERT( res == 0)
+    return ( uint32_t ) CV_FTELL( m_Fp);}
+
+
+//_____________________________________________________________________________________________________________________________
+
+uint32_t  Cv_FileSpritz::SaveBuffer( uint32_t fOff, const void *buf, uint32_t sz)
+{
+    int         res = CV_FSEEK( m_Fp, fOff, SEEK_SET );               // go to the file-offset 
+    CV_ERROR_ASSERT( res == 0)
+    size_t      nWr = fwrite( buf, sz, 1,  m_Fp);             // write the page content.
+    CV_ERROR_ASSERT( nWr == 1)
+    return fOff;
+}
+
+//_____________________________________________________________________________________________________________________________
+
+void    Cv_FileSpritz::RestoreBuffer( uint32_t fOff, void *buf, uint32_t sz)
+{
+    CV_FSEEK( m_Fp, fOff, SEEK_SET );
+    CV_DEBUG_ASSERT( fOff == CV_FTELL( m_Fp))
+	size_t    nRd = fread( buf, sz, 1, m_Fp);
+    CV_ERROR_ASSERT( nRd == 1)
     return;
 }
 
@@ -143,6 +168,8 @@ bool    Cv_ValidationSpritz::Write( const void *buf, uint32_t sz)
     CV_ERROR_ASSERT( ( res == res2) && ( res3 == 0))
     return res;
 }
+
+
 
 //_____________________________________________________________________________________________________________________________
 
