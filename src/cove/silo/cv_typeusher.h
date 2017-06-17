@@ -191,7 +191,7 @@ template < typename Type>
         if ( !RoleUsher::BaseFlg)
             return Cv_TypeUsher::StoreObjectAtOffset( outDocket, storeCasket, pObj); 
 
-        uint32_t            curOff = outDocket->Spritz()->Offset();
+        uint32_t            curOff = ( uint32_t) outDocket->Spritz()->Offset();
         if ( !pObj)
         {
             outDocket->Spritz()->FillNull( sizeof( uint32_t));
@@ -224,7 +224,7 @@ template < typename Type>
         if ( !RoleUsher::BaseFlg)
             return Cv_TypeUsher::RestoreObjectAtOffset( inDoc, storeCasket, pObj);
         *pObj = nullptr;
-        uint32_t            curOff = inDoc->Spritz()->Offset();
+        uint32_t            curOff = ( uint32_t) inDoc->Spritz()->Offset();
         uint32_t            objOff = 0;
         inDoc->Spritz()->Read( &objOff, sizeof( uint32_t));
         if ( !objOff)

@@ -28,6 +28,7 @@
 #ifdef _MSC_VER
 #define strcasecmp      stricmp
 #define strncasecmp     strnicmp
+#define fseek           _fseeki64
 #endif
 
 #define CV_UINT8_MAX        uint8_t( -1)

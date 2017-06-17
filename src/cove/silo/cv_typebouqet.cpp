@@ -469,7 +469,7 @@ uint32_t    Cv_OutDocket::StoreObject( Cv_TypeCasket *casket, const void *x)
     CV_FNPASS( () )
 
     uint32_t            szPrimary = casket->Size();
-    uint32_t            offset = Spritz()->EnsureSize( szPrimary);
+    uint32_t            offset = ( uint32_t) Spritz()->EnsureSize( szPrimary);
     Spritz()->SetOffset( offset); 
     casket->StoreObject( x, this);
     return Bouquet()->CodeForCasket( casket);

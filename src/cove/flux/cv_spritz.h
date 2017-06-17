@@ -3,31 +3,59 @@
 
 #include    <iostream>
 #include    "cove/silo/cv_cstr.h"
+
 //_____________________________________________________________________________________________________________________________
 
 class Cv_Spritz 
 {
 public:
+    void       FillNull( uint64_t sz) ;
+
+    virtual    uint64_t    Size( void) const = 0; 
+
+    virtual    uint64_t    Offset( void) const = 0;
+    
+    virtual    void        SetOffset( uint64_t k) = 0;
+
+    void        SetOffsetAtEnd( void) {  SetOffset( CV_UINT64_MAX); }
+    
+    virtual    uint64_t     EnsureSize( uint64_t sz) = 0;
+    
+    virtual    bool         Read( void *buf, uint64_t sz) = 0;
+    
+    virtual    bool         Write( const void *buf, uint64_t sz) = 0;
+
+    virtual    void         FlushAll( void)  = 0;
+    
+    virtual   void          SaveBuffer( uint32_t fOff, const void *buf, uint64_t sz) = 0;
+    virtual   void          RestoreBuffer( uint64_t fOff, void *buf, uint64_t sz) = 0;
+};
+
+//_____________________________________________________________________________________________________________________________
+
+class Cv_Spritz32 
+{
+public:
     void       FillNull( uint32_t sz) ;
 
-    virtual    uint32_t    Size( void) const = 0;
+    virtual    uint32_t     Size( void) const = 0;
     
-    virtual    uint32_t    Offset( void) const = 0;
+    virtual    uint32_t     Offset( void) const = 0;
     
-    virtual    void        SetOffset( uint32_t k) = 0;
+    virtual    void         SetOffset( uint32_t k) = 0;
 
     void        SetOffsetAtEnd( void) {  SetOffset( CV_UINT32_MAX); }
     
-    virtual    uint32_t    EnsureSize( uint32_t sz) = 0;
+    virtual    uint32_t     EnsureSize( uint32_t sz) = 0;
     
-    virtual    bool        Read( void *buf, uint32_t sz) = 0;
+    virtual    bool         Read( void *buf, uint32_t sz) = 0;
     
-    virtual    bool        Write( const void *buf, uint32_t sz) = 0;
+    virtual    bool         Write( const void *buf, uint32_t sz) = 0;
 
-    virtual    void        FlushAll( void)  = 0;
+    virtual    void         FlushAll( void)  = 0;
     
-    virtual   uint32_t    SaveBuffer( uint32_t fOff, const void *buf, uint32_t sz) = 0;
-    virtual   void        RestoreBuffer( uint32_t fOff, void *buf, uint32_t sz) = 0;
+    virtual   void          SaveBuffer( uint32_t fOff, const void *buf, uint32_t sz) = 0;
+    virtual   void          RestoreBuffer( uint32_t fOff, void *buf, uint32_t sz) = 0;
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -44,29 +72,29 @@ public:
 protected:
     FILE        *m_Fp;
     Facet       m_Facet;
-    uint32_t    m_Offset;
+    uint64_t    m_Offset;
     
 public:
     Cv_FileSpritz( const Cv_CStr &fname, Facet facet);
     ~Cv_FileSpritz( void);
 
-    uint32_t    Size( void) const;
+    uint64_t    Size( void) const;
 
-    uint32_t    Offset( void) const { return m_Offset; }
+    uint64_t    Offset( void) const { return m_Offset; }
 
-    void        SetOffset( uint32_t k);
+    void        SetOffset( uint64_t k);
     
-    uint32_t    EnsureSize( uint32_t sz);
+    uint64_t    EnsureSize( uint64_t sz);
 
-    bool        Read( void *buf, uint32_t sz);
+    bool        Read( void *buf, uint64_t sz);
 
-    bool        Write( const void *buf, uint32_t sz);
+    bool        Write( const void *buf, uint64_t sz);
 
     void        FlushAll( void);
+    
+    void        SaveBuffer( uint64_t fOff, const void *buf, uint64_t sz);
 
-    uint32_t    SaveBuffer( uint32_t fOff, const void *buf, uint32_t sz);
-
-    void        RestoreBuffer( uint32_t fOff, void *buf, uint32_t sz);
+    void        RestoreBuffer( uint64_t fOff, void *buf, uint64_t sz);
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -83,17 +111,17 @@ public:
     
     ~Cv_ValidationSpritz( void);
      
-    uint32_t    Size( void) const { return m_WorkSpritz->Size(); }
+    uint64_t    Size( void) const { return m_WorkSpritz->Size(); }
 
-    uint32_t    Offset( void) const { return m_WorkSpritz->Offset(); }
+    uint64_t    Offset( void) const { return m_WorkSpritz->Offset(); }
 
-    void        SetOffset( uint32_t k) { m_WorkSpritz->SetOffset( k); }
+    void        SetOffset( uint64_t k) { m_WorkSpritz->SetOffset( k); }
     
-    uint32_t    EnsureSize( uint32_t sz) { return m_WorkSpritz->EnsureSize( sz); }
+    uint64_t    EnsureSize( uint64_t sz) { return m_WorkSpritz->EnsureSize( sz); }
 
-    bool        Read( void *buf, uint32_t sz);
+    bool        Read( void *buf, uint64_t sz);
 
-    bool        Write( const void *buf, uint32_t sz); 
+    bool        Write( const void *buf, uint64_t sz); 
 };
 
 //_____________________________________________________________________________________________________________________________

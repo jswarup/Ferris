@@ -525,7 +525,7 @@ public:
     bool                    StoreObject( const void *thisPtr, Cv_OutDocket *outDocket) const
     {
         const Type  *pThis = static_cast< const Type *>( thisPtr);
-        uint32_t    offset = outDocket->Spritz()->Offset();
+        uint32_t    offset = ( uint32_t) outDocket->Spritz()->Offset();
         Cv_TypeUsher::MapObjectDefToOffset( outDocket, pThis, offset);
         outDocket->Spritz()->SetOffset( offset);
         return Adaptor( this).SaveObject( outDocket, pThis);
@@ -534,7 +534,7 @@ public:
     bool                    RestoreObject( void *thisPtr, Cv_InDocket *inDoc) const
     {
         Type        *pThis = static_cast< Type *>( thisPtr);
-        uint32_t    offset = inDoc->Spritz()->Offset();
+        uint32_t    offset = ( uint32_t) inDoc->Spritz()->Offset();
         bool        rslt = Adaptor( this).LoadObject( inDoc, pThis);
         Cv_TypeUsher::MapOffsetToObjectDef( inDoc, offset, pThis);
         return rslt;
@@ -818,7 +818,7 @@ public:
     bool                SaveObject( Cv_OutDocket *outDocket, const X *thisPtr)  const
     {
         Cv_StructCask< X>   *structCask = static_cast< Cv_StructCask< X> *>( m_ParamCasket->GetOwner());
-        uint32_t            baseOffset = outDocket->Spritz()->Offset();
+        uint32_t            baseOffset = ( uint32_t) outDocket->Spritz()->Offset();
         for ( uint32_t j = 0; j <  FieldSz(); ++j)
         {
             uint32_t            i = FieldSz() -1 -j;
@@ -834,7 +834,7 @@ public:
     bool                LoadObject( Cv_InDocket  *inDocket, X *thisPtr) const
     {
         Cv_StructCask< X>   *structCask = static_cast< Cv_StructCask< X> *>( m_ParamCasket->GetOwner());
-        uint32_t            baseOffset = inDocket->Spritz()->Offset();
+        uint32_t            baseOffset = ( uint32_t) inDocket->Spritz()->Offset();
         for ( uint32_t i = 0; i < FieldSz(); ++i )
         {
             FieldCasketData     *fieldData = &FieldData( i);
@@ -970,7 +970,7 @@ public:
     bool               SaveObject( Cv_OutDocket *outDocket, const Seq *pSeq) const
     {
         Cv_Spritz           *sink = outDocket->Spritz();
-        uint32_t            fileOffset = sink->Offset();
+        uint32_t            fileOffset = ( uint32_t) sink->Offset();
 
         if ( !pSeq || !pSeq->size())
         {
@@ -979,13 +979,13 @@ public:
         }
         uint32_t            sz = uint32_t( pSeq->size());
         sink->Write( &sz, sizeof( uint32_t));
-        uint32_t            dist = sink->Size() -fileOffset;
+        uint32_t            dist = ( uint32_t) sink->Size() -fileOffset;
         sink->Write( &dist, sizeof( uint32_t));
 
         Cv_TypeBouquet      *bouquet = outDocket->Bouquet();
         Cv_TypeCasket       *casket = ValueCasket( bouquet);
         uint32_t            szPrimary = casket->Size();
-        uint32_t            auxOffset = sink->EnsureSize( szPrimary * sz);
+        uint32_t            auxOffset = ( uint32_t) sink->EnsureSize( szPrimary * sz);
         for ( uint32_t i = 0; i < sz; ++i, auxOffset += szPrimary)
         {
             sink->SetOffset( auxOffset);
@@ -998,7 +998,7 @@ public:
     {
         Cv_TypeCasket       *casket = inDocket->Bouquet()->LocateCasket( cv_TypeCask< Value>(), nullptr);
    
-        uint32_t            fileOffset = inDocket->Spritz()->Offset();
+        uint32_t            fileOffset = ( uint32_t) inDocket->Spritz()->Offset();
         uint32_t            sz = 0;
         inDocket->Spritz()->Read( &sz, sizeof( uint32_t));
         uint32_t            dist = 0;
@@ -1525,7 +1525,7 @@ public:
     bool                SaveObject( Cv_OutDocket *outDocket, const Cv_CStr *pSeq) const
     {
         Cv_Spritz           *sink = outDocket->Spritz();
-        uint32_t            fileOffset = sink->Offset();
+        uint32_t            fileOffset = ( uint32_t) sink->Offset();
 
         if ( !pSeq->Size())
         {
@@ -1533,7 +1533,7 @@ public:
             return true;
         }
         uint32_t            sz = pSeq->Size();
-        uint32_t            auxOffset = outDocket->Spritz()->EnsureSize( sz);
+        uint32_t            auxOffset = ( uint32_t) outDocket->Spritz()->EnsureSize( sz);
         uint32_t            dist = auxOffset -fileOffset;
         sink->Write( &dist, sizeof( uint32_t));
         sink->Write( &sz, sizeof( uint32_t));
@@ -1544,7 +1544,7 @@ public:
 
     bool                LoadObject( Cv_InDocket  *inDocket, Cv_CStr *pSeq) const
     {
-        uint32_t            fileOffset = inDocket->Spritz()->Offset();
+        uint32_t            fileOffset = ( uint32_t) inDocket->Spritz()->Offset();
         uint32_t            dist = 0;
         inDocket->Spritz()->Read( &dist, sizeof( uint32_t));
         if ( !dist)
@@ -1636,7 +1636,7 @@ public:
     bool                SaveObject( Cv_OutDocket *outDocket, const std::string *pSeq) const
     {
         Cv_Spritz           *sink = outDocket->Spritz();
-        uint32_t            fileOffset = sink->Offset();
+        uint32_t            fileOffset = ( uint32_t) sink->Offset();
 
         if ( !pSeq->size())
         {
@@ -1644,7 +1644,7 @@ public:
             return true;
         }
         uint32_t            sz = uint32_t( pSeq->size());
-        uint32_t            auxOffset = outDocket->Spritz()->EnsureSize( sz);
+        uint32_t            auxOffset = ( uint32_t) outDocket->Spritz()->EnsureSize( sz);
         uint32_t            dist = auxOffset -fileOffset;
         sink->Write( &dist, sizeof( uint32_t));
         sink->Write( &sz, sizeof( uint32_t));
@@ -1655,7 +1655,7 @@ public:
 
     bool                LoadObject( Cv_InDocket  *inDocket, std::string *pSeq) const
     {
-        uint32_t            fileOffset = inDocket->Spritz()->Offset();
+        uint32_t            fileOffset = ( uint32_t) inDocket->Spritz()->Offset();
         uint32_t            dist = 0;
         inDocket->Spritz()->Read( &dist, sizeof( uint32_t));
         if ( !dist)

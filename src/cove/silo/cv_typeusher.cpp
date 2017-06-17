@@ -24,7 +24,7 @@ bool    Cv_TypeUsher::StoreAtOffset( Cv_OutDocket *outDocket, Cv_TypeCask *baseC
 {
     CV_FNPASS(())
     
-    uint32_t                curOff = outDocket->Spritz()->Offset();
+    uint32_t                curOff = ( uint32_t) outDocket->Spritz()->Offset();
 
     if ( !pObj)
     {
@@ -49,7 +49,7 @@ bool    Cv_TypeUsher::StoreAtOffset( Cv_OutDocket *outDocket, Cv_TypeCask *baseC
     uint32_t                        objSz = objCasket->Size();   
     if ( code)
         objSz += sizeof( uint32_t);
-    uint32_t                        auxOffset = outDocket->Spritz()->EnsureSize( objSz);
+    uint32_t                        auxOffset = ( uint32_t) outDocket->Spritz()->EnsureSize( objSz);
     uint32_t                        dist = auxOffset -curOff;
 
     if ( code)                      // if code is valid set the 31st bit.
@@ -73,7 +73,7 @@ uint32_t    Cv_TypeUsher::RestoreAtOffset( Cv_InDocket *inDoc, Cv_TypeCask *base
     CV_FNPASS(())
     
     *pObj = nullptr;
-    uint32_t                        curOff = inDoc->Spritz()->Offset();
+    uint32_t                        curOff = ( uint32_t) inDoc->Spritz()->Offset();
     uint32_t                        dist = 0;
     uint32_t                        code = 0;
     inDoc->Spritz()->Read( &dist, sizeof( uint32_t));
@@ -92,7 +92,7 @@ uint32_t    Cv_TypeUsher::RestoreAtOffset( Cv_InDocket *inDoc, Cv_TypeCask *base
         objCasket = inDoc->Bouquet()->CasketForCode( uint32_t( uint16_t( code) -1) | ( 1 << 31));
     
     uint8_t             *obj = objCasket->Master()->CreateObject();
-    uint32_t            objOff = inDoc->Spritz()->Offset();
+    uint32_t            objOff = ( uint32_t) inDoc->Spritz()->Offset();
     objCasket->RestoreObject( obj, inDoc);
     uint32_t        storeOffset =  ( storeCasket->Master() != baseCask) ? baseCask->DerivedCasks().at( baseCask->FindDerivedCask( storeCasket->Master())).m_BOffset : 0;
     uint32_t        objOffset =  ( objCasket->Master() != baseCask) ? baseCask->DerivedCasks().at( baseCask->FindDerivedCask( objCasket->Master())).m_BOffset : 0;
