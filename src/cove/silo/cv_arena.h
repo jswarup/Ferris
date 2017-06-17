@@ -12,6 +12,7 @@
 #include	"cove/silo/cv_slist.h"
 #include	"cove/silo/cv_arenatools.h"
 
+#include	"cove/flux/cv_spritz.h"
 //_____________________________________________________________________________________________________________________________
 // HeapStall is a heap construct;  Declaration parameter
 //      ParentStall : the parent stall refering it.
@@ -356,7 +357,7 @@ template < typename MemStall>
     };
 
     
-    bool    IsOnHeap(  void *s) { return !!s && !( uint64_t( s) & 0x1); }
+    bool            IsOnHeap(  void *s) { return !!s && !( uint64_t( s) & 0x1); }
 
     
 };
