@@ -19,23 +19,19 @@ void TestArena( void)
     
     {
         Cv_FileSpritz   fp( "test.sge", Cv_FileSpritz::WriteTrim);                   // if the file exists and user intends to use it
-        {
-            Arena        arena( &fp, 0); 
-            auto         pin1 = arena.Spot( 0);
-            for ( uint32_t i = 0; i < szVec; ++i, ++pin1)
-                *pin1 = i;
+        Arena           arena( &fp, 0); 
+        auto            pin1 = arena.Spot( 0);
+        for ( uint32_t i = 0; i < szVec; ++i, ++pin1)
+            *pin1 = i;
            
-        }
     }
     {
         Cv_FileSpritz   fp( "test.sge", Cv_FileSpritz::ReadOnly); 
-        {
-            Arena        arena( &fp, 0);
-            std::vector< uint32_t>      vec( szVec);
-            auto                        pin2 = arena.Spot( 0);
-            for ( uint32_t i = 0; i < vec.size(); ++i, ++pin2)
-                vec[ vec.size() -1 -i] = ( *pin2);
-        } 
+        Arena           arena( &fp, 0);
+        std::vector< uint32_t>      vec( szVec);
+        auto                        pin2 = arena.Spot( 0);
+        for ( uint32_t i = 0; i < vec.size(); ++i, ++pin2)
+            vec[ vec.size() -1 -i] = ( *pin2);
     }
     return;
 }
