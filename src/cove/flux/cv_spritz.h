@@ -15,7 +15,7 @@ public:
 
     virtual    uint64_t    Offset( void) const = 0;
     
-    virtual    void        SetOffset( uint64_t k) = 0;
+    virtual    uint64_t     SetOffset( uint64_t k) = 0;
 
     void        SetOffsetAtEnd( void) {  SetOffset( CV_UINT64_MAX); }
     
@@ -27,36 +27,11 @@ public:
 
     virtual    void         FlushAll( void)  = 0;
     
-    virtual   void          SaveBuffer( uint32_t fOff, const void *buf, uint64_t sz) = 0;
+    virtual   uint64_t      SaveBuffer( uint64_t fOff, const void *buf, uint64_t sz) = 0;
     virtual   void          RestoreBuffer( uint64_t fOff, void *buf, uint64_t sz) = 0;
 };
 
-//_____________________________________________________________________________________________________________________________
-
-class Cv_Spritz32 
-{
-public:
-    void       FillNull( uint32_t sz) ;
-
-    virtual    uint32_t     Size( void) const = 0;
-    
-    virtual    uint32_t     Offset( void) const = 0;
-    
-    virtual    void         SetOffset( uint32_t k) = 0;
-
-    void        SetOffsetAtEnd( void) {  SetOffset( CV_UINT32_MAX); }
-    
-    virtual    uint32_t     EnsureSize( uint32_t sz) = 0;
-    
-    virtual    bool         Read( void *buf, uint32_t sz) = 0;
-    
-    virtual    bool         Write( const void *buf, uint32_t sz) = 0;
-
-    virtual    void         FlushAll( void)  = 0;
-    
-    virtual   void          SaveBuffer( uint32_t fOff, const void *buf, uint32_t sz) = 0;
-    virtual   void          RestoreBuffer( uint32_t fOff, void *buf, uint32_t sz) = 0;
-};
+ 
 
 //_____________________________________________________________________________________________________________________________
 
@@ -82,7 +57,7 @@ public:
 
     uint64_t    Offset( void) const { return m_Offset; }
 
-    void        SetOffset( uint64_t k);
+    uint64_t    SetOffset( uint64_t k);
     
     uint64_t    EnsureSize( uint64_t sz);
 
@@ -92,7 +67,7 @@ public:
 
     void        FlushAll( void);
     
-    void        SaveBuffer( uint64_t fOff, const void *buf, uint64_t sz);
+    uint64_t    SaveBuffer( uint64_t fOff, const void *buf, uint64_t sz);
 
     void        RestoreBuffer( uint64_t fOff, void *buf, uint64_t sz);
 };
@@ -115,7 +90,7 @@ public:
 
     uint64_t    Offset( void) const { return m_WorkSpritz->Offset(); }
 
-    void        SetOffset( uint64_t k) { m_WorkSpritz->SetOffset( k); }
+    uint64_t    SetOffset( uint64_t k) { return m_WorkSpritz->SetOffset( k); }
     
     uint64_t    EnsureSize( uint64_t sz) { return m_WorkSpritz->EnsureSize( sz); }
 

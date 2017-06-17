@@ -8,6 +8,7 @@
 #include    "cove/silo/cv_vector.h"
 #include    "cove/silo/cv_stadium.h"
 #include    "cove/net/cv_graphnode.h"
+#include	"cove/flux/cv_spritz.h"
 
 //_____________________________________________________________________________________________________________________________
 
@@ -16,54 +17,26 @@ void TestArena( void)
     typedef  Cv_FileArena< uint32_t, false, 4, 5, 6>    Arena;
     uint32_t                            szVec = 1 << Arena::SzMask();
     
-{
-        FILE         *fp = fopen( "test.sge", "w+b");                   // if the file exists and user intends to use it
+    {
+        Cv_FileSpritz   fp( "test.sge", Cv_FileSpritz::WriteTrim);                   // if the file exists and user intends to use it
         {
-            Arena        arena( fp, 0); 
+            Arena        arena( &fp, 0); 
             auto         pin1 = arena.Spot( 0);
             for ( uint32_t i = 0; i < szVec; ++i, ++pin1)
                 *pin1 = i;
-            }
-        fclose( fp);
+           
+        }
     }
     {
-        FILE         *fp = fopen( "test.sge",  "r+b");
+        Cv_FileSpritz   fp( "test.sge", Cv_FileSpritz::ReadOnly); 
         {
-            Arena        arena( fp, 0);
+            Arena        arena( &fp, 0);
             std::vector< uint32_t>      vec( szVec);
             auto                        pin2 = arena.Spot( 0);
             for ( uint32_t i = 0; i < vec.size(); ++i, ++pin2)
                 vec[ vec.size() -1 -i] = ( *pin2);
-        }
-        fclose( fp);
+        } 
     }
-    return;
-}
-
-//_____________________________________________________________________________________________________________________________
-
-void TestArena1( void)
-{
-    typedef  Cv_FileArena< uint32_t, false, 4, 5, 6>    Arena;
-    
-    bool            freshFLg = true;
-    FILE            *fp = fopen( "test.sge", !freshFLg && Cv_Aid::FileExists( "test.sge") ? "r+b" :  "w+b");                   // if the file exists and user intends to use it
-    Arena           arena( fp, 0);
-
-    //typedef  Cr_Arena< uint32_t, false, 4, 5, 6>    Arena;
-    //Arena                                           arena;
-
-    uint32_t                            szVec = 1 << Arena::SzMask();
-    if ( freshFLg)
-    {
-        auto        pin1 = arena.Spot( 0);
-        for ( uint32_t i = 0; i < szVec; ++i, ++pin1)
-            *pin1 = i;
-    }
-    std::vector< uint32_t>      vec( szVec);
-    auto                        pin2 = arena.Spot( 0);
-    for ( uint32_t i = 0; i < vec.size(); ++i, ++pin2)
-        vec[ vec.size() -1 -i] = ( *pin2);
     return;
 }
 

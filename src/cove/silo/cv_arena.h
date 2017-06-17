@@ -11,8 +11,8 @@
 #include	"cove/barn/cv_frager.h"
 #include	"cove/silo/cv_slist.h"
 #include	"cove/silo/cv_arenatools.h"
-
 #include	"cove/flux/cv_spritz.h"
+
 //_____________________________________________________________________________________________________________________________
 // HeapStall is a heap construct;  Declaration parameter
 //      ParentStall : the parent stall refering it.
@@ -271,7 +271,7 @@ class Cv_Arena : public Cv_BaseArena< Cv_Arena< Leaf, M, Rest...>, M, Rest...>
 template< typename Leaf, bool M, uint8_t... Rest>
 class Cv_FileArena : public Cv_BaseArena< Cv_FileArena< Leaf, M, Rest...>, M, Rest...>
 {
-    FILE        *m_Fp;
+    Cv_Spritz   *m_Fp;
     uint64_t    m_Offset;
 
 public:
@@ -281,7 +281,7 @@ public:
 	typedef typename BaseArena::RootStall                                   RootStall;
 
   
-    Cv_FileArena( FILE  *f, uint64_t offset = CV_UINT64_MAX) 
+    Cv_FileArena( Cv_Spritz  *f, uint64_t offset = CV_UINT64_MAX) 
         :  m_Fp( f), m_Offset( offset)
     {}    
 	
@@ -292,13 +292,12 @@ public:
             RootStall   *rootStall =  BaseArena::FetchTopStall();
             if ( m_Offset == CV_UINT64_MAX)
             {
-                int     res = CV_FSEEK( m_Fp, 0L, SEEK_END );
-                CV_ERROR_ASSERT( res == 0)
-                rootStall->m_FileOffset.Store( m_Offset = CV_FTELL( m_Fp));
+                m_Offset =  m_Fp->SetOffset( CV_UINT64_MAX);
+                rootStall->m_FileOffset.Store( m_Offset);
                 ScrubStall( rootStall);
             } else 
             {
-                CV_FSEEK( m_Fp, m_Offset, SEEK_SET); 
+                m_Fp->SetOffset( m_Offset);
                 rootStall->m_FileOffset.Store( m_Offset);
                 ReloadStall( rootStall );
             }
@@ -312,10 +311,7 @@ public:
 template < typename MemStall>
     void    ReloadStall( MemStall  *spot)
     {
-        CV_FSEEK( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );
-        CV_DEBUG_ASSERT( spot->m_FileOffset.Load() == CV_FTELL( m_Fp))
-	    size_t    nRd = fread( spot->template PtrAt< uint8_t>( 0), MemStall::PageSz, 1, m_Fp);
-        CV_ERROR_ASSERT( nRd == 1)
+        m_Fp->RestoreBuffer( spot->m_FileOffset.Load(), spot->template PtrAt< uint8_t>( 0), MemStall::PageSz); 
         return;
     }
 
@@ -325,20 +321,8 @@ template < typename MemStall>
 template < typename MemStall>
     void    ScrubStall( MemStall  *spot)
     {
-        if ( spot->m_FileOffset.Load() == CV_UINT64_MAX)                                    // if has not been written to file write the chunk to file
-	    {
-            int     res = CV_FSEEK( m_Fp, 0L, SEEK_END );                                    // go to the end of file
-            CV_ERROR_ASSERT( res == 0)
-            spot->m_FileOffset.Store( CV_FTELL( m_Fp));                           // store the file-location in the Stall
-            size_t    nWr = fwrite(  spot->template PtrAt< uint8_t>( 0), 1, MemStall::PageSz, m_Fp);           // write the chunk to file
-            CV_ERROR_ASSERT( nWr == 1)
-            return;
-        } 
-
-        int         res = CV_FSEEK( m_Fp, spot->m_FileOffset.Load(), SEEK_SET );               // go to the file-offset 
-        CV_ERROR_ASSERT( res == 0)
-        size_t      nWr = fwrite( spot->template PtrAt< uint8_t>( 0), MemStall::PageSz, 1,  m_Fp);             // write the page content.
-        CV_ERROR_ASSERT( nWr == 1)
+        m_Offset = m_Fp->SaveBuffer( spot->m_FileOffset.Load(), spot->template PtrAt< uint8_t>( 0), MemStall::PageSz);
+        spot->m_FileOffset.Store( m_Offset); 
         return;
     }
 

@@ -38,23 +38,23 @@ Cv_FileSpritz::~Cv_FileSpritz( void)
 
 //_____________________________________________________________________________________________________________________________
     
-void        Cv_FileSpritz::SetOffset( uint64_t k)
+uint64_t        Cv_FileSpritz::SetOffset( uint64_t k)
 {
     uint64_t    fSz = Size();
     if ( k < fSz)
     {
         m_Offset = k;
-        fseek( m_Fp, k, SEEK_SET);
+        CV_FSEEK( m_Fp, k, SEEK_SET);
     }
     else if (( m_Facet & WriteRead) || ( k == CV_UINT64_MAX))
     {
         m_Offset = fSz;
-        fseek( m_Fp, 0L, SEEK_END);
+        CV_FSEEK( m_Fp, 0L, SEEK_END);
     } else 
         CV_ERROR_ASSERT( false)
 
     if (( m_Facet == ReadOnly) || ( k <= fSz) || ( k == CV_UINT64_MAX))
-        return;
+        return m_Offset;
 
     uint8_t     t[ 4096];
     t[ 0] = 1;
@@ -67,7 +67,7 @@ void        Cv_FileSpritz::SetOffset( uint64_t k)
         fwrite( t, wrSz, 1, m_Fp);
     }
     m_Offset = k;
-    return;
+    return m_Offset;
 }
 
 //_____________________________________________________________________________________________________________________________
@@ -117,21 +117,19 @@ uint64_t    Cv_FileSpritz::Size( void) const
 
 //_____________________________________________________________________________________________________________________________
 
-void  Cv_FileSpritz::SaveBuffer( uint64_t fOff, const void *buf, uint64_t sz)
+uint64_t  Cv_FileSpritz::SaveBuffer( uint64_t fOff, const void *buf, uint64_t sz)
 {
-    int         res = CV_FSEEK( m_Fp, fOff, SEEK_SET );               // go to the file-offset 
-    CV_ERROR_ASSERT( res == 0)
+    fOff = SetOffset( fOff); 
     size_t      nWr = fwrite( buf, sz, 1,  m_Fp);             // write the page content.
     CV_ERROR_ASSERT( nWr == 1)
-    return;
+    return fOff;
 }
 
 //_____________________________________________________________________________________________________________________________
 
 void    Cv_FileSpritz::RestoreBuffer( uint64_t fOff, void *buf, uint64_t sz)
 {
-    CV_FSEEK( m_Fp, fOff, SEEK_SET );
-    CV_DEBUG_ASSERT( fOff == CV_FTELL( m_Fp))
+    fOff = SetOffset( fOff); 
 	size_t    nRd = fread( buf, sz, 1, m_Fp);
     CV_ERROR_ASSERT( nRd == 1)
     return;
