@@ -47,6 +47,14 @@ public:
         //CV_ERROR_ASSERT(false)
         return nullptr;
     }
+
+    DLink   *GetTailLink(void) 
+    {
+        DLink	    *dl = static_cast< DLink *>( this);
+        while ( dl->m_Next)
+            dl = dl->m_Next;
+        return dl;
+    }
 };
 
 //_____________________________________________________________________________________________________________________________

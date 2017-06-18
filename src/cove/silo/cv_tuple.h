@@ -11,7 +11,7 @@ class   Cv_Tuple;
 template <typename T, int K>
 struct Cv_TupleIndex
 {
-    typedef typename T::Base TBase;
+    typedef typename T::TupleBase TupleBase;
 
 	T	*m_T;
 
@@ -20,13 +20,13 @@ struct Cv_TupleIndex
 		:  m_T( p)
 	{}
 
-	auto	PVar( void)  {  return  Cv_TupleIndex< TBase, K -1>( static_cast< TBase *>( m_T)).PVar();  }
+	auto	PVar( void)  {  return  Cv_TupleIndex< TupleBase, K -1>( static_cast< TupleBase *>( m_T)).PVar();  }
 };
 
 template <typename T>
 struct Cv_TupleIndex< T, 0>
 {
-    typedef typename T::Base TBase;
+    typedef typename T::TupleBase TupleBase;
 
 	T	*m_T;
 	
@@ -63,30 +63,30 @@ public:
 
     typedef T                     CType;
     typedef Cv_Tuple< T, Rest...> Tuple;
-    typedef Cv_Tuple< Rest...>    Base;
+    typedef Cv_Tuple< Rest...>    TupleBase;
 
     enum {
-        Sz = Base::Sz +1,
+        Sz = TupleBase::Sz +1,
     };
     
     Cv_Tuple( void)
     {}
 
     Cv_Tuple( const Cv_Tuple &t)
-        : Base( ( const Base &) t), m_Var( t.m_Var)
+        : TupleBase( ( const TupleBase &) t), m_Var( t.m_Var)
     {}
 
     Cv_Tuple( const T &t, Rest... rest)
-        : Base( rest...), m_Var( t)
+        : TupleBase( rest...), m_Var( t)
     {}
 
-    Cv_Tuple( Cv_Tuple< T> &&t, Base &&base)
-        : Base( std::move( base)), m_Var( std::move( t.m_Var)) 
+    Cv_Tuple( Cv_Tuple< T> &&t, TupleBase &&base)
+        : TupleBase( std::move( base)), m_Var( std::move( t.m_Var)) 
     {}
 
 template <class X>
     Cv_Tuple( X x)
-        : Base( x), m_Var( x)
+        : TupleBase( x), m_Var( x)
     {}
     
 	auto	PVar( void) { return &m_Var; }
@@ -104,13 +104,13 @@ template < int K>
 template < typename Lambda>
     auto    Compose( Lambda param) const
     {
-        return Cv_TupleTools::Make( [=](auto... rest) { return param( uint32_t( Tuple::Sz -1), m_Var, rest...);},  Base::Compose( param)); 
+        return Cv_TupleTools::Make( [=](auto... rest) { return param( uint32_t( Tuple::Sz -1), m_Var, rest...);},  TupleBase::Compose( param)); 
     };
 
     template < typename... X>
     auto    Invoke( X... args) const
     {
-        return  Cv_TupleTools::Make( m_Var( args...), Base::Invoke( args...)) ;
+        return  Cv_TupleTools::Make( m_Var( args...), TupleBase::Invoke( args...)) ;
     }
 };
 
@@ -126,7 +126,7 @@ class   Cv_Tuple< T>
 
     typedef T                       CType;
     typedef Cv_Tuple< T>            Tuple;
-    typedef void                    Base;
+    typedef void                    TupleBase;
     
     enum {
         Sz = 1,
@@ -172,7 +172,7 @@ template < typename... X>
 //_____________________________________________________________________________________________________________________________
 
 template < int K, typename Tuple>
-struct Ru_Index : public Ru_Index< K -1, typename Tuple::Base>
+struct Ru_Index : public Ru_Index< K -1, typename Tuple::TupleBase>
 {
 };
 

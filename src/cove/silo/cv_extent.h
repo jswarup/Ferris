@@ -83,7 +83,7 @@ public:
 
     X   Deallocate( X x, uint32_t sz)
     {
-        std::vector< X>::iterator   it = std::lower_bound( m_Knots.begin(), m_Knots.end(), x);
+        typename std::vector< X>::iterator   it = std::lower_bound( m_Knots.begin(), m_Knots.end(), x);
         CV_ERROR_ASSERT( it != m_Knots.end());
         if ( *it == x)
         {

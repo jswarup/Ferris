@@ -12,6 +12,14 @@
 
 //_____________________________________________________________________________________________________________________________
 
+void    TestAdder( void)
+{
+    Ru_FullAdder::Site   rr( nullptr) ;
+    return;
+}
+
+//_____________________________________________________________________________________________________________________________
+
 void TestArena( void)
 {
     typedef  Cv_FileArena< uint32_t, false, 4, 5, 6>    Arena;
@@ -34,13 +42,6 @@ void TestArena( void)
             vec[ vec.size() -1 -i] = ( *pin2);
     }
     return;
-}
-
-//_____________________________________________________________________________________________________________________________
-
-void    TestAdder( void)
-{
-    Ru_HalfAdder::Site   rr( nullptr) ;
 }
 
 //_____________________________________________________________________________________________________________________________
@@ -91,6 +92,17 @@ void    TestExtent( void)
 
 int main( int argc, char *argv[])
 {
+    typedef Cv_Tuple< uint8_t, uint16_t, uint32_t, uint64_t, int8_t, int16_t, int32_t, int64_t>   Tuple;
+    Tuple       t;
+    uint8_t     *tmp1 =  Cv_TupleIndex< Tuple, 0>( &t).PVar();  
+    uint16_t    *tmp2 =  Cv_TupleIndex< Tuple, 1>( &t).PVar();  
+    uint32_t    *tmp3 =  Cv_TupleIndex< Tuple, 2>( &t).PVar();  
+    uint64_t    *tmp4 =  Cv_TupleIndex< Tuple, 3>( &t).PVar();  
+    int8_t      *tmp5 =  Cv_TupleIndex< Tuple, 4>( &t).PVar();
+    int16_t     *tmp6 =  Cv_TupleIndex< Tuple, 5>( &t).PVar();
+    int32_t     *tmp7 =  Cv_TupleIndex< Tuple, 6>( &t).PVar();
+    int64_t     *tmp8 =  Cv_TupleIndex< Tuple, 7>( &t).PVar();
+
     TestArena();
     TestAdder();
     TestExtent();

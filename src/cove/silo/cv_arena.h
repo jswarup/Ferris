@@ -331,7 +331,7 @@ template < typename MemStall>
     class Janitor
     {
     public:
-        Cv_Atomic< uint64_t,  MT>        m_FileOffset;
+        Cv_Atomic< uint64_t,  M>        m_FileOffset;
             
         Janitor( void) 
             : m_FileOffset( CV_UINT64_MAX) {}
