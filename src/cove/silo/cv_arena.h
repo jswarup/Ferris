@@ -191,7 +191,7 @@ public:
 
     typedef Cv_MemStall< Arena, Arena, Rest...>     RootStall;
     
-constexpr static uint32_t               SzMask( void) { return  RootStall::SzMask; }
+    constexpr static uint32_t               SzMask( void) { return  RootStall::SzMask; }
      
 protected:
     RootStall                                           *m_TopStall;
