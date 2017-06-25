@@ -21,12 +21,12 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\src\rube\barn\ru_include.h" />
     <ClInclude Include="..\..\..\src\rube\blocks\ru_gates.h" />
-    <ClInclude Include="..\..\..\src\rube\engine\ru_rubereactor.h" />
-    <ClInclude Include="..\..\..\src\rube\engine\ru_rubesite.h" />
+    <ClInclude Include="..\..\..\src\rube\engine\ru_stave.h" />
+    <ClInclude Include="..\..\..\src\rube\engine\ru_site.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\rube\barn\ru_include.cpp" />
-    <ClCompile Include="..\..\..\src\rube\engine\ru_rubereactor.cpp" />
+    <ClCompile Include="..\..\..\src\rube\engine\ru_stave.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\..\src\rube\CMakeLists.txt" />

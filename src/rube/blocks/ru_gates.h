@@ -1,15 +1,14 @@
 //----------------------------------------- ru_gate.h --------------------------------------------------------------------
 #pragma once
 
-#include    "rube/engine/ru_rubesite.h"
+#include    "rube/engine/ru_site.h"
 
 //_____________________________________________________________________________________________________________________________
 
 struct Ru_AndGate
 {
-    typedef Ru_Inlet< bool, bool>       Inlet;
-    typedef Ru_Outlet< bool>            Outlet;   
-    typedef Ru_Site< Ru_AndGate>        Site;
+    typedef Ru_Inlet< Ru_AndGate, bool, bool>       Inlet;
+    typedef Ru_Outlet< Ru_AndGate, bool>            Outlet;  
      
     Outlet::Tuple     Action( const Inlet::Tuple  &input)
     {
@@ -21,9 +20,8 @@ struct Ru_AndGate
 
 struct Ru_XorGate
 {
-    typedef Ru_Inlet< bool, bool>       Inlet;
-    typedef Ru_Outlet< bool>            Outlet;   
-    typedef Ru_Site< Ru_XorGate>        Site;
+    typedef Ru_Inlet< Ru_XorGate, bool, bool>       Inlet;
+    typedef Ru_Outlet< Ru_XorGate, bool>            Outlet;  
     
     Outlet::Tuple     Action( const Inlet::Tuple  &input)
     {
@@ -35,9 +33,8 @@ struct Ru_XorGate
 
 struct Ru_OrGate
 {
-    typedef Ru_Inlet< bool, bool>       Inlet;
-    typedef Ru_Outlet< bool>            Outlet;   
-    typedef Ru_Site< Ru_OrGate>         Site;
+    typedef Ru_Inlet< Ru_OrGate, bool, bool>       Inlet;
+    typedef Ru_Outlet< Ru_OrGate, bool>            Outlet;  
     
     Outlet::Tuple     Action( const Inlet::Tuple  &input)
     {
@@ -49,8 +46,8 @@ struct Ru_OrGate
 
 struct Ru_HalfAdder  
 {
-    typedef Ru_Inlet< bool, bool>       Inlet;      // a, b
-    typedef Ru_Outlet< bool, bool>      Outlet;     // sum, carry
+    typedef Ru_Inlet< Ru_HalfAdder, bool, bool>       Inlet;      // a, b
+    typedef Ru_Outlet< Ru_HalfAdder, bool, bool>      Outlet;     // sum, carry
     
     typedef Ru_Compound< Ru_AndGate, Ru_XorGate>   Compound;
 
@@ -80,9 +77,11 @@ struct Ru_HalfAdder
 struct Ru_FullAdder  
 {
 public:
-    typedef Ru_Inlet< bool, bool, bool>         Inlet;      // carryIn, a, b
-    typedef Ru_Outlet< bool, bool>              Outlet;     // sum, carry
-    typedef Ru_Junction< bool, bool, bool>      Junction;   // sum2_A
+    struct Site;
+
+    typedef Ru_Inlet< Ru_HalfAdder, bool, bool, bool>                   Inlet;      // carryIn, a, b
+    typedef Ru_Outlet< Ru_HalfAdder, bool, bool>                        Outlet;     // sum, carry
+    typedef Ru_Junction< Ru_FullAdder, bool, bool, bool>                Junction;   // sum2_A
 
 	typedef Ru_Compound< Ru_HalfAdder, Ru_HalfAdder, Ru_OrGate>   Compound;
 
@@ -93,15 +92,15 @@ public:
         {
             Ru_Site< Ru_HalfAdder>  *halfAdder1 = Child< 0>();
             Ru_Site< Ru_HalfAdder>  *halfAdder2 = Child< 1>();
+            Ru_Site< Ru_OrGate>     *orGate =   Child< 2>(); 
+
             InPort< 0>()->Join( halfAdder1->InPort< 0>());      // carryIn
             InPort< 1>()->Join( halfAdder2->InPort< 0>());      // a
             InPort< 2>()->Join( halfAdder2->InPort< 1>());      // b
     
-            Conn< 0>()->Join( halfAdder2->OutPort< 0>(), halfAdder1->InPort< 1>());         // sum2 from a & b  => input to the final halfAdder 
-            
-            Ru_Site< Ru_OrGate>     *orGate =   Child< 2>();  
-            Conn< 1>()->Join( halfAdder1->OutPort< 1>(), orGate->InPort< 0>());            // carry1 => orIn1
-            Conn< 2>()->Join( halfAdder2->OutPort< 1>(), orGate->InPort< 1>());            // carry2 => orIn1
+            Conn< 0>()->Join( halfAdder2->OutPort< 0>(), halfAdder1->InPort< 1>());     // sum2 from a & b  => input to the final halfAdder 
+            Conn< 1>()->Join( halfAdder1->OutPort< 1>(), orGate->InPort< 0>());         // carry1 => orIn1
+            Conn< 2>()->Join( halfAdder2->OutPort< 1>(), orGate->InPort< 1>());         // carry2 => orIn1
             
             OutPort< 0>()->Join( halfAdder1->OutPort< 0>());
             OutPort< 1>()->Join( orGate->OutPort< 0>());
