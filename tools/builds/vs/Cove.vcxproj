@@ -38,6 +38,7 @@
     <ClInclude Include="..\..\..\src\cove\silo\cv_iota.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_slist.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_stadium.h" />
+    <ClInclude Include="..\..\..\src\cove\silo\cv_trotter.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_tuple.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_typebouqet.h" />
     <ClInclude Include="..\..\..\src\cove\silo\cv_typecask.h" />

@@ -23,7 +23,7 @@ public:
     {}
     void    Store( const X &x) { m_X =  x; }
 
-    bool    Busy( const X &lock) const { m_X.load() == lock; }
+    bool    Busy( const X &lock) const { return m_X.load() == lock; }
     
     X       Load( void) const { return m_X.load(); }
 
@@ -82,7 +82,7 @@ public:
     {}
     void    Store( X *x) { m_X =  x; }
 
-    bool    Busy( X *lock = LockValue()) const { m_X.load() == lock; }
+    bool    Busy( X *lock = LockValue()) const { return m_X.load() == lock; }
     
     X       *Load( void) const { return m_X.load(); }
 
@@ -113,7 +113,7 @@ public:
 
     void    Store( X *x) { m_X = x; }
     
-    bool    Busy( X *lock = LockValue()) const { m_X  == lock; }
+    bool    Busy( X *lock = LockValue()) const { return m_X  == lock; }
     
     X       *Load( void) const { return m_X; }
 

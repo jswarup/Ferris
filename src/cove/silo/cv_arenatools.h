@@ -10,9 +10,9 @@ protected:
      typedef typename LeafStall::ValueType   LeafType;
 
     Arena                   *m_Arena;
-    LeafStall               *m_MemChunk;
     uint32_t                m_Index;
-
+    LeafStall               *m_MemChunk;
+    
 public:
     typedef LeafType                    value_type;
     typedef int                         difference_type;
@@ -25,7 +25,7 @@ public:
     {}
     
     Cv_Spot( Arena *arena, uint32_t index)
-        : Cv_Spot( m_Arena->Spot( m_Index))
+        : Cv_Spot( m_Arena->Spot( index))
     {}
     
     Cv_Spot( Arena *arena, uint32_t index, LeafStall *memChunk)

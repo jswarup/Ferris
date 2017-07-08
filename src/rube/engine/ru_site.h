@@ -43,6 +43,7 @@ class   Ru_ModulePort : public Ru_Port< T, InPortFlg>
 public:
     Ru_ModulePort( void) 
     {}
+
 };
   
 //_____________________________________________________________________________________________________________________________
@@ -213,9 +214,11 @@ template < int K>
 
 //_____________________________________________________________________________________________________________________________
 
-template < class Module>
-struct Ru_TSite : public Ru_RubeSite, public Ru_TInletSite< Module>, public Ru_TOutletSite< Module>, public Ru_TJunctionSite< Module>
+template < class TModule>
+struct Ru_TSite : public Ru_RubeSite, public Ru_TInletSite< TModule>, public Ru_TOutletSite< TModule>, public Ru_TJunctionSite< TModule>
 {
+    typedef TModule Module;
+
     Ru_TSite( Ru_RubeSite *master)
         : Ru_RubeSite( master), Ru_TInletSite< Module>( this), Ru_TOutletSite< Module>( this), Ru_TJunctionSite< Module>( this)
     {}
@@ -224,11 +227,29 @@ struct Ru_TSite : public Ru_RubeSite, public Ru_TInletSite< Module>, public Ru_T
 //_____________________________________________________________________________________________________________________________
  
 template < class Module, typename = void>
-struct Ru_Site : public Ru_TSite< Module>
+struct Ru_CSite : public Ru_TSite< Module>
 {
-    Ru_Site( Ru_RubeSite *master)
+    Ru_CSite( Ru_RubeSite *master)
         : Ru_TSite< Module>( master)
     {}
+};
+
+//_____________________________________________________________________________________________________________________________
+
+template < typename Module, typename = void>
+struct  Ru_Site : public Ru_CSite< Module>
+{
+    typedef typename Module::Inlet::Tuple       Input;
+    typedef typename Module::Outlet::Tuple      Output;
+
+    Ru_Site( Ru_RubeSite *master)
+        :   Ru_CSite< Module>( master)
+    {}
+
+    auto    ActionFn( Input *)
+    {
+        return  nullptr;
+    }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -249,6 +270,8 @@ struct Ru_DSite< Module,  typename Cv_TypeEngage::Exist< typename Module::Site>:
     {}
 };
 
+//_____________________________________________________________________________________________________________________________
+
 template < typename...  T>
 struct Ru_Compound : public Cv_Tuple< Ru_DSite< T>...>
 {
@@ -265,16 +288,33 @@ template <int K>
 //_____________________________________________________________________________________________________________________________
 
 template < class ModuleT>
-struct Ru_Site< ModuleT, typename Cv_TypeEngage::Exist< typename ModuleT::Compound>::Note > : public Ru_TSite< ModuleT>, public ModuleT::Compound
+struct Ru_CSite< ModuleT, typename Cv_TypeEngage::Exist< typename ModuleT::Compound>::Note > : public Ru_TSite< ModuleT>, public ModuleT::Compound
 {
     typedef typename ModuleT::Compound  Compound; 
     typedef ModuleT                     Module; 
 
 public:
-    Ru_Site( Ru_RubeSite *master)
+    Ru_CSite( Ru_RubeSite *master)
         : Ru_TSite< ModuleT>( master), Compound( master) 
+    {}
+};
+
+//_____________________________________________________________________________________________________________________________
+
+template < typename Module>
+struct  Ru_Site<Module, typename Cv_TypeEngage::Exist< typename Module::Action>::Note > : public Ru_CSite< Module>
+{
+    typedef typename Module::Inlet::Tuple       Input;
+    typedef typename Module::Outlet::Tuple      Output;
+
+    Ru_Site( Ru_RubeSite *master)
+        :   Ru_CSite< Module>( master)
+    {}
+
+    auto    ActionFn( Output *output, Input *input)
     {
-    }
+        return  [output, input]( void) {  *output = Module::Action( *input); return; };
+    } 
 };
 
 //_____________________________________________________________________________________________________________________________

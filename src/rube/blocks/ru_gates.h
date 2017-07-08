@@ -33,8 +33,8 @@ struct Ru_XorGate
 
 struct Ru_OrGate
 {
-    typedef Ru_Inlet< Ru_OrGate, bool, bool>       Inlet;
-    typedef Ru_Outlet< Ru_OrGate, bool>            Outlet;  
+    typedef Ru_Inlet< Ru_OrGate, bool, bool>        Inlet;
+    typedef Ru_Outlet< Ru_OrGate, bool>             Outlet;  
     
     Outlet::Tuple     Action( const Inlet::Tuple  &input)
     {
@@ -46,10 +46,10 @@ struct Ru_OrGate
 
 struct Ru_HalfAdder  
 {
-    typedef Ru_Inlet< Ru_HalfAdder, bool, bool>       Inlet;      // a, b
-    typedef Ru_Outlet< Ru_HalfAdder, bool, bool>      Outlet;     // sum, carry
+    typedef Ru_Inlet< Ru_HalfAdder, bool, bool>     Inlet;      // a, b
+    typedef Ru_Outlet< Ru_HalfAdder, bool, bool>    Outlet;     // sum, carry
     
-    typedef Ru_Compound< Ru_AndGate, Ru_XorGate>   Compound;
+    typedef Ru_Compound< Ru_AndGate, Ru_XorGate>    Compound;
 
     struct Site : public Ru_Site< Ru_HalfAdder>
     {
@@ -79,11 +79,11 @@ struct Ru_FullAdder
 public:
     struct Site;
 
-    typedef Ru_Inlet< Ru_HalfAdder, bool, bool, bool>                   Inlet;      // carryIn, a, b
-    typedef Ru_Outlet< Ru_HalfAdder, bool, bool>                        Outlet;     // sum, carry
-    typedef Ru_Junction< Ru_FullAdder, bool, bool, bool>                Junction;   // sum2_A
+    typedef Ru_Inlet< Ru_HalfAdder, bool, bool, bool>               Inlet;      // carryIn, a, b
+    typedef Ru_Outlet< Ru_HalfAdder, bool, bool>                    Outlet;     // sum, carry
+    typedef Ru_Junction< Ru_FullAdder, bool, bool, bool>            Junction;   // sum2_A
 
-	typedef Ru_Compound< Ru_HalfAdder, Ru_HalfAdder, Ru_OrGate>   Compound;
+	typedef Ru_Compound< Ru_HalfAdder, Ru_HalfAdder, Ru_OrGate>     Compound;
 
 	struct Site : public Ru_Site< Ru_FullAdder>
     {

@@ -9,12 +9,16 @@
 #include    "cove/silo/cv_stadium.h"
 #include    "cove/net/cv_graphnode.h"
 #include	"cove/flux/cv_spritz.h"
+#include    "rube/engine/ru_stave.h"
 
 //_____________________________________________________________________________________________________________________________
 
 void    TestAdder( void)
 {
-    Ru_FullAdder::Site   rr( nullptr) ;
+    Ru_FullAdder::Site  rr( nullptr) ;
+    Ru_StaveCrate       staveRepos;
+    Ru_StaveCrateCnstr  staveReposCnstr;
+    Ru_Stave            *stave = staveReposCnstr.Proliferate( &rr, &staveRepos); 
     return;
 }
 

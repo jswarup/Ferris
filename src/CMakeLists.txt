@@ -13,4 +13,5 @@ add_subdirectory (cove)
 add_subdirectory (rube)
 
 set(ferris_source_files console/sisyphus)
+target_link_libraries(cove cove)
 add_executable(ferris ${ferris_source_files})
