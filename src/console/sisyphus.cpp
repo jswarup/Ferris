@@ -6,8 +6,7 @@
 #include    "cove/silo/cv_vecop.h"
 #include    "cove/silo/cv_arena.h"
 #include    "cove/silo/cv_vector.h"
-#include    "cove/silo/cv_stadium.h"
-#include    "cove/net/cv_graphnode.h"
+#include    "cove/silo/cv_stadium.h" 
 #include	"cove/flux/cv_spritz.h"
 #include    "rube/engine/ru_stave.h"
 
@@ -16,9 +15,9 @@
 void    TestAdder( void)
 {
     Ru_FullAdder::Site  rr( nullptr) ;
-    Ru_StaveCrate       staveRepos;
-    Ru_StaveCrateCnstr  staveReposCnstr;
-    Ru_Stave            *stave = staveReposCnstr.Proliferate( &rr, &staveRepos); 
+    Ru_StaveCrate       staveCrate;
+    Ru_StaveCrateCnstr  staveReposCnstr( &staveCrate);
+    Ru_Stave            *stave = staveReposCnstr.Proliferate( &rr ); 
     return;
 }
 

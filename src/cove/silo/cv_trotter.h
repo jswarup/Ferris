@@ -1,80 +1,6 @@
 //_______________________________________________ cv_trotter.h _______________________________________________________________
 #pragma once
 
-//_____________________________________________________________________________________________________________________________
-
-template < class Elem>
-class  Cv_TreeTrotter
-{
-protected:
-    //_____________________________________________________________________________________________________________________________
-
-template < class Anchor, typename Method>
-    class Support
-    {
-        Cv_TreeTrotter    *m_Context;
-        Anchor              *m_Anchor;
-        Method              m_Method;
-    public:
-        Support( Cv_TreeTrotter *ctxt, Anchor *anchor, Method method)
-            :   m_Context( ctxt), m_Anchor( anchor), m_Method( method)
-        {}
-
-    template < class Arg>
-        bool    CallMethod( const Elem &elem, bool entryFlg, Arg *arg)
-        {
-            return (m_Anchor->*m_Method)( elem, m_Context, entryFlg, arg);
-        }
-
-    template < class Arg>
-        bool  DoDepthFirst( Arg *arg)
-        {
-            while ( m_Context->HasElem())
-            {
-                if ( !m_Context->IsCurrEntered())    
-                {
-                    m_Context->MarkCurrEntered();                    
-                    bool    res = CallMethod( m_Context->CurrElem(), true, arg);
-                    if ( !res)
-                        return false;
-                }
-                if ( m_Context->IsCurrEntered())
-                {
-                    Elem    elem = m_Context->CurrElem();
-                    m_Context->PopCurr();
-                    bool res = CallMethod( elem, false, arg);
-                    if ( !res)
-                        return false;
-                }
-            }
-            return true;            
-        }
-    };
-
-    //_____________________________________________________________________________________________________________________________
-
-    std::vector< Elem>      m_ElemQue;
-    std::vector< bool>      m_StatusQue;
-
-public:
-    Cv_TreeTrotter( void)
-    {}
-
-    void        PushElem( const Elem &elem) {  m_ElemQue.push_back( elem); m_StatusQue.push_back( false); }
-    bool        IsCurrEntered( void)  const { return  m_StatusQue.back(); }
-    void        MarkCurrEntered( void) { m_StatusQue.back() = true; }
-    const Elem  &CurrElem( void) { return m_ElemQue.back(); }
-    void        PopCurr( void) {  m_ElemQue.pop_back(); m_StatusQue.pop_back(); }
-    bool        HasElem( void) const { return !!m_ElemQue.size(); }
-   
-template < class Anchor, typename Method, typename Args>
-    bool    DoDepthTraversal( const Elem &elem, Anchor *anchor, Method method, Args *args)
-    {
-        PushElem( elem);   
-        Support<  Anchor, Method>           support( this, anchor, method);
-        return support.DoDepthFirst( args); 
-    }
-};
 
 //_____________________________________________________________________________________________________________________________
 
@@ -99,23 +25,23 @@ template < class  Store, typename Method>
         
         void        Rejig( void)
         {
-            if (!( (2 * m_Store->Size()) < m_StateStatus.size()))
+            if (!( (2 * m_Store->Size()) < m_Context->m_StateStatus.size()))
                 m_Context->m_StateStatus.resize( 2 * m_Store->Size(), false);
         }
     public:
-        Support( Store *store, Cv_GraphTrotter *ctxt, Anchor *anchor, Method method)
-            :  m_Store( store), m_Context( ctxt), m_Anchor( anchor), m_Method( method)
+        Support( Store *store, Anchor *anchor, Method method)
+            :  m_Store( store), m_Context( anchor), m_Anchor( anchor), m_Method( method)
         {}
 
     template < class Arg>
         bool    CallMethod( uint32_t stateId, bool entryFlg, Arg *arg)
         {
-            return (m_Anchor->*m_Method)( stateId, m_Context, entryFlg, arg);
+            return (m_Anchor->*m_Method)( stateId,  entryFlg, arg);
         }
 
         bool    CallMethod( uint32_t stateId, bool entryFlg, void *arg)
         {
-            return (m_Anchor->*m_Method)( stateId, m_Context, entryFlg);
+            return (m_Anchor->*m_Method)( stateId,  entryFlg);
         }
 
     template < class Arg>
@@ -243,19 +169,19 @@ template < class Iterator>
         return qFlg;
     }
 
-template < class Anchor, typename Method>
-    void  DoDepthTraversal( uint32_t stateId, Anchor *anchor, Method method)
+template < class Store, typename Method>
+    void  DoDepthTraversal( uint32_t stateId, Store *store, Method method)
     {   
-        m_StateStatus.resize( 2 * m_Store->Size(), false);
-        Support<  Anchor, Method>( this, anchor, method).DoDepthFirst( stateId, ( void *) nullptr); 
+        m_StateStatus.resize( 2 * store->Size(), false);
+        Support<  Store, Method>( store, static_cast< Anchor *>( this), method).DoDepthFirst( stateId, ( void *) nullptr); 
     }
         
           
-template < class Anchor, typename Method, typename Args>
-    void  DoDepthTraversal( uint32_t stateId, Anchor *anchor, Method method, Args *args)
+template < class Store, typename Method, typename Args>
+    void  DoDepthTraversal( uint32_t stateId, Store *store, Method method, Args *args)
     {   
-        m_StateStatus.resize( 2 * m_Store->Size(), false);
-        Support<  Anchor, Method>( this, anchor, method).DoDepthFirst( stateId, args); 
+        m_StateStatus.resize( 2 * store->Size(), false);
+        Support<  Store, Method>( store, static_cast< Anchor *>( this), method).DoDepthFirst( stateId, args); 
     }
 };
 
