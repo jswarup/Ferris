@@ -10,6 +10,8 @@
 //_____________________________________________________________________________________________________________________________
 
 class Ru_StaveCrate;
+ 
+typedef void (*Ru_ActionFnType)( void);
 
 //_____________________________________________________________________________________________________________________________
 
@@ -20,24 +22,73 @@ public:
         :   Cv_CrateEntry( id)
     {} 
 
-    void    WriteFuture( uint32_t ind, void *value);
+};
+
+//_____________________________________________________________________________________________________________________________
+
+template < typename Module, typename = void>
+struct Ru_StaveModuleAction
+{
+
+    auto ActionFn( void)
+    {
+        return  NULL;
+    } 
+};
+
+template < typename Module>
+struct Ru_StaveModuleAction<  Module, typename Cv_TypeEngage::Exist< decltype((( Module *) nullptr)->Action(  *( typename Module::Input *) nullptr) )>::Note>
+{
+    typedef typename Module::Inlet::Tuple       Input;
+    typedef typename Module::Outlet::Tuple      Output;
+    typedef typename Module::Outlet::PtrTuple   PtrOutput;
+
+    auto  ActionFn( void)
+    {   
+        return [this]( void) { 
+            Output  output = this->Module::Action( m_Input); 
+            Cv_TupleTools::PtrAssign( m_PtrOutput, output);
+            return; }
+    }
+ };
+
+//_____________________________________________________________________________________________________________________________
+
+template < typename Module, typename = void>
+struct Ru_StaveModuleCompound : public Ru_StaveModuleAction< Module> 
+{
+ 
+};
+
+template < typename Module>
+struct Ru_StaveModuleCompound<  Module, typename Cv_TypeEngage::Exist< typename  Module::Compound>::Note> : public Ru_StaveModuleAction< Module> 
+{
+    auto  ActionFn( void)
+    {   
+        return [this]( void) { 
+            auto    modFn = this->Ru_StaveModuleAction< Module>::ActionFn();
+            return; };
+    }
+ 
 };
 
 //_____________________________________________________________________________________________________________________________
 
 template < typename Module>
-class Ru_StaveModule : public Ru_Stave
+class Ru_StaveModule : public Ru_Stave, public Ru_StaveModuleCompound< Module>
 {
     typedef typename Module::Inlet::Tuple       Input;
     typedef typename Module::Outlet::Tuple      Output;
+    typedef typename Module::Outlet::PtrTuple   PtrOutput;
 
     Input                                       m_Input;
     Input                                       m_Future;
+    PtrOutput                                   m_PtrOutput;
     
 public: 
     Ru_StaveModule( uint32_t id)
         :   Ru_Stave( id)
-    {}
+    {} 
  };
  
 //_____________________________________________________________________________________________________________________________
@@ -60,6 +111,14 @@ public:
 class  Ru_StaveCrateCnstr : public Cv_GraphTraversor< Ru_StaveCrate>
 {
     std::vector< Ru_RubeSite *>     m_Sites;
+    
+template < typename Site>
+    Ru_StaveModule< typename Site::Module>  *Construct( Site *rr)
+    {
+        Ru_StaveModule< typename Site::Module>    *stave = m_Store->Create< Ru_StaveModule< typename Site::Module> >( m_Store->Size()); 
+        m_Sites.push_back( rr);
+        return stave;
+    }
 
     bool    Visit( uint32_t stateId, Cv_GraphTraversor< Ru_StaveCrate> *traveror, bool entryFlg)
     {
@@ -76,9 +135,7 @@ public:
 template < typename Site>
     Ru_StaveModule< typename Site::Module>  *Proliferate( Site *rr)
     {
-        Ru_StaveModule< typename Site::Module>    *stave = m_Store->Create< Ru_StaveModule< typename Site::Module> >( m_Store->Size());
-        Ru_RubeSite         *rs = rr;
-        m_Sites.push_back( rs);
+        Ru_StaveModule< typename Site::Module>    *stave = Construct( rr);  
         DoDepthTraversal( stave->GetId(), this, &Ru_StaveCrateCnstr::Visit);
         return stave;
     }    

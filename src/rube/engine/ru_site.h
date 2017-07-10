@@ -53,8 +53,8 @@ template < typename Module, typename... T>
 class   Ru_Inlet : public Cv_Tuple< Ru_ModulePort< Module, T, true>...>
 { 
 public:
-    typedef Cv_Tuple< Ru_ModulePort< Module, T, true>...>     Base;
-    typedef Cv_Tuple< T...>                             Tuple;
+    typedef Cv_Tuple< Ru_ModulePort< Module, T, true>...>       Base;
+    typedef Cv_Tuple< T...>                                     Tuple;
     
     Ru_Inlet( void)
     {}
@@ -72,7 +72,8 @@ class   Ru_Outlet : public Cv_Tuple< Ru_ModulePort< Module, T, false>...>
     
 public:
     typedef Cv_Tuple< Ru_ModulePort< Module, T, false>...> 	Base;
-    typedef Cv_Tuple< T...>  			                Tuple;
+    typedef Cv_Tuple< T...>  			                    Tuple;
+    typedef Cv_Tuple< T*...>  			                    PtrTuple;
 
     Ru_Outlet( void)
     {}
@@ -246,10 +247,7 @@ struct  Ru_Site : public Ru_CSite< Module>
         :   Ru_CSite< Module>( master)
     {}
 
-    auto    ActionFn( Input *)
-    {
-        return  nullptr;
-    }
+ 
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -276,6 +274,7 @@ template < typename...  T>
 struct Ru_Compound : public Cv_Tuple< Ru_DSite< T>...>
 {
     typedef Cv_Tuple< Ru_DSite< T>...>  CBase;
+    typedef Cv_Tuple< T...>             Tuple;
 
     Ru_Compound( Ru_RubeSite *master)
         : CBase( master)
@@ -292,7 +291,7 @@ struct Ru_CSite< ModuleT, typename Cv_TypeEngage::Exist< typename ModuleT::Compo
 {
     typedef typename ModuleT::Compound  Compound; 
     typedef ModuleT                     Module; 
-
+    
 public:
     Ru_CSite( Ru_RubeSite *master)
         : Ru_TSite< ModuleT>( master), Compound( master) 
@@ -311,10 +310,7 @@ struct  Ru_Site<Module, typename Cv_TypeEngage::Exist< typename Module::Action>:
         :   Ru_CSite< Module>( master)
     {}
 
-    auto    ActionFn( Output *output, Input *input)
-    {
-        return  [output, input]( void) {  *output = Module::Action( *input); return; };
-    } 
+
 };
 
 //_____________________________________________________________________________________________________________________________

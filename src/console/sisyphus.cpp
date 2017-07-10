@@ -17,7 +17,8 @@ void    TestAdder( void)
     Ru_FullAdder::Site  rr( nullptr) ;
     Ru_StaveCrate       staveCrate;
     Ru_StaveCrateCnstr  staveReposCnstr( &staveCrate);
-    Ru_Stave            *stave = staveReposCnstr.Proliferate( &rr ); 
+    auto                stave = staveReposCnstr.Proliferate( &rr ); 
+    stave->ActionFn();
     return;
 }
 

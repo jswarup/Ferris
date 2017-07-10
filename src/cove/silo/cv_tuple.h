@@ -50,6 +50,9 @@ template< typename T, typename... BT >
 template< typename... Types >
     static constexpr auto 	Dump( std::ostream &ostr, const  Cv_Tuple< Types...> &tuple);
 	
+template< typename... Types >
+    static constexpr void 	PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const Cv_Tuple< Types...> &tuple);
+	
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -208,6 +211,13 @@ constexpr auto   Cv_TupleTools::Dump( std::ostream &ostr, const  Cv_Tuple< Types
         ostr << var << (( k == 0) ? "] " : ", "); 
         return true; 
     });
+}
+
+template< typename... Types >
+constexpr void 	Cv_TupleTools::PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const Cv_Tuple< Types...> &tuple) 
+{
+    *ptrTuple.Var() = *tuple.Var(); 
+    PtrAssign( ( Cv_Tuple< Types*...>::TupleBase &) ptrTuple, ( const Cv_Tuple< Types...>::TupleBase &) tuple);
 }
 
 //_____________________________________________________________________________________________________________________________
