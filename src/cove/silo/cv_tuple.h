@@ -105,9 +105,9 @@ template < int K>
     auto        Var( void)  { return *const_cast<Tuple *>( this)->Ptr< K>(); }
 
 template < typename Lambda>
-    auto    Compose( Lambda param) const
+    auto    Compose( Lambda lambda) const
     {
-        return Cv_TupleTools::Make( [=](auto... rest) { return param( uint32_t( Tuple::Sz -1), m_Var, rest...);},  TupleBase::Compose( param)); 
+        return Cv_TupleTools::Make( [=](auto... rest) { return lambda( uint32_t( Tuple::Sz -1), m_Var, rest...);},  TupleBase::Compose( lambda)); 
     };
 
     template < typename... X>

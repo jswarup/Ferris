@@ -1,7 +1,8 @@
-//----------------------------------------- ru_rubesite.h --------------------------------------------------------------------
+//----------------------------------------- ru_site.h --------------------------------------------------------------------
 #pragma once
 
 #include    "cove/silo/cv_tuple.h"
+#include    "rube/engine/ru_stave.h"
 
 //_____________________________________________________________________________________________________________________________
 
@@ -273,8 +274,8 @@ struct Ru_DSite< Module,  typename Cv_TypeEngage::Exist< typename Module::Site>:
 template < typename...  T>
 struct Ru_Compound : public Cv_Tuple< Ru_DSite< T>...>
 {
-    typedef Cv_Tuple< Ru_DSite< T>...>  CBase;
-    typedef Cv_Tuple< T...>             Tuple;
+    typedef Cv_Tuple< Ru_DSite< T>...>          CBase;
+    typedef Cv_Tuple< Ru_StaveModule< T>...>    SubStaves;
 
     Ru_Compound( Ru_RubeSite *master)
         : CBase( master)
