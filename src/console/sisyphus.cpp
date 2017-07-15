@@ -28,7 +28,8 @@ void    TestAdder( void)
         return true; 
     };
     Ru_StaveModule< Ru_FullAdder::Site>      stave;
-
+    auto        lm = stave.ActionFn();
+    lm();
     //auto    c = stave->Compose( lambda);
     return;
 }

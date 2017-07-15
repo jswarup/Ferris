@@ -110,10 +110,21 @@ template < typename Lambda>
         return Cv_TupleTools::Make( [=](auto... rest) { return lambda( uint32_t( Tuple::Sz -1), m_Var, rest...);},  TupleBase::Compose( lambda)); 
     };
 
-    template < typename... X>
+template < typename Lambda>
+    auto    Xform( Lambda lamdba) const
+    {
+       // return  Cv_TupleTools::Make( [=](auto... rest) { return param( uint32_t( 0), m_Var, rest...);});
+        return   Cv_TupleTools::Make( lamdba( m_Var)...); 
+    };
+template < typename... X>
     auto    Invoke( X... args) const
     {
         return  Cv_TupleTools::Make( m_Var( args...), TupleBase::Invoke( args...)) ;
+    }
+template < typename... X>
+    auto    Invoke( void) const
+    {
+        return  Cv_TupleTools::Make( m_Var(), TupleBase::Invoke()) ;
     }
 };
 
@@ -169,6 +180,11 @@ template < typename... X>
     auto Invoke( X... args) const
     {
         return  Cv_TupleTools::Make( m_Var( args...)) ;
+    }
+template < typename... X>
+    auto Invoke( void) const
+    {
+        return  Cv_TupleTools::Make( m_Var()) ;
     }
 }; 
 
