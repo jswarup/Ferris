@@ -44,19 +44,23 @@ template< typename... Types >
     static constexpr auto   Make( Types&&... args );
 	
 template< typename T, typename... BT >
-    static constexpr auto  	Make( T &&t1, Cv_Tuple< BT...> &&t2);
+    static constexpr auto  	Cons( const T &t1, const Cv_Tuple< BT...> &t2);
+
+template< typename T, typename... BT >
+    static constexpr auto  	Cons( T &&t1, Cv_Tuple< BT...> &&t2);
 
 template< typename... Types >
     static constexpr auto 	Dump( std::ostream &ostr, const  Cv_Tuple< Types...> &tuple);
 	
 template< typename... Types >
     static constexpr void 	PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const Cv_Tuple< Types...> &tuple);
-	
+ 
 template< typename T1, typename T2, typename = void >
-    static constexpr   auto   Merge( T1 &&t1, T2 &&t2); 
+    static constexpr   auto   Fuse( const T1 &t1, const T2 &t2); 
  
 template< typename T1, typename T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
-    static constexpr   auto   Merge( T1 &&t1, T2 &&t2);
+    static constexpr   auto   Fuse( const T1 &t1, const T2 &t2);
+ 
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -87,6 +91,11 @@ public:
         : TupleBase( rest...), m_Var( t)
     {}
 
+    Cv_Tuple( const Cv_Tuple< T> &t, const TupleBase &base)
+        : TupleBase( base), m_Var( t.m_Var)
+    {}
+
+
     Cv_Tuple( Cv_Tuple< T> &&t, TupleBase &&base)
         : TupleBase( std::move( base)), m_Var( std::move( t.m_Var)) 
     {}
@@ -111,19 +120,19 @@ template < int K>
 template < typename Lambda>
     auto    Compose( Lambda lambda) const
     {
-        return Cv_TupleTools::Make( [=](auto... rest) { return lambda( uint32_t( Tuple::Sz -1), m_Var, rest...);},  TupleBase::Compose( lambda)); 
+        return Cv_TupleTools::Cons( [=](auto... rest) { return lambda( uint32_t( Tuple::Sz -1), m_Var, rest...);},  TupleBase::Compose( lambda)); 
     };
 
  
 template < typename... X>
     auto    Invoke( X... args) const
     {
-        return  Cv_TupleTools::Make( m_Var( args...), TupleBase::Invoke( args...)) ;
+        return  Cv_TupleTools::Cons( m_Var( args...), TupleBase::Invoke( args...)) ;
     }
 template < typename... X>
     auto    Invoke( void) const
     {
-        return  Cv_TupleTools::Make( m_Var(), TupleBase::Invoke()) ;
+        return  Cv_TupleTools::Cons( m_Var(), TupleBase::Invoke()) ;
     }
 };
 
@@ -208,11 +217,17 @@ constexpr auto   Cv_TupleTools::Make( Types&&... args )
 }
 
 template< typename T, typename... BT >
-constexpr auto  Cv_TupleTools::Make( T &&t1, Cv_Tuple< BT...> &&t2)
+constexpr auto  Cv_TupleTools::Cons( T &&t1, Cv_Tuple< BT...> &&t2)
 {
 	return Cv_Tuple< T, BT...>( std::forward<T>( t1), std::forward< Cv_Tuple< BT...> >( t2));
 }
 
+template< typename T, typename... BT >
+constexpr auto  Cv_TupleTools::Cons( const T &t1, const Cv_Tuple< BT...> &t2)
+{
+    Cv_Tuple< T, BT...> consTuple( t1, t2);
+	return consTuple;
+}
 
 template< typename... Types >
 constexpr auto   Cv_TupleTools::Dump( std::ostream &ostr, const  Cv_Tuple< Types...> &tuple)
@@ -234,17 +249,16 @@ constexpr void 	Cv_TupleTools::PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const 
 }
 
 template< typename T1, typename T2, typename>
-constexpr auto   Cv_TupleTools::Merge( T1 &&t1, T2 &&t2)
+constexpr auto   Cv_TupleTools::Fuse( const T1 &t1, const T2 &t2)
 {
-    return  Cv_TupleTools::Make( t1.m_Var, t2);
+    return  Cv_TupleTools::Cons( t1.m_Var, t2);
 }
 
 template< typename T1, typename T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
-constexpr auto   Cv_TupleTools::Merge( T1 &&t1, T2 &&t2)
+constexpr auto   Cv_TupleTools::Fuse( const T1 &t1, const T2 &t2)
 {
-    return Cv_TupleTools::Merge( std::forward< T1::TupleBase >( t1), Cv_TupleTools::Make( t1.m_Var, t2));
+    return Cv_TupleTools::Fuse( t1, Cv_TupleTools::Cons( t1.m_Var, t2));
 }
-
 
 //_____________________________________________________________________________________________________________________________
 

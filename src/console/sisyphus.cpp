@@ -16,8 +16,10 @@ void    TestAdder( void)
 {
     auto    a = Cv_TupleTools::Make( 1, 2, 3, 4);
     auto    b = Cv_TupleTools::Make( 5, 6, 7);
-    auto    c = Cv_TupleTools::Merge( a, b);
-    auto    d = Cv_TupleTools::Dump( std::cout, a);
+    auto    e = Cv_TupleTools::Cons( 15, b);
+    
+    auto    c = Cv_TupleTools::Fuse( a, e);
+    auto    d = Cv_TupleTools::Dump( std::cout, c);
     d.Invoke();
 
     Ru_FullAdder::Site  rr( nullptr) ;
