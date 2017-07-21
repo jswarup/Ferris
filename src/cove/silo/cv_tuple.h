@@ -54,13 +54,9 @@ template< typename... Types >
 	
 template< typename... Types >
     static constexpr void 	PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const Cv_Tuple< Types...> &tuple);
- 
-template< typename T1, typename T2, typename = void >
-    static constexpr   auto   Fuse( const T1 &t1, const T2 &t2); 
- 
-template< typename T1, typename T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
-    static constexpr   auto   Fuse( const T1 &t1, const T2 &t2);
- 
+
+template< typename T1, typename T2>
+    static constexpr   auto Fuse( const T1 &t1, const T2 &t2); 
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -248,18 +244,32 @@ constexpr void 	Cv_TupleTools::PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const 
     PtrAssign( static_cast< typename Cv_Tuple< Types*...>::TupleBase &>( ptrTuple), static_cast< const typename Cv_Tuple< Types...>::TupleBase &>( tuple));
 }
 
-template< typename T1, typename T2, typename>
+
+template< typename T1, typename T2, typename = void>
+struct Cv_TupleToolsFuser
+{
+    constexpr static auto Fuse( const T1 &t1, const T2 &t2)
+    {
+        return Cv_TupleTools::Cons( t1.m_Var, t2);
+    }
+};
+
+template< typename T1, typename T2>
+struct Cv_TupleToolsFuser< T1, T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
+{
+    constexpr static auto Fuse( const T1 &t1, const T2 &t2)
+    {
+        return Cv_TupleTools::Fuse( static_cast< const typename T1::TupleBase &>( t1), Cv_TupleTools::Cons( t1.m_Var, t2));
+    }
+};
+
+
+template< typename T1, typename T2>
 constexpr auto   Cv_TupleTools::Fuse( const T1 &t1, const T2 &t2)
 {
-    return  Cv_TupleTools::Cons( t1.m_Var, t2);
+    return  Cv_TupleToolsFuser< T1, T2>::Fuse( t1, t2);
 }
-
-template< typename T1, typename T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
-constexpr auto   Cv_TupleTools::Fuse( const T1 &t1, const T2 &t2)
-{
-    return Cv_TupleTools::Fuse( t1, Cv_TupleTools::Cons( t1.m_Var, t2));
-}
-
+ 
 //_____________________________________________________________________________________________________________________________
 
 template < typename X>
