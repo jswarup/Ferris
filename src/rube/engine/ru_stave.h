@@ -46,9 +46,8 @@ struct Ru_StaveModuleAction<  Module, typename Cv_TypeEngage::Exist< decltype(((
     auto  ActionFn( void)
     {   
         return [this]( auto... rest) { 
-            Ru_StaveModule< Module>         *thisModule = static_cast< Ru_StaveModule< Module> *>( this);
-            Output  output = thisModule->Module::Action( thisModule->m_Input); 
-            Cv_TupleTools::PtrAssign( thisModule->m_PtrOutput, output);
+            Ru_StaveModule< Module>     *thisModule = static_cast< Ru_StaveModule< Module> *>( this); 
+            Cv_TupleTools::PtrAssign( thisModule->m_PtrOutput, thisModule->Module::Action( thisModule->m_Input));
             return; };
     }
  };
@@ -60,9 +59,7 @@ struct Ru_StaveModuleCompound : public Ru_StaveModuleAction< Module>
 {
     auto  ActionFn( void)
     {   
-        return [this]( auto... rest) { 
-            auto    modFn = this->Ru_StaveModuleAction< Module>::ActionFn(rest...);
-            return; };
+        return  this->Ru_StaveModuleAction< Module>::ActionFn(); 
     }
 };
 

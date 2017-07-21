@@ -14,16 +14,9 @@
 
 void    TestAdder( void)
 {
-    auto    a = Cv_TupleTools::Make( 1, 2, 3, 4);
-    auto    f = Cv_TupleTools::Reverse( a);
-    auto    b = Cv_TupleTools::Make( 5, 6, 7);
-    auto    e = Cv_TupleTools::Cons( 15, b);
-        
-    auto    c = Cv_TupleTools::Fuse( f, e);
-    auto    d = Cv_TupleTools::Dump( std::cout, c);
-    d.Invoke();
 
-    Ru_FullAdder::Site  rr( nullptr) ;
+
+    Ru_FullAdder::Site      rr( nullptr);
 /*
     Ru_StaveCrate       staveCrate;
     Ru_StaveCrateCnstr  staveReposCnstr( &staveCrate);
@@ -73,6 +66,21 @@ void TestArena( void)
 
 void    TestVecOp( void)
 {
+    {
+        auto    a = Cv_TupleTools::Make( 0, 1, 2, 3, 4);
+        auto    f = Cv_TupleTools::Reverse( a);
+        auto    b = Cv_TupleTools::Make( 5, 6, 7, 8);
+       
+        auto    e = Cv_TupleTools::Cons( 15, b); 
+        auto    c = Cv_TupleTools::Fuse( f, e);
+        auto    d = Cv_TupleTools::Dump( std::cout, c);
+
+        d.Invoke();
+        std::cout << "OK\n";
+        auto    g = Cv_TupleTools::Dump( std::cout, Cv_TupleTools::Fuse( Cv_TupleTools::Make( a, b)));
+        g.Invoke();
+    }
+
     std::cout << "OK\n";
 
     auto    lm = []( uint32_t k, auto var, auto... args) 

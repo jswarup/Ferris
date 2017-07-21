@@ -49,6 +49,9 @@ template< typename T, typename... BT >
 template< typename T, typename... BT >
     static constexpr auto  	Cons( T &&t1, Cv_Tuple< BT...> &&t2);
 
+template< typename T, typename... BT >
+    static constexpr auto  	Reverse( const Cv_Tuple< T, BT...> &t);
+
 template< typename... Types >
     static constexpr auto 	Dump( std::ostream &ostr, const  Cv_Tuple< Types...> &tuple);
 	
@@ -58,8 +61,17 @@ template< typename... Types >
 template< typename T1, typename T2>
     static constexpr   auto Fuse( const T1 &t1, const T2 &t2); 
 
+template< typename T>
+    static constexpr   auto Fuse( const  Cv_Tuple< T> &tuple)
+    {
+        return tuple.m_Var; 
+    }
+
 template< typename T, typename... BT >
-    static constexpr auto  	Reverse( const Cv_Tuple< T, BT...> &t);
+    static constexpr   auto Fuse( const  Cv_Tuple< T, BT...> &tuple)
+    {
+        return Fuse( tuple.m_Var, Fuse( static_cast< const Cv_Tuple< BT...> &>( tuple))); 
+    }
 
 };
 
