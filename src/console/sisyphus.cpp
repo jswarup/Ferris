@@ -31,7 +31,7 @@ void    TestAdder( void)
     };
     Ru_StaveModule< Ru_FullAdder::Site>      stave;
     auto        lm = stave.ActionFn();
-    lm();
+    //lm();
     //auto    c = stave->Compose( lambda);
     return;
 }
@@ -77,7 +77,7 @@ void    TestVecOp( void)
 
         d.Invoke();
         std::cout << "OK\n";
-        auto    g = Cv_TupleTools::Dump( std::cout, Cv_TupleTools::Fuse( Cv_TupleTools::Make( a, b)));
+        auto    g = Cv_TupleTools::Dump( std::cout, Cv_TupleTools::Melt( Cv_TupleTools::Make( a, b)));
         g.Invoke();
     }
 

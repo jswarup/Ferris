@@ -32,7 +32,7 @@ struct Ru_StaveModuleAction
 
     auto ActionFn( void)
     {
-        return []( auto... rest) { return; };
+        return Cv_TupleTools::Make( []( auto... rest) { return; });
     } 
 };
 
@@ -45,10 +45,10 @@ struct Ru_StaveModuleAction<  Module, typename Cv_TypeEngage::Exist< decltype(((
 
     auto  ActionFn( void)
     {   
-        return [this]( auto... rest) { 
+        return Cv_TupleTools::Make( [this]( auto... rest) { 
             Ru_StaveModule< Module>     *thisModule = static_cast< Ru_StaveModule< Module> *>( this); 
             Cv_TupleTools::PtrAssign( thisModule->m_PtrOutput, thisModule->Module::Action( thisModule->m_Input));
-            return; };
+            return; });
     }
  };
 
@@ -70,17 +70,12 @@ struct Ru_StaveModuleCompound<  Module, typename Cv_TypeEngage::Exist< typename 
     typedef typename  Module::Compound::SubStaves SubStaves;
     auto  ActionFn( void)
     {   
-        return [this]( auto... rest) { 
-            auto    lm = []( uint32_t k, auto var, auto... args)  { return var.ActionFn(); };
-            auto    subActions = static_cast< SubStaves *>( this)->Compose( lm);
-            subActions.Invoke( rest...);   
-            auto    modFn = this->Ru_StaveModuleAction< Module>::ActionFn(); 
-            modFn( rest...); 
-            return; };
-        
-       // return Ru_StaveModuleAction< Module>::ActionFn(); 
+        auto    modFn = this->Ru_StaveModuleAction< Module>::ActionFn(); 
+        auto    subActionsLmbd = static_cast< SubStaves *>( this)->Compose( []( uint32_t k, auto var, auto... args)  { return var.ActionFn(); } );
+        //auto    subActions = subActionsLmbd.Invoke();
+        //return Cv_TupleTools::Fuse( modFn, Cv_TupleTools::Fuse( ));
+        return modFn;
     }
- 
 };
 
 //_____________________________________________________________________________________________________________________________

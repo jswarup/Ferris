@@ -61,17 +61,8 @@ template< typename... Types >
 template< typename T1, typename T2>
     static constexpr   auto Fuse( const T1 &t1, const T2 &t2); 
 
-template< typename T>
-    static constexpr   auto Fuse( const  Cv_Tuple< T> &tuple)
-    {
-        return tuple.m_Var; 
-    }
-
 template< typename T, typename... BT >
-    static constexpr   auto Fuse( const  Cv_Tuple< T, BT...> &tuple)
-    {
-        return Fuse( tuple.m_Var, Fuse( static_cast< const Cv_Tuple< BT...> &>( tuple))); 
-    }
+    static constexpr   auto Melt( const  Cv_Tuple< T, BT...> &tuple);
 
 };
 
@@ -240,6 +231,14 @@ constexpr auto  Cv_TupleTools::Cons( const T &t1, const Cv_Tuple< BT...> &t2)
 	return Cv_Tuple< T, BT...>( t1, t2);
 }
 
+
+template< typename T, typename... BT >
+constexpr auto Cv_TupleTools::Reverse( const Cv_Tuple< T, BT...> &t)
+{
+    return Fuse( static_cast< const Cv_Tuple< BT...> &>( t), Cv_Tuple< T>( t.m_Var));  
+}
+
+
 template< typename... Types >
 constexpr auto   Cv_TupleTools::Dump( std::ostream &ostr, const  Cv_Tuple< Types...> &tuple)
 {
@@ -286,9 +285,26 @@ constexpr auto   Cv_TupleTools::Fuse( const T1 &t1, const T2 &t2)
 }
  
 template< typename T, typename... BT >
-constexpr auto Cv_TupleTools::Reverse( const Cv_Tuple< T, BT...> &t)
+struct Cv_TupleToolsMelter
 {
-    return Fuse( static_cast< const Cv_Tuple< BT...> &>( t), Cv_Tuple< T>( t.m_Var));  
+    static constexpr   auto Melt( const  Cv_Tuple< T, BT...> &tuple)
+    {
+        return Cv_TupleTools::Fuse( tuple.m_Var, Cv_TupleToolsMelter< BT...>::Melt(  tuple)); 
+    }
+};
+template< typename T >
+struct Cv_TupleToolsMelter< T>
+{
+    static constexpr   auto Melt( const  Cv_Tuple< T> &tuple)
+    {
+        return tuple.m_Var; 
+    }
+};
+
+template< typename T, typename... BT > 
+constexpr   auto    Cv_TupleTools::Melt( const  Cv_Tuple< T, BT...> &tuple)
+{
+    return Cv_TupleToolsMelter< T, BT...>::Melt( tuple); 
 }
 
 
