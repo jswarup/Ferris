@@ -15,10 +15,11 @@
 void    TestAdder( void)
 {
     auto    a = Cv_TupleTools::Make( 1, 2, 3, 4);
+    auto    f = Cv_TupleTools::Reverse( a);
     auto    b = Cv_TupleTools::Make( 5, 6, 7);
     auto    e = Cv_TupleTools::Cons( 15, b);
-    
-    auto    c = Cv_TupleTools::Fuse( a, e);
+        
+    auto    c = Cv_TupleTools::Fuse( f, e);
     auto    d = Cv_TupleTools::Dump( std::cout, c);
     d.Invoke();
 

@@ -57,6 +57,10 @@ template< typename... Types >
 
 template< typename T1, typename T2>
     static constexpr   auto Fuse( const T1 &t1, const T2 &t2); 
+
+template< typename T, typename... BT >
+    static constexpr auto  	Reverse( const Cv_Tuple< T, BT...> &t);
+
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -220,9 +224,8 @@ constexpr auto  Cv_TupleTools::Cons( T &&t1, Cv_Tuple< BT...> &&t2)
 
 template< typename T, typename... BT >
 constexpr auto  Cv_TupleTools::Cons( const T &t1, const Cv_Tuple< BT...> &t2)
-{
-    Cv_Tuple< T, BT...> consTuple( t1, t2);
-	return consTuple;
+{   
+	return Cv_Tuple< T, BT...>( t1, t2);
 }
 
 template< typename... Types >
@@ -270,6 +273,13 @@ constexpr auto   Cv_TupleTools::Fuse( const T1 &t1, const T2 &t2)
     return  Cv_TupleToolsFuser< T1, T2>::Fuse( t1, t2);
 }
  
+template< typename T, typename... BT >
+constexpr auto Cv_TupleTools::Reverse( const Cv_Tuple< T, BT...> &t)
+{
+    return Fuse( static_cast< const Cv_Tuple< BT...> &>( t), Cv_Tuple< T>( t.m_Var));  
+}
+
+
 //_____________________________________________________________________________________________________________________________
 
 template < typename X>
