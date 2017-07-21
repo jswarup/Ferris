@@ -14,8 +14,6 @@
       <File Name="../../../../src/rube/blocks/ru_gates.h"/>
     </VirtualDirectory>
     <VirtualDirectory Name="engine">
-      <File Name="../../../../src/rube/engine/ru_rubereactor.cpp"/>
-      <File Name="../../../../src/rube/engine/ru_rubereactor.h"/>
       <File Name="../../../../src/rube/engine/ru_rubesite.h"/>
       <File Name="../../../../src/rube/engine/ru_tuple.h"/>
     </VirtualDirectory>

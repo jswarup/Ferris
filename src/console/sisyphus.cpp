@@ -14,6 +14,12 @@
 
 void    TestAdder( void)
 {
+    auto    a = Cv_TupleTools::Make( 1, 2, 3, 4);
+    auto    b = Cv_TupleTools::Make( 5, 6, 7);
+    auto    c = Cv_TupleTools::Merge( a, b);
+    auto    d = Cv_TupleTools::Dump( std::cout, a);
+    d.Invoke();
+
     Ru_FullAdder::Site  rr( nullptr) ;
 /*
     Ru_StaveCrate       staveCrate;

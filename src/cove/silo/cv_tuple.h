@@ -26,7 +26,6 @@ struct Cv_TupleIndex
 template <typename T>
 struct Cv_TupleIndex< T, 0>
 {
-    typedef typename T::TupleBase TupleBase;
 
 	T	*m_T;
 	
@@ -53,6 +52,11 @@ template< typename... Types >
 template< typename... Types >
     static constexpr void 	PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const Cv_Tuple< Types...> &tuple);
 	
+template< typename T1, typename T2, typename = void >
+    static constexpr   auto   Merge( T1 &&t1, T2 &&t2); 
+ 
+template< typename T1, typename T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
+    static constexpr   auto   Merge( T1 &&t1, T2 &&t2);
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -110,12 +114,7 @@ template < typename Lambda>
         return Cv_TupleTools::Make( [=](auto... rest) { return lambda( uint32_t( Tuple::Sz -1), m_Var, rest...);},  TupleBase::Compose( lambda)); 
     };
 
-template < typename Lambda>
-    auto    Xform( Lambda lamdba) const
-    {
-       // return  Cv_TupleTools::Make( [=](auto... rest) { return param( uint32_t( 0), m_Var, rest...);});
-        return   Cv_TupleTools::Make( lamdba( m_Var)...); 
-    };
+ 
 template < typename... X>
     auto    Invoke( X... args) const
     {
@@ -139,8 +138,7 @@ class   Cv_Tuple< T>
     
 
     typedef T                       CType;
-    typedef Cv_Tuple< T>            Tuple;
-    typedef void                    TupleBase;
+    typedef Cv_Tuple< T>            Tuple; 
     
     enum {
         Sz = 1,
@@ -203,7 +201,6 @@ struct Ru_Index< 0, Tuple>
 
 //_____________________________________________________________________________________________________________________________
 
-
 template< typename... Types >
 constexpr auto   Cv_TupleTools::Make( Types&&... args )
 {
@@ -233,8 +230,21 @@ template< typename... Types >
 constexpr void 	Cv_TupleTools::PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const Cv_Tuple< Types...> &tuple) 
 {
     *ptrTuple.Var() = *tuple.Var(); 
-    PtrAssign( ( Cv_Tuple< Types*...>::TupleBase &) ptrTuple, ( const Cv_Tuple< Types...>::TupleBase &) tuple);
+    PtrAssign( static_cast< typename Cv_Tuple< Types*...>::TupleBase &>( ptrTuple), static_cast< const typename Cv_Tuple< Types...>::TupleBase &>( tuple));
 }
+
+template< typename T1, typename T2, typename>
+constexpr auto   Cv_TupleTools::Merge( T1 &&t1, T2 &&t2)
+{
+    return  Cv_TupleTools::Make( t1.m_Var, t2);
+}
+
+template< typename T1, typename T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
+constexpr auto   Cv_TupleTools::Merge( T1 &&t1, T2 &&t2)
+{
+    return Cv_TupleTools::Merge( std::forward< T1::TupleBase >( t1), Cv_TupleTools::Make( t1.m_Var, t2));
+}
+
 
 //_____________________________________________________________________________________________________________________________
 

@@ -10,6 +10,9 @@
 //_____________________________________________________________________________________________________________________________
 
 class Ru_StaveCrate; 
+template < typename Module>
+class Ru_StaveModule;
+
 //_____________________________________________________________________________________________________________________________
 
 class Ru_Stave : public Cv_CrateEntry
@@ -43,9 +46,10 @@ struct Ru_StaveModuleAction<  Module, typename Cv_TypeEngage::Exist< decltype(((
     auto  ActionFn( void)
     {   
         return [this]( auto... rest) { 
-            Output  output = this->Module::Action( m_Input); 
-            Cv_TupleTools::PtrAssign( m_PtrOutput, output);
-            return; }
+            Ru_StaveModule< Module>         *thisModule = static_cast< Ru_StaveModule< Module> *>( this);
+            Output  output = thisModule->Module::Action( thisModule->m_Input); 
+            Cv_TupleTools::PtrAssign( thisModule->m_PtrOutput, output);
+            return; };
     }
  };
 
