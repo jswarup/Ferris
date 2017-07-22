@@ -246,14 +246,14 @@ template< typename T, typename... BT >
 constexpr auto  Cv_TupleTools::Cons( T &&t1, Cv_Tuple< BT...> &&t2)
 {
     typedef Cv_Tuple< T, BT...>     Tup;
-	return Tup( std::forward<T>( t1), std::forward< Tup::TupleBase>( t2));
+	return Tup( std::forward<T>( t1), std::forward< typename Tup::TupleBase>( t2));
 }
 
 template< typename T, typename... BT >
 constexpr auto  Cv_TupleTools::Cons( const T &t1, const Cv_Tuple< BT...> &t2)
 {   
     typedef Cv_Tuple< T, BT...>     Tup;
-	return Tup( t1, static_cast< const Tup::TupleBase &>( t2));
+	return Tup( t1, static_cast< const typename Tup::TupleBase &>( t2));
 }
 
 
@@ -298,11 +298,29 @@ constexpr auto   Cv_TupleTools::Dump( std::ostream &ostr, const  Cv_Tuple< Types
     });
 }
 
+template< typename T1, typename T2, typename = void>
+struct Cv_TupleToolsPtrAssigner
+{
+    static constexpr void PtrAssign( const T1 &ptrTuple, const T2 &tuple)
+    {
+        *ptrTuple.m_Var = tuple.m_Var;       
+    }
+};
+
+template< typename T1, typename T2>
+struct Cv_TupleToolsPtrAssigner< T1, T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
+{
+    static constexpr void PtrAssign( const T1 &ptrTuple, const T2 &tuple)
+    {
+        *ptrTuple.m_Var = tuple.m_Var;  
+        return Cv_TupleTools::PtrAssign( static_cast< const typename T1::TupleBase &>( ptrTuple), static_cast< const typename T2::TupleBase &>( tuple));
+    }
+};
+
 template< typename... Types >
 constexpr void 	Cv_TupleTools::PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const Cv_Tuple< Types...> &tuple) 
 {
-    *ptrTuple.Var() = *tuple.Var(); 
-    PtrAssign( static_cast< typename Cv_Tuple< Types*...>::TupleBase &>( ptrTuple), static_cast< const typename Cv_Tuple< Types...>::TupleBase &>( tuple));
+    Cv_TupleToolsPtrAssigner< Cv_Tuple< Types*...>, Cv_Tuple< Types...>>::PtrAssign( ptrTuple, tuple);
 }
 
 
