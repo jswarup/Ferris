@@ -64,13 +64,12 @@ struct Ru_StaveModuleCompound : public Ru_StaveModuleAction< Module>
 };
 
 template < typename Module>
-struct Ru_StaveModuleCompound<  Module, typename Cv_TypeEngage::Exist< typename  Module::Compound>::Note> :  public Module::Compound::SubStaves  
-{ 
-    Ru_StaveModuleAction< Module>       m_StaveAction;
+struct Ru_StaveModuleCompound<  Module, typename Cv_TypeEngage::Exist< typename  Module::Compound>::Note> :  public Ru_StaveModuleAction< Module>, public Module::Compound::SubStaves  
+{  
     typedef typename  Module::Compound::SubStaves SubStaves;
     auto  ActionFn( void)
     {   
-        auto    modFn = m_StaveAction.ActionFn(); 
+        auto    modFn = static_cast< Ru_StaveModuleAction< Module> *>( this)->ActionFn(); 
         auto    subActions = static_cast< SubStaves *>( this)->Unary( []( auto var) { return var.ActionFn(); } ); 
         return Cv_TupleTools::Fuse( modFn, Cv_TupleTools::Melt( subActions)); 
     }
