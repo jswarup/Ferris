@@ -41,6 +41,9 @@ struct Cv_TupleIndex< T, 0>
 struct  Cv_TupleTools
 {   
 template< typename... Types >
+    static constexpr auto   Make( const Types &... args );
+
+template< typename... Types >
     static constexpr auto   Make( Types&&... args );
 	
 template< typename T, typename... BT >
@@ -52,6 +55,9 @@ template< typename T, typename... BT >
 template< typename T, typename... BT >
     static constexpr auto  	Reverse( const Cv_Tuple< T, BT...> &t);
 
+template< typename T, typename... BT >
+    static constexpr   auto Melt( const  Cv_Tuple< T, BT...> &tuple);
+
 template< typename... Types >
     static constexpr auto 	Dump( std::ostream &ostr, const  Cv_Tuple< Types...> &tuple);
 	
@@ -61,10 +67,10 @@ template< typename... Types >
 template< typename T1, typename T2>
     static constexpr   auto Fuse( const T1 &t1, const T2 &t2); 
 
-template< typename T, typename... BT >
-    static constexpr   auto Melt( const  Cv_Tuple< T, BT...> &tuple);
+template< typename Lambda, typename T1, typename T2>
+    static constexpr   auto Binary( const Lambda &lambda, const T1 &t1, const T2 &t2);
 
-};
+}; 
 
 //_____________________________________________________________________________________________________________________________
 
@@ -94,13 +100,13 @@ public:
         : TupleBase( rest...), m_Var( t)
     {}
 
-    Cv_Tuple( const Cv_Tuple< T> &t, const TupleBase &base)
-        : TupleBase( base), m_Var( t.m_Var)
+    Cv_Tuple( const  T &t, const TupleBase &base)
+        : TupleBase( base), m_Var( t)
     {}
 
 
-    Cv_Tuple( Cv_Tuple< T> &&t, TupleBase &&base)
-        : TupleBase( std::move( base)), m_Var( std::move( t.m_Var)) 
+    Cv_Tuple( T &&t, TupleBase &&base)
+        : TupleBase( std::move( base)), m_Var( std::move( t)) 
     {}
 
 template <class X>
@@ -126,7 +132,12 @@ template < typename Lambda>
         return Cv_TupleTools::Cons( [=](auto... rest) { return lambda( uint32_t( Tuple::Sz -1), m_Var, rest...);},  TupleBase::Compose( lambda)); 
     };
 
- 
+ template < typename Lambda>
+    auto    Unary( Lambda lambda) const
+    {
+        return  Cv_TupleTools::Cons( lambda( m_Var), TupleBase::Unary( lambda));
+    };
+
 template < typename... X>
     auto    Invoke( X... args) const
     {
@@ -181,9 +192,15 @@ template < int K>
     auto    &Var( void) const { return m_Var; }
 
 template < typename Lambda>
-    auto    Compose( Lambda param) const
+    auto    Compose( Lambda lambda) const
     {
-        return  Cv_TupleTools::Make( [=](auto... rest) { return param( uint32_t( 0), m_Var, rest...);});
+        return  Cv_TupleTools::Make( [=](auto... rest) { return lambda( uint32_t( 0), m_Var, rest...);});
+    };
+
+template < typename Lambda>
+    auto    Unary( Lambda lambda) const
+    {
+        return  Cv_TupleTools::Make( lambda( m_Var));
     };
 
 template < typename... X>
@@ -214,6 +231,12 @@ struct Ru_Index< 0, Tuple>
 //_____________________________________________________________________________________________________________________________
 
 template< typename... Types >
+constexpr auto   Cv_TupleTools::Make( const Types&... args )
+{
+	return Cv_Tuple< Types...>( args...);
+}
+
+template< typename... Types >
 constexpr auto   Cv_TupleTools::Make( Types&&... args )
 {
 	return Cv_Tuple< Types...>( std::forward<Types>( args)...);
@@ -222,13 +245,15 @@ constexpr auto   Cv_TupleTools::Make( Types&&... args )
 template< typename T, typename... BT >
 constexpr auto  Cv_TupleTools::Cons( T &&t1, Cv_Tuple< BT...> &&t2)
 {
-	return Cv_Tuple< T, BT...>( std::forward<T>( t1), std::forward< Cv_Tuple< BT...> >( t2));
+    typedef Cv_Tuple< T, BT...>     Tup;
+	return Tup( std::forward<T>( t1), std::forward< Tup::TupleBase>( t2));
 }
 
 template< typename T, typename... BT >
 constexpr auto  Cv_TupleTools::Cons( const T &t1, const Cv_Tuple< BT...> &t2)
 {   
-	return Cv_Tuple< T, BT...>( t1, t2);
+    typedef Cv_Tuple< T, BT...>     Tup;
+	return Tup( t1, static_cast< const Tup::TupleBase &>( t2));
 }
 
 
@@ -238,6 +263,28 @@ constexpr auto Cv_TupleTools::Reverse( const Cv_Tuple< T, BT...> &t)
     return Fuse( static_cast< const Cv_Tuple< BT...> &>( t), Cv_Tuple< T>( t.m_Var));  
 }
 
+template< typename T, typename... BT >
+struct Cv_TupleToolsMelter
+{
+    static constexpr   auto Melt( const  Cv_Tuple< T, BT...> &tuple)
+    {
+        return Cv_TupleTools::Fuse( tuple.m_Var, Cv_TupleToolsMelter< BT...>::Melt(  tuple)); 
+    }
+};
+template< typename T >
+struct Cv_TupleToolsMelter< T>
+{
+    static constexpr   auto Melt( const  Cv_Tuple< T> &tuple)
+    {
+        return tuple.m_Var; 
+    }
+};
+
+template< typename T, typename... BT > 
+constexpr   auto    Cv_TupleTools::Melt( const  Cv_Tuple< T, BT...> &tuple)
+{
+    return Cv_TupleToolsMelter< T, BT...>::Melt( tuple); 
+}
 
 template< typename... Types >
 constexpr auto   Cv_TupleTools::Dump( std::ostream &ostr, const  Cv_Tuple< Types...> &tuple)
@@ -284,27 +331,30 @@ constexpr auto   Cv_TupleTools::Fuse( const T1 &t1, const T2 &t2)
     return  Cv_TupleToolsFuser< T1, T2>::Fuse( t1, t2);
 }
  
-template< typename T, typename... BT >
-struct Cv_TupleToolsMelter
+
+template< typename Lambda, typename T1, typename T2, typename = void>
+struct Cv_TupleToolsBinaryOps
 {
-    static constexpr   auto Melt( const  Cv_Tuple< T, BT...> &tuple)
+    constexpr static auto Binary( const Lambda &lambda, const T1 &t1, const T2 &t2 )
     {
-        return Cv_TupleTools::Fuse( tuple.m_Var, Cv_TupleToolsMelter< BT...>::Melt(  tuple)); 
-    }
-};
-template< typename T >
-struct Cv_TupleToolsMelter< T>
-{
-    static constexpr   auto Melt( const  Cv_Tuple< T> &tuple)
-    {
-        return tuple.m_Var; 
+        return Cv_TupleTools::Make( lambda( t1.m_Var, t2.m_Var));
     }
 };
 
-template< typename T, typename... BT > 
-constexpr   auto    Cv_TupleTools::Melt( const  Cv_Tuple< T, BT...> &tuple)
+template< typename Lambda, typename T1, typename T2>
+struct Cv_TupleToolsBinaryOps< Lambda, T1, T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
 {
-    return Cv_TupleToolsMelter< T, BT...>::Melt( tuple); 
+    constexpr static auto Binary( const Lambda &lambda, const T1 &t1, const T2 &t2)
+    {
+        return Cv_TupleTools::Cons( lambda( t1.m_Var, t2.m_Var), Cv_TupleTools::Binary( lambda, static_cast< const typename T1::TupleBase &>( t1), 
+                                                                                static_cast< const typename T2::TupleBase &>( t2)));
+    }
+};
+
+template< typename Lambda, typename T1, typename T2>
+constexpr   auto Cv_TupleTools::Binary( const Lambda &lambda, const T1 &t1, const T2 &t2) 
+{
+    return Cv_TupleToolsBinaryOps< Lambda, T1, T2>::Binary( lambda, t1, t2);
 }
 
 

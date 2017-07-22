@@ -71,10 +71,9 @@ struct Ru_StaveModuleCompound<  Module, typename Cv_TypeEngage::Exist< typename 
     auto  ActionFn( void)
     {   
         auto    modFn = this->Ru_StaveModuleAction< Module>::ActionFn(); 
-        auto    subActionsLmbd = static_cast< SubStaves *>( this)->Compose( []( uint32_t k, auto var, auto... args)  { return var.ActionFn(); } );
-        //auto    subActions = subActionsLmbd.Invoke();
-        //return Cv_TupleTools::Fuse( modFn, Cv_TupleTools::Fuse( ));
-        return modFn;
+       // auto    subActions = static_cast< SubStaves *>( this)->Apply( []( auto var) { return var.ActionFn(); } );
+        //auto    a = Cv_TupleTools::Melt( subActions);
+        return modFn;// Cv_TupleTools::Melt( modFn, a); 
     }
 };
 

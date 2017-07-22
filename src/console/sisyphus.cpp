@@ -68,7 +68,13 @@ void    TestVecOp( void)
 {
     {
         auto    a = Cv_TupleTools::Make( 0, 1, 2, 3, 4);
-        auto    f = Cv_TupleTools::Reverse( a);
+        auto    r = a.Unary( []( auto var) { return var * 7; });
+        Cv_TupleTools::Dump( std::cout, r).Invoke();
+        
+        auto    s = Cv_TupleTools::Binary( []( auto v1, auto v2) { return v1 + v2; }, a, r);
+        Cv_TupleTools::Dump( std::cout, s).Invoke();
+/*
+        auto    f = Cv_TupleTools::Reverse( r);
         auto    b = Cv_TupleTools::Make( 5, 6, 7, 8);
        
         auto    e = Cv_TupleTools::Cons( 15, b); 
@@ -79,6 +85,7 @@ void    TestVecOp( void)
         std::cout << "OK\n";
         auto    g = Cv_TupleTools::Dump( std::cout, Cv_TupleTools::Melt( Cv_TupleTools::Make( a, b)));
         g.Invoke();
+*/
     }
 
     std::cout << "OK\n";
