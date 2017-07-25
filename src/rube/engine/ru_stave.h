@@ -95,55 +95,28 @@ public:
  };
  
 //_____________________________________________________________________________________________________________________________
-/*
-struct Ru_StaveCrate : public Cv_Crate< Ru_Stave>
+ 
+struct Ru_StaveCrate
 {
    
 public:
     Ru_StaveCrate( void)
     {}
-
-    Cv_Enumerator< uint32_t>    *StateEnumerator( uint32_t stateId)
-    {
-        return NULL;
-    }
-};
-
-//_____________________________________________________________________________________________________________________________
-
-class  Ru_StaveCrateCnstr : public Cv_GraphTraversor< Ru_StaveCrate>
-{
-    std::vector< Ru_RubeSite *>     m_Sites;
     
-template < typename Site>
-    Ru_StaveModule< typename Site::Module>  *Construct( Site *rr)
-    {
-        Ru_StaveModule< typename Site::Module>    *stave = m_Store->Create< Ru_StaveModule< typename Site::Module> >( m_Store->Size()); 
-        m_Sites.push_back( rr);
-        return stave;
-    }
-
-    bool    Visit( uint32_t stateId, Cv_GraphTraversor< Ru_StaveCrate> *traveror, bool entryFlg)
+    bool    ElemTravesor( Ru_Stave *elem, Cv_TreeTraversor< Ru_Stave*> *context, bool entryFlg, void *)
     {
             return true;
-    }   
-
-public:
-    Ru_StaveCrateCnstr( Ru_StaveCrate *crate)
-        : Cv_GraphTraversor< Ru_StaveCrate>( crate)
-    {
-        m_Sites.push_back( 0);
-    }
+    } 
+    
     
 template < typename Site>
-    Ru_StaveModule< typename Site::Module>  *Proliferate( Site *rr)
+    Ru_StaveModule< typename Site::Module>      Proliferate( Site *rr)
     {
-        Ru_StaveModule< typename Site::Module>    *stave = Construct( rr);  
-//        DoDepthTraversal( stave->GetId(), this, &Ru_StaveCrateCnstr::Visit);
+        Ru_StaveModule< typename Site::Module>      stave; 
+        Cv_TreeTraversor< Ru_Stave *>                 staveTraversor;      
+        staveTraversor.DoDepthTraversal( &stave, this,  &Ru_StaveCrate::ElemTravesor, ( void *) nullptr); 
         return stave;
     }    
-    
 };
-*/
-
+ 
 //_____________________________________________________________________________________________________________________________
