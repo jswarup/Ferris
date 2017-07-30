@@ -156,16 +156,6 @@ public:
 
 //_____________________________________________________________________________________________________________________________
 
-struct Ru_RubeSite : public Cv_Minion< Ru_RubeSite>
-{
-public:
-    Ru_RubeSite( Ru_RubeSite *master )
-        : Cv_Minion< Ru_RubeSite>( master) 
-    {}
-};
-
-//_____________________________________________________________________________________________________________________________
-
 template < class Module, typename = void> 
 struct Ru_TJunctionSite 
 {
@@ -237,12 +227,12 @@ template < int K>
 //_____________________________________________________________________________________________________________________________
 
 template < class TModule>
-struct Ru_TSite : public Ru_RubeSite, public Ru_TInletSite< TModule>, public Ru_TOutletSite< TModule>, public Ru_TJunctionSite< TModule>
+struct Ru_TSite : public Ru_TInletSite< TModule>, public Ru_TOutletSite< TModule>, public Ru_TJunctionSite< TModule>
 {
     typedef TModule Module;
 
-    Ru_TSite( Ru_RubeSite *master)
-        : Ru_RubeSite( master), Ru_TInletSite< Module>( this), Ru_TOutletSite< Module>( this), Ru_TJunctionSite< Module>( this)
+    Ru_TSite( Ru_Stave< Module> *master)
+        : Ru_TInletSite< Module>( this), Ru_TOutletSite< Module>( this), Ru_TJunctionSite< Module>( this)
     {}
 };
 
@@ -251,7 +241,7 @@ struct Ru_TSite : public Ru_RubeSite, public Ru_TInletSite< TModule>, public Ru_
 template < class Module, typename = void>
 struct Ru_CSite : public Ru_TSite< Module>
 {
-    Ru_CSite( Ru_RubeSite *master)
+    Ru_CSite( Ru_Stave< Module> *master)
         : Ru_TSite< Module>( master)
     {}
 };
@@ -264,7 +254,7 @@ struct  Ru_Site : public Ru_CSite< Module>
     typedef typename Module::Inlet::Tuple       Input;
     typedef typename Module::Outlet::Tuple      Output;
 
-    Ru_Site( Ru_RubeSite *master)
+    Ru_Site( Ru_Stave< Module> *master)
         :   Ru_CSite< Module>( master)
     {}
 
@@ -276,7 +266,7 @@ struct  Ru_Site : public Ru_CSite< Module>
 template < class Module, typename = void> 
 struct Ru_DSite : public Ru_Site< Module>
 {
-    Ru_DSite( Ru_RubeSite *master)
+    Ru_DSite( Ru_Stave< Module> *master)
         : Ru_Site< Module>( master)
     {}
 };
@@ -284,27 +274,50 @@ struct Ru_DSite : public Ru_Site< Module>
 template <typename Module>
 struct Ru_DSite< Module,  typename Cv_TypeEngage::Exist< typename Module::Site>::Note> : public Module::Site
 {    
-    Ru_DSite( Ru_RubeSite *master)
+    Ru_DSite( Ru_Stave< Module> *master)
         :  Module::Site( master)
     {}
 };
 
 //_____________________________________________________________________________________________________________________________
 
-template < typename...  T>
-struct Ru_Compound : public Cv_Tuple< Ru_DSite< T>...>
+template < typename T, typename... Rest>
+struct Ru_Compound : public Ru_Compound< Rest...>
 {
-    typedef Cv_Tuple< Ru_DSite< T>...>          CBase;
-    typedef Cv_Tuple< Ru_StaveModule< T>...>    SubStaves;
+    typedef Ru_Compound< Rest...>                       TupleBase;
+    typedef Cv_Tuple< Ru_Stave< T>, Ru_Stave< Rest>...> SubStaves;
 
-    Ru_Compound( Ru_RubeSite *master)
-        : CBase( master)
+    Ru_Site< T>            m_Var;
+
+    Ru_Compound(  Cv_Tuple< Ru_Stave< T>, Ru_Stave< Rest>...> *t)
+        : TupleBase( t), m_Var( t->PVar())
     {}
+ 
+	auto	PVar( void) { return &m_Var; }
 
 template <int K>
-    auto    Child( void)  { return Cv_TupleIndex< CBase, K>( this).PVar(); }
+    auto    Child( void)  { return Cv_TupleIndex< Ru_Compound, K>( this).PVar(); }
 };
 
+//_____________________________________________________________________________________________________________________________
+
+template < typename T>
+struct Ru_Compound< T> 
+{
+    typedef Cv_Tuple< Ru_Stave< T> >          SubStaves;
+
+    Ru_Site< T>            m_Var;
+
+    Ru_Compound( SubStaves *t)
+        : m_Var( t->PVar())
+    {}
+ 
+    auto	PVar( void) { return &m_Var; }
+
+template <int K>
+    auto    Child( void)  { return &m_Var; }
+
+};
 //_____________________________________________________________________________________________________________________________
 
 template < class ModuleT>
@@ -314,7 +327,7 @@ struct Ru_CSite< ModuleT, typename Cv_TypeEngage::Exist< typename ModuleT::Compo
     typedef ModuleT                     Module; 
     
 public:
-    Ru_CSite( Ru_RubeSite *master)
+    Ru_CSite( Ru_Stave< Module> *master)
         : Ru_TSite< ModuleT>( master), Compound( master) 
     {}
 };
@@ -327,7 +340,7 @@ struct  Ru_Site<Module, typename Cv_TypeEngage::Exist< typename Module::Action>:
     typedef typename Module::Inlet::Tuple       Input;
     typedef typename Module::Outlet::Tuple      Output;
 
-    Ru_Site( Ru_RubeSite *master)
+    Ru_Site( Ru_Stave< Module> *master)
         :   Ru_CSite< Module>( master)
     {}
 

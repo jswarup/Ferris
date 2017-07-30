@@ -53,9 +53,9 @@ struct Ru_HalfAdder
 
     struct Site : public Ru_Site< Ru_HalfAdder>
     {
-        Site( Ru_RubeSite *master)
+        Site( Ru_Stave< Ru_HalfAdder> *master)
             : Ru_Site< Ru_HalfAdder>( master)
-        {
+        { 
             Ru_Site< Ru_AndGate>    *xorGate = Child< 0>();
             Ru_Site< Ru_XorGate>    *andGate = Child< 1>();
             
@@ -67,6 +67,7 @@ struct Ru_HalfAdder
 
 		    OutPort< 0>()->Join( xorGate->OutPort< 0>());   // sum
 		    OutPort< 1>()->Join( andGate->OutPort< 0>());   // carry       
+ 
         }
     };
 
@@ -87,7 +88,7 @@ public:
 
 	struct Site : public Ru_Site< Ru_FullAdder>
     {
-        Site( Ru_RubeSite *master)             
+        Site(  Ru_Stave< Ru_FullAdder> *master)             
             : Ru_Site< Ru_FullAdder>( master)
         {
             Ru_Site< Ru_HalfAdder>  *halfAdder1 = Child< 0>();
@@ -104,7 +105,7 @@ public:
             
             OutPort< 0>()->Join( halfAdder1->OutPort< 0>());
             OutPort< 1>()->Join( orGate->OutPort< 0>());
-            
+      
         }
     };
 

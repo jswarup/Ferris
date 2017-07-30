@@ -15,20 +15,17 @@
 void    TestAdder( void)
 {
 
-    Ru_StaveModule< Ru_FullAdder>       stave; 
-    Ru_FullAdder::Site                  rr( nullptr);
+    Ru_Stave< Ru_FullAdder>         stave; 
+    Ru_FullAdder::Site              rr( &stave);
  
     auto    lambda = []( uint32_t k, auto var, auto... args) 
     { 
         std::cout << var;  
         return true; 
-    };/*
-    Ru_StaveCrate       staveCrate;
-    auto                stave =  staveCrate.Proliferate(  &rr ); 
-    */
+    };
+
     auto        lm = stave.ActionFn();
-    lm.Invoke(); 
-    //auto    c = stave->Compose( lambda);
+    lm.Invoke();  
     return;
 }
 

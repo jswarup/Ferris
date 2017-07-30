@@ -9,25 +9,13 @@
 
 //_____________________________________________________________________________________________________________________________
 
-struct Ru_StaveCrate; 
 template < typename Module>
-struct Ru_StaveModule;
-
-//_____________________________________________________________________________________________________________________________
-
-struct Ru_Stave : public Cv_CrateEntry
-{
-public: 
-    Ru_Stave( uint32_t id)
-        :   Cv_CrateEntry( id)
-    {} 
-
-};
+struct Ru_Stave;
 
 //_____________________________________________________________________________________________________________________________
 
 template < typename Module, typename = void>
-struct Ru_StaveModuleAction
+struct Ru_StaveAction
 {
 
     auto ActionFn( void)
@@ -37,7 +25,7 @@ struct Ru_StaveModuleAction
 };
 
 template < typename Module>
-struct Ru_StaveModuleAction<  Module, typename Cv_TypeEngage::Exist< decltype((( Module *) nullptr)->Action(  *( typename Module::Inlet::Tuple *) nullptr) )>::Note>
+struct Ru_StaveAction<  Module, typename Cv_TypeEngage::Exist< decltype((( Module *) nullptr)->Action(  *( typename Module::Inlet::Tuple *) nullptr) )>::Note>
 {
     typedef typename Module::Inlet::Tuple       Input;
     typedef typename Module::Outlet::Tuple      Output;
@@ -46,7 +34,7 @@ struct Ru_StaveModuleAction<  Module, typename Cv_TypeEngage::Exist< decltype(((
     auto  ActionFn( void)
     {   
         return Cv_TupleTools::Make( [this]( auto... rest) { 
-            Ru_StaveModule< Module>     *thisModule = static_cast< Ru_StaveModule< Module> *>( this); 
+            Ru_Stave< Module>     *thisModule = static_cast< Ru_Stave< Module> *>( this); 
             Cv_TupleTools::PtrAssign( thisModule->m_PtrOutput, thisModule->Action( thisModule->m_Input));
             return true; });
     }
@@ -55,21 +43,21 @@ struct Ru_StaveModuleAction<  Module, typename Cv_TypeEngage::Exist< decltype(((
 //_____________________________________________________________________________________________________________________________
 
 template < typename Module, typename = void>
-struct Ru_StaveModuleCompound : public Ru_StaveModuleAction< Module> 
+struct Ru_StaveCompound : public Ru_StaveAction< Module> 
 {
     auto  ActionFn( void)
     {   
-        return  this->Ru_StaveModuleAction< Module>::ActionFn(); 
+        return  this->Ru_StaveAction< Module>::ActionFn(); 
     }
 };
 
 template < typename Module>
-struct Ru_StaveModuleCompound<  Module, typename Cv_TypeEngage::Exist< typename  Module::Compound>::Note> :  public Ru_StaveModuleAction< Module>, public Module::Compound::SubStaves  
+struct Ru_StaveCompound<  Module, typename Cv_TypeEngage::Exist< typename  Module::Compound>::Note> :  public Ru_StaveAction< Module>, public Module::Compound::SubStaves  
 {  
     typedef typename  Module::Compound::SubStaves SubStaves;
     auto  ActionFn( void)
     {   
-        auto    modFn = static_cast< Ru_StaveModuleAction< Module> *>( this)->ActionFn(); 
+        auto    modFn = static_cast< Ru_StaveAction< Module> *>( this)->ActionFn(); 
         auto    subActions = static_cast< SubStaves *>( this)->Unary( []( auto var) { return var.ActionFn(); } ); 
         return Cv_TupleTools::Fuse( modFn, Cv_TupleTools::Melt( subActions)); 
     }
@@ -78,7 +66,7 @@ struct Ru_StaveModuleCompound<  Module, typename Cv_TypeEngage::Exist< typename 
 //_____________________________________________________________________________________________________________________________
 
 template < typename Module>
-struct Ru_StaveModule : public Ru_Stave, public Ru_StaveModuleCompound< Module>, public Module
+struct Ru_Stave :  public Ru_StaveCompound< Module>, public Module
 {
     typedef typename Module::Inlet::Tuple       Input;
     typedef typename Module::Outlet::Tuple      Output;
@@ -89,34 +77,9 @@ struct Ru_StaveModule : public Ru_Stave, public Ru_StaveModuleCompound< Module>,
     PtrOutput                                   m_PtrOutput;
     
 public: 
-    Ru_StaveModule( uint32_t id = 0)
-        :   Ru_Stave( id)
+    Ru_Stave( void) 
     {} 
  };
  
-//_____________________________________________________________________________________________________________________________
- 
-struct Ru_StaveCrate
-{
-   
-public:
-    Ru_StaveCrate( void)
-    {}
-    
-    bool    ElemTravesor( Ru_Stave *elem, Cv_TreeTraversor< Ru_Stave*> *context, bool entryFlg, void *)
-    {
-            return true;
-    } 
-    
-    
-template < typename Site>
-    Ru_StaveModule< typename Site::Module>      Proliferate( Site *rr)
-    {
-        Ru_StaveModule< typename Site::Module>      stave; 
-        Cv_TreeTraversor< Ru_Stave *>                 staveTraversor;      
-        staveTraversor.DoDepthTraversal( &stave, this,  &Ru_StaveCrate::ElemTravesor, ( void *) nullptr); 
-        return stave;
-    }    
-};
  
 //_____________________________________________________________________________________________________________________________
