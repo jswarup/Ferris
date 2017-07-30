@@ -41,17 +41,37 @@ public:
 template < typename Module, typename T, bool InPortFlg >
 class   Ru_ModulePort : public Ru_Port< T, InPortFlg>
 {   
+    
 public:
     Ru_ModulePort( void) 
     {}
-
 };
-  
+
+template < typename Module, bool InPortFlg, int Ind, typename T, typename... Rest>
+class   Ru_ModulePortTuple : public Ru_ModulePortTuple< Module, InPortFlg, Ind +1, Rest...> 
+{
+public:
+    Ru_Port< T, InPortFlg>      m_Var;
+
+    typedef Ru_ModulePortTuple< Module, InPortFlg, Ind +1, Rest...>    TupleBase;
+
+    auto	PVar( void) { return &m_Var; }
+};
+
+template < typename Module, bool InPortFlg, int Ind, typename T>
+class   Ru_ModulePortTuple< Module, InPortFlg,  Ind, T>  
+{
+public:
+    Ru_Port< T, InPortFlg>  m_Var;
+    
+    auto	PVar( void) { return &m_Var; }
+};
+
 //_____________________________________________________________________________________________________________________________
 
 
 template < typename Module, typename... T>
-class   Ru_Inlet : public Cv_Tuple< Ru_ModulePort< Module, T, true>...>
+class   Ru_Inlet : public Ru_ModulePortTuple< Module, true, 0, T...>
 { 
 public:
     typedef Cv_Tuple< Ru_ModulePort< Module, T, true>...>       Base;

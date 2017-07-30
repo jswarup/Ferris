@@ -38,8 +38,27 @@ struct Cv_TupleIndex< T, 0>
 
 //_____________________________________________________________________________________________________________________________
 
+template< std::size_t I, class T >
+struct Cv_TupleType;
+
+template< std::size_t I, class Head, class... Tail >
+struct Cv_TupleType< I, Cv_Tuple<Head, Tail...>> : Cv_TupleType< I - 1, Cv_Tuple< Tail...>> 
+{ 
+};
+
+template< class Head, class... Tail >
+struct Cv_TupleType< 0, Cv_Tuple<Head, Tail...>> 
+{
+    typedef Head type;
+};
+ 
+//_____________________________________________________________________________________________________________________________
+
 struct  Cv_TupleTools
 {   
+template <std::size_t N,  typename Tuple>
+    using type = typename Cv_TupleType< N, Tuple>::type;
+
 template< typename... Types >
     static constexpr auto   Make( const Types &... args );
 
