@@ -287,7 +287,7 @@ struct Ru_Compound : public Ru_Compound< Rest...>
     typedef Ru_Compound< Rest...>                       TupleBase;
     typedef Cv_Tuple< Ru_Stave< T>, Ru_Stave< Rest>...> SubStaves;
 
-    Ru_Site< T>            m_Var;
+    Ru_DSite< T>            m_Var;
 
     Ru_Compound(  Cv_Tuple< Ru_Stave< T>, Ru_Stave< Rest>...> *t)
         : TupleBase( t), m_Var( t->PVar())
@@ -306,7 +306,7 @@ struct Ru_Compound< T>
 {
     typedef Cv_Tuple< Ru_Stave< T> >          SubStaves;
 
-    Ru_Site< T>            m_Var;
+    Ru_DSite< T>            m_Var;
 
     Ru_Compound( SubStaves *t)
         : m_Var( t->PVar())
