@@ -41,7 +41,6 @@ public:
 template < typename Module, typename T, bool InPortFlg >
 class   Ru_ModulePort : public Ru_Port< T, InPortFlg>
 {   
-    
 public:
     Ru_ModulePort( void) 
     {}
@@ -68,7 +67,6 @@ public:
 };
 
 //_____________________________________________________________________________________________________________________________
-
 
 template < typename Module, typename... T>
 class   Ru_Inlet : public Ru_ModulePortTuple< Module, true, 0, T...>
@@ -159,7 +157,7 @@ public:
 template < class Module, typename = void> 
 struct Ru_TJunctionSite 
 {
-    Ru_TJunctionSite( Ru_TSite< Module> *site)
+    Ru_TJunctionSite( void)
     {}
 
 template < int K>
@@ -172,7 +170,7 @@ struct Ru_TJunctionSite< Module,  typename Cv_TypeEngage::Exist< typename Module
     typedef typename Module::Junction   Junction;  
     Junction                            m_Junction; 
 
-    Ru_TJunctionSite( Ru_TSite< Module> *site)
+    Ru_TJunctionSite( void)
     {}
 template < int K>
     auto        Conn( void) { return Cv_TupleIndex< Junction, K>( &m_Junction).PVar();  }  
@@ -182,7 +180,7 @@ template < int K>
 template < class Module, typename = void> 
 struct Ru_TInletSite 
 {
-    Ru_TInletSite( Ru_TSite< Module> *site)
+    Ru_TInletSite( void)
     {}
 
 template < int K>
@@ -194,7 +192,7 @@ struct Ru_TInletSite< Module,  typename Cv_TypeEngage::Exist< typename Module::I
 {
     typedef typename Module::Inlet   Inlet;   
     
-    Ru_TInletSite( Ru_TSite< Module> *site)
+    Ru_TInletSite( void)
     {}
 
 template < int K>
@@ -206,7 +204,7 @@ template < int K>
 template < class Module, typename = void> 
 struct Ru_TOutletSite 
 {
-    Ru_TOutletSite( Ru_TSite< Module> *site)
+    Ru_TOutletSite( void)
     {}
 
 template < int K>
@@ -218,7 +216,7 @@ struct Ru_TOutletSite< Module,  typename Cv_TypeEngage::Exist< typename Module::
 {
     typedef typename Module::Outlet   Outlet; 
 
-    Ru_TOutletSite( Ru_TSite< Module> *site)
+    Ru_TOutletSite( void)
     {}
 template < int K>
     auto        OutPort( void) { return Cv_TupleIndex< Outlet, K>( this).PVar();  }  
@@ -229,10 +227,11 @@ template < int K>
 template < class TModule>
 struct Ru_TSite : public Ru_TInletSite< TModule>, public Ru_TOutletSite< TModule>, public Ru_TJunctionSite< TModule>
 {
-    typedef TModule Module;
+    typedef TModule     Module;
+    Ru_Stave< Module>   *m_Master;
 
     Ru_TSite( Ru_Stave< Module> *master)
-        : Ru_TInletSite< Module>( this), Ru_TOutletSite< Module>( this), Ru_TJunctionSite< Module>( this)
+        : Ru_TInletSite< Module>( ), Ru_TOutletSite< Module>(), Ru_TJunctionSite< Module>(), m_Master( master)
     {}
 };
 
