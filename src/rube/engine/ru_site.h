@@ -44,6 +44,18 @@ class   Ru_ModulePort : public Ru_Port< T, InPortFlg>
 public:
     Ru_ModulePort( void) 
     {}
+
+};
+
+template < typename Module, typename T>
+class   Ru_ModulePort< Module, T, true> : public Ru_Port< T, true>
+{   
+public:
+    T       *m_PVal;
+    Ru_ModulePort( T *pVal) 
+        : m_PVal( pVal)
+    {}
+
 };
 
 template < typename Module, bool InPortFlg, int Ind, typename T, typename... Rest>
@@ -72,14 +84,16 @@ template < typename Module, typename T, typename... Rest>
 class   Ru_Inlet : public Ru_Inlet< Module, Rest...>
 {   
 public:
-    typedef Ru_Inlet< Module, Rest...> 	        TupleBase;
+    typedef Ru_Inlet< Module, Rest...> 	            TupleBase;
     typedef Cv_Tuple< T, Rest...>  			        Tuple;
     typedef Cv_Tuple< T*, Rest*...>  			    PtrTuple;
-
+    enum {
+        Sz = TupleBase::Sz +1,
+    };
     Ru_ModulePort< Module, T, true>                 m_Var;
 
     Ru_Inlet( Ru_Stave< Module> *stave)
-        : TupleBase( stave)
+        : TupleBase( stave), m_Var( stave->VarPtr< Sz -1>())
     {}
 
     auto	PVar( void) { return &m_Var; }
@@ -94,10 +108,13 @@ class   Ru_Inlet< Module, T>
 public:
     typedef Cv_Tuple< T>  			                Tuple;
     typedef Cv_Tuple< T*>  			                PtrTuple;
-
+    enum {
+        Sz = 1,
+    };
     Ru_ModulePort< Module, T, true>                m_Var;
 
     Ru_Inlet( Ru_Stave< Module> *stave)
+        : m_Var( stave->VarPtr< Sz -1>())
     {}
 
     auto	PVar( void) { return &m_Var; }
@@ -115,7 +132,9 @@ public:
     typedef Ru_Outlet< Module, Rest...> 	        TupleBase;
     typedef Cv_Tuple< T, Rest...>  			        Tuple;
     typedef Cv_Tuple< T*, Rest*...>  			    PtrTuple;
-
+    enum {
+        Sz = TupleBase::Sz +1,
+    };
     Ru_ModulePort< Module, T, false>                 m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
@@ -134,7 +153,9 @@ class   Ru_Outlet< Module, T>
 public:
     typedef Cv_Tuple< T>  			                Tuple;
     typedef Cv_Tuple< T*>  			                PtrTuple;
-
+    enum {
+        Sz = 1,
+    };
     Ru_ModulePort< Module, T, false>                m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)

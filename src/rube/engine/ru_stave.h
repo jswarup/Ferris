@@ -79,6 +79,9 @@ struct Ru_Stave :  public Ru_StaveCompound< Module>, public Module
 public: 
     Ru_Stave( void) 
     {} 
+
+template < int K>
+    auto        VarPtr( void)  { return Cv_TupleIndex< Input, Input::Sz -1 -K>( &m_Future).PVar(); } 
  };
  
  
