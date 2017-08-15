@@ -68,37 +68,82 @@ public:
 
 //_____________________________________________________________________________________________________________________________
 
-template < typename Module, typename... T>
-class   Ru_Inlet : public Ru_ModulePortTuple< Module, true, 0, T...>
+template < typename Module, typename T, typename... Rest> 
+class   Ru_Inlet : public Ru_Inlet< Module, Rest...>
+{   
+public:
+    typedef Ru_Inlet< Module, Rest...> 	        TupleBase;
+    typedef Cv_Tuple< T, Rest...>  			        Tuple;
+    typedef Cv_Tuple< T*, Rest*...>  			    PtrTuple;
+
+    Ru_ModulePort< Module, T, true>                 m_Var;
+
+    Ru_Inlet( Ru_Stave< Module> *stave)
+        : TupleBase( stave)
+    {}
+
+    auto	PVar( void) { return &m_Var; }
+
+template < int K>
+    auto        Port( void) { return Cv_TupleIndex< Base, K>( this).PVar(); }
+};
+
+template < typename Module, typename T> 
+class   Ru_Inlet< Module, T>   
 { 
 public:
-    typedef Cv_Tuple< Ru_ModulePort< Module, T, true>...>       Base;
-    typedef Cv_Tuple< T...>                                     Tuple;
-    
+    typedef Cv_Tuple< T>  			                Tuple;
+    typedef Cv_Tuple< T*>  			                PtrTuple;
+
+    Ru_ModulePort< Module, T, true>                m_Var;
+
     Ru_Inlet( Ru_Stave< Module> *stave)
     {}
 
+    auto	PVar( void) { return &m_Var; }
+
 template < int K>
-    auto        Port( void) { return Cv_TupleIndex< Base,  K>( this).PVar(); }
-     
+    auto        Port( void) { return PVar(); }
 };
 
 //_____________________________________________________________________________________________________________________________
 
-template < typename Module, typename... T>
-class   Ru_Outlet : public Cv_Tuple< Ru_ModulePort< Module, T, false>...>
-{ 
-    
+template < typename Module, typename T, typename... Rest> 
+class   Ru_Outlet : public Ru_Outlet< Module, Rest...>
+{   
 public:
-    typedef Cv_Tuple< Ru_ModulePort< Module, T, false>...> 	Base;
-    typedef Cv_Tuple< T...>  			                    Tuple;
-    typedef Cv_Tuple< T*...>  			                    PtrTuple;
+    typedef Ru_Outlet< Module, Rest...> 	        TupleBase;
+    typedef Cv_Tuple< T, Rest...>  			        Tuple;
+    typedef Cv_Tuple< T*, Rest*...>  			    PtrTuple;
+
+    Ru_ModulePort< Module, T, false>                 m_Var;
+
+    Ru_Outlet( Ru_Stave< Module> *stave)
+        : TupleBase( stave)
+    {}
+
+    auto	PVar( void) { return &m_Var; }
+
+template < int K>
+    auto        Port( void) { return Cv_TupleIndex< Base, K>( this).PVar(); }
+};
+
+template < typename Module, typename T> 
+class   Ru_Outlet< Module, T>   
+{ 
+public:
+    typedef Cv_Tuple< T>  			                Tuple;
+    typedef Cv_Tuple< T*>  			                PtrTuple;
+
+    Ru_ModulePort< Module, T, false>                m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
     {}
 
+    auto	PVar( void) { return &m_Var; }
+
 template < int K>
-    auto        Port( void) { return Cv_TupleIndex< Base, K>( this).PVar(); }
+    auto        Port( void) { return PVar(); }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -137,19 +182,41 @@ public:
 
 //_____________________________________________________________________________________________________________________________
 
-template < typename Module, typename... T>
-class   Ru_Junction : public Cv_Tuple< Ru_Connection< T>...>
+
+template < typename Module, typename T, typename... Rest> 
+class   Ru_Junction : public Ru_Junction< Module, Rest...>
 { 
-
+    
 public:
-    typedef Cv_Tuple< Ru_Connection< T>...> 	        Base;
-    typedef Cv_Tuple< T...>  			                Tuple;
+    typedef Ru_Junction< Module, Rest...> 	        TupleBase;
+    typedef Cv_Tuple< T, Rest...>  			        Tuple;
+    Ru_Connection< T>                               m_Var;
 
-    Ru_Junction( void)
+    Ru_Junction( Ru_Stave< Module> *stave)
+        : TupleBase( stave)
     {}
+
+    auto	PVar( void) { return &m_Var; }
 
 template < int K>
     auto        Connection( void) { return Cv_TupleIndex< Base, K>( this).PVar(); }
+};
+
+template < typename Module, typename T> 
+class   Ru_Junction< Module, T>   
+{ 
+
+public:
+    typedef Cv_Tuple< T>  			                Tuple;
+
+    Ru_Connection< T>                               m_Var;
+    Ru_Junction( Ru_Stave< Module> *stave)
+    {}
+
+    auto	PVar( void) { return &m_Var; }
+
+template < int K>
+    auto        Connection( void) { return PVar(); }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -170,6 +237,7 @@ struct Ru_TJunctionSite< Module,  typename Cv_TypeEngage::Exist< typename Module
     typedef typename Module::Junction   Junction;   
 
     Ru_TJunctionSite( Ru_Stave< Module> *stave)
+        : Junction( stave)
     {}
 template < int K>
     auto        Conn( void) { return Cv_TupleIndex< Junction, K>( this).PVar();  }  
