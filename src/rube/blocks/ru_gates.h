@@ -66,8 +66,7 @@ struct Ru_HalfAdder
 		    InPort< 1>()->Join( xorGate->InPort< 1>());
 
 		    OutPort< 0>()->Join( xorGate->OutPort< 0>());   // sum
-		    OutPort< 1>()->Join( andGate->OutPort< 0>());   // carry       
- 
+		    OutPort< 1>()->Join( andGate->OutPort< 0>());   // carry   
         }
     };
 
@@ -80,8 +79,8 @@ struct Ru_FullAdder
 public:
     struct Site;
 
-    typedef Ru_Inlet< Ru_HalfAdder, bool, bool, bool>               Inlet;      // carryIn, a, b
-    typedef Ru_Outlet< Ru_HalfAdder, bool, bool>                    Outlet;     // sum, carry
+    typedef Ru_Inlet< Ru_FullAdder, bool, bool, bool>               Inlet;      // carryIn, a, b
+    typedef Ru_Outlet< Ru_FullAdder, bool, bool>                    Outlet;     // sum, carry
     typedef Ru_Junction< Ru_FullAdder, bool, bool, bool>            Junction;   // sum2_A
 
 	typedef Ru_Compound< Ru_HalfAdder, Ru_HalfAdder, Ru_OrGate>     Compound;
