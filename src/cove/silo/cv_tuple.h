@@ -409,3 +409,33 @@ public:
 };
 
 //_____________________________________________________________________________________________________________________________
+
+template < typename Tuple, typename = void>
+class Cv_OpTuple 
+{
+public:
+    typedef typename Tuple::CType  CType;
+
+    std::function< bool( const CType &)>    m_Var;
+     
+    auto	PVar( void) { return &m_Var; }
+
+    bool    Apply( const Tuple &tup) { return m_Var( tup.m_Var); }
+};
+
+template < typename Tuple>
+class Cv_OpTuple< Tuple, typename Cv_TypeEngage::Exist< typename Tuple::TupleBase>::Note> : public Cv_OpTuple< typename Tuple::TupleBase>
+{
+public:
+    typedef typename Tuple::TupleBase       TupleTupleBase;
+    typedef Cv_OpTuple< TupleTupleBase>     TupleBase;
+    typedef typename Tuple::CType           CType;
+
+    std::function< bool( const CType &)>    m_Var;
+
+    auto	PVar( void) { return &m_Var; }
+    
+    bool    Apply( const Tuple &tup)  { return m_Var( tup.m_Var) && TupleBase::Apply( static_cast< const TupleTupleBase &>( tup)); }
+};
+
+//_____________________________________________________________________________________________________________________________

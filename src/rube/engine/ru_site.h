@@ -39,24 +39,33 @@ public:
 //_____________________________________________________________________________________________________________________________
 
 template < typename Module, typename T, bool InPortFlg >
-class   Ru_ModulePort : public Ru_Port< T, InPortFlg>
+class   Ru_ModulePort;
+
+template < typename Module, typename T>
+class   Ru_ModulePort< Module, T, false> : public Ru_Port< T, false>
 {   
 public:
-    Ru_ModulePort( void) 
-    {}
+    std::function< bool( const T &)>    *m_POp;
 
+    Ru_ModulePort( std::function< bool( const T &)> *pOp)
+        :  m_POp( pOp)
+    {}
 };
 
 template < typename Module, typename T>
 class   Ru_ModulePort< Module, T, true> : public Ru_Port< T, true>
 {   
 public:
-    T       *m_PVal;
+    T           *m_PVal;
+
     Ru_ModulePort( T *pVal) 
-        : m_PVal( pVal)
+        :  m_PVal( pVal)
     {}
 
+
 };
+ 
+//_____________________________________________________________________________________________________________________________
 
 template < typename Module, bool InPortFlg, int Ind, typename T, typename... Rest>
 class   Ru_ModulePortTuple : public Ru_ModulePortTuple< Module, InPortFlg, Ind +1, Rest...> 
@@ -138,7 +147,7 @@ public:
     Ru_ModulePort< Module, T, false>                 m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
-        : TupleBase( stave)
+        : TupleBase( stave), m_Var( stave->OpPtr< Sz -1>())
     {}
 
     auto	PVar( void) { return &m_Var; }
@@ -159,6 +168,7 @@ public:
     Ru_ModulePort< Module, T, false>                m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
+        : m_Var( stave->OpPtr< Sz -1>())
     {}
 
     auto	PVar( void) { return &m_Var; }
@@ -346,7 +356,6 @@ struct  Ru_Site : public Ru_CSite< Module>
     Ru_Site( Ru_Stave< Module> *stave)
         :   Ru_CSite< Module>( stave)
     {}
-
  
 };
 

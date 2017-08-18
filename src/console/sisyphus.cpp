@@ -14,6 +14,8 @@
 
 void    TestAdder( void)
 {
+    auto    a = Cv_TupleTools::Make( 0, 1, 2, 3, 4);
+    Cv_OpTuple< decltype( a)>   tup;
 
     Ru_Stave< Ru_FullAdder>         stave; 
     Ru_FullAdder::Site              rr( &stave);
