@@ -14,14 +14,12 @@ class   Ru_Connection;
 
 //_____________________________________________________________________________________________________________________________
 
-template < typename T, bool InPortFlg >
-class   Ru_Port : public Cv_DLink< Ru_Port< T, InPortFlg>>
+template < typename T>
+class   Ru_Port : public Cv_DLink< Ru_Port< T >>
 {
-    typedef Ru_Port< T, InPortFlg>  Port;
-    Ru_Connection< T>               *m_Conn;
-public:
-    const static bool In = InPortFlg; 
+    typedef Ru_Port< T>  Port; 
 
+public: 
     Ru_Port( void) 
     {}
 
@@ -31,9 +29,7 @@ public:
         Cv_DList< Port>  list2( port->GetHeadLink());
         list1.Transfer( &list2); 
         return list1.GetHead();
-    }
-    
-    void SetConnection( Ru_Connection< T> *conn) {   m_Conn = conn; }
+    } 
 };
   
 //_____________________________________________________________________________________________________________________________
@@ -42,18 +38,16 @@ template < typename Module, typename T, bool InPortFlg >
 class   Ru_ModulePort;
 
 template < typename Module, typename T>
-class   Ru_ModulePort< Module, T, false> : public Ru_Port< T, false>
+class   Ru_ModulePort< Module, T, false> : public Ru_Port< T>
 {   
-public:
-    std::function< bool( const T &)>    *m_POp;
+public: 
 
-    Ru_ModulePort( std::function< bool( const T &)> *pOp)
-        :  m_POp( pOp)
+    Ru_ModulePort( void) 
     {}
 };
 
 template < typename Module, typename T>
-class   Ru_ModulePort< Module, T, true> : public Ru_Port< T, true>
+class   Ru_ModulePort< Module, T, true> : public Ru_Port< T>
 {   
 public:
     T           *m_PVal;
@@ -61,32 +55,8 @@ public:
     Ru_ModulePort( T *pVal) 
         :  m_PVal( pVal)
     {}
-
-
 };
  
-//_____________________________________________________________________________________________________________________________
-
-template < typename Module, bool InPortFlg, int Ind, typename T, typename... Rest>
-class   Ru_ModulePortTuple : public Ru_ModulePortTuple< Module, InPortFlg, Ind +1, Rest...> 
-{
-public:
-    Ru_Port< T, InPortFlg>      m_Var;
-
-    typedef Ru_ModulePortTuple< Module, InPortFlg, Ind +1, Rest...>    TupleBase;
-
-    auto	PVar( void) { return &m_Var; }
-};
-
-template < typename Module, bool InPortFlg, int Ind, typename T>
-class   Ru_ModulePortTuple< Module, InPortFlg,  Ind, T>  
-{
-public:
-    Ru_Port< T, InPortFlg>      m_Var;
-    
-    auto	PVar( void) { return &m_Var; }
-};
-
 //_____________________________________________________________________________________________________________________________
 
 template < typename Module, typename T, typename... Rest> 
@@ -147,7 +117,7 @@ public:
     Ru_ModulePort< Module, T, false>                 m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
-        : TupleBase( stave), m_Var( stave->OpPtr< Sz -1>())
+        : TupleBase( stave), m_Var()// stave->OpPtr< Sz -1>())
     {}
 
     auto	PVar( void) { return &m_Var; }
@@ -168,109 +138,13 @@ public:
     Ru_ModulePort< Module, T, false>                m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
-        : m_Var( stave->OpPtr< Sz -1>())
+        : m_Var()//  stave->OpPtr< Sz -1>())
     {}
 
     auto	PVar( void) { return &m_Var; }
 
 template < int K>
     auto        Port( void) { return PVar(); }
-};
-
-//_____________________________________________________________________________________________________________________________
-
-template < typename T>
-class   Ru_Connection
-{
-    typedef Ru_Port< T, true>      InPort;
-    typedef Ru_Port< T, false>     OutPort;
-
-    InPort          *m_InPort;
-    OutPort         *m_OutPort;
-
-public:
-    Ru_Connection( void)
-        : m_InPort( nullptr), m_OutPort( nullptr)
-    {}
-    
-    void    Join( OutPort *out, InPort *in)
-    {
-        if ( m_InPort)
-            m_InPort->GetTailLink()->SetNext( in);
-        else
-            m_InPort = in->GetHeadLink();
-        for ( InPort *in = m_InPort; in; in = in->GetNext())
-            in->SetConnection( this);
-
-        if ( m_OutPort)
-            m_OutPort->GetTailLink()->SetNext( out);
-        else
-            m_OutPort = out->GetHeadLink();
-        for ( OutPort *out = m_OutPort; out; out = out->GetNext())
-            out->SetConnection( this);
-    }
-};
-
-//_____________________________________________________________________________________________________________________________
-
-
-template < typename Module, typename T, typename... Rest> 
-class   Ru_Junction : public Ru_Junction< Module, Rest...>
-{ 
-    
-public:
-    typedef Ru_Junction< Module, Rest...> 	        TupleBase;
-    typedef Cv_Tuple< T, Rest...>  			        Tuple;
-    Ru_Connection< T>                               m_Var;
-
-    Ru_Junction( Ru_Stave< Module> *stave)
-        : TupleBase( stave)
-    {}
-
-    auto	PVar( void) { return &m_Var; }
-
-template < int K>
-    auto        Connection( void) { return Cv_TupleIndex< Base, K>( this).PVar(); }
-};
-
-template < typename Module, typename T> 
-class   Ru_Junction< Module, T>   
-{ 
-
-public:
-    typedef Cv_Tuple< T>  			                Tuple;
-
-    Ru_Connection< T>                               m_Var;
-    Ru_Junction( Ru_Stave< Module> *stave)
-    {}
-
-    auto	PVar( void) { return &m_Var; }
-
-template < int K>
-    auto        Connection( void) { return PVar(); }
-};
-
-//_____________________________________________________________________________________________________________________________
-
-template < class Module, typename = void> 
-struct Ru_TJunctionSite 
-{
-    Ru_TJunctionSite( Ru_Stave< Module> *stave)
-    {}
- 
-};
-
-template <typename Module>
-struct Ru_TJunctionSite< Module,  typename Cv_TypeEngage::Exist< typename Module::Junction>::Note> : public Module::Junction
-{
-    typedef typename Module::Junction   Junction;   
-
-    Ru_TJunctionSite( Ru_Stave< Module> *stave)
-        : Junction( stave)
-    {}
-template < int K>
-    auto        Conn( void) { return Cv_TupleIndex< Junction, K>( this).PVar();  }  
-     
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -325,13 +199,13 @@ template < int K>
 //_____________________________________________________________________________________________________________________________
 
 template < class TModule>
-struct Ru_TSite : public Ru_TInletSite< TModule>, public Ru_TOutletSite< TModule>, public Ru_TJunctionSite< TModule>
+struct Ru_TSite : public Ru_TInletSite< TModule>, public Ru_TOutletSite< TModule> 
 {
     typedef TModule     Module;
     Ru_Stave< Module>   *m_Stave;
 
     Ru_TSite( Ru_Stave< Module> *stave)
-        : Ru_TInletSite< Module>( stave), Ru_TOutletSite< Module>( stave), Ru_TJunctionSite< Module>( stave), m_Stave( stave)
+        : Ru_TInletSite< Module>( stave), Ru_TOutletSite< Module>( stave), m_Stave( stave)
     {}
 };
 

@@ -34,8 +34,7 @@ struct Ru_StaveAction<  Module, typename Cv_TypeEngage::Exist< decltype((( Modul
     auto  ActionFn( void)
     {   
         return Cv_TupleTools::Make( [this]( auto... rest) { 
-            Ru_Stave< Module>       *thisModule = static_cast< Ru_Stave< Module> *>( this); 
-            thisModule->m_OpOutput.Apply( thisModule->Action( thisModule->m_Input));
+            Ru_Stave< Module>       *thisModule = static_cast< Ru_Stave< Module> *>( this);  
    //         Cv_TupleTools::PtrAssign( thisModule->m_PtrOutput, thisModule->Action( thisModule->m_Input));
             return true; });
     }
@@ -79,21 +78,15 @@ struct Ru_Stave :  public Ru_StaveCompound< Module>, public Module
     typedef typename Module::Outlet::Tuple      Output;
     typedef typename Module::Outlet::PtrTuple   PtrOutput; 
 
-    Input                      m_Input;
-    Input                      m_Future;
-    //PtrOutput                  m_PtrOutput;
-
-    Cv_OpTuple< Output>        m_OpOutput; 
-    Cv_TypeMapTuple< Cv_OpListener, Output>   m_Listeners;
+    Input                                       m_Input;
+    Input                                       m_Future; 
+    Cv_TypeMapTuple< Cv_OpListener, Output>     m_Listeners;
 public: 
     Ru_Stave( void) 
     {} 
 
 template < int K>
     auto        VarPtr( void)  { return Cv_TupleIndex< Input, Input::Sz -1 -K>( &m_Future).PVar(); } 
-
-template < int K>
-    auto        OpPtr( void)  { return Cv_TupleIndex< Cv_OpTuple< Output>, Output::Sz -1 -K>( &m_OpOutput).PVar(); } 
 
 template < int K>
     auto        Listener( void)  { return Cv_TupleIndex< Cv_TypeMapTuple< Cv_OpListener, Output>, Output::Sz -1 -K>( &m_Listeners).PVar(); } 

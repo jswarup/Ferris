@@ -149,7 +149,7 @@ public:
             return dl->Initialize();
         }
         if (dl == tl)
-            m_Head->SetPrev(dl->GetPrev()); // make dl the tail
+            m_Head->SetPrev( dl->GetPrev());     // make dl the tail
         else if (dl == m_Head)
         {
             m_Head = m_Head->GetNext();
@@ -158,6 +158,10 @@ public:
         return dl->Initialize();
     }
 
+    //_____________________________________________________________________________________________________________________________
+
+    DLink    *Pop( void) { return Remove( GetHead()); }
+    
     //_____________________________________________________________________________________________________________________________
 
     void    InsertAfter(DLink *ref, DLink *dl)
@@ -212,12 +216,8 @@ public:
         dlist->m_Head = NULL;
         return;
     }
-
-    
     
     //_____________________________________________________________________________________________________________________________
-
-    
 };
 
 
