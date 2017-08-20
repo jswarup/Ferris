@@ -28,8 +28,7 @@ template < typename Module>
 struct Ru_StaveAction<  Module, typename Cv_TypeEngage::Exist< decltype((( Module *) nullptr)->Action(  *( typename Module::Inlet::Tuple *) nullptr) )>::Note>
 {
     typedef typename Module::Inlet::Tuple       Input;
-    typedef typename Module::Outlet::Tuple      Output;
-    typedef typename Module::Outlet::PtrTuple   PtrOutput;
+    typedef typename Module::Outlet::Tuple      Output; 
 
     auto  ActionFn( void)
     {   
@@ -68,19 +67,19 @@ struct Ru_StaveCompound<  Module, typename Cv_TypeEngage::Exist< typename  Modul
 template< class X> 
 struct Cv_OpListener
 {
-    std::vector< X >    m_Vec;
+    std::vector< X *>    m_Vec;
 };
 
 template < typename Module>
 struct Ru_Stave :  public Ru_StaveCompound< Module>, public Module
 {
     typedef typename Module::Inlet::Tuple       Input;
-    typedef typename Module::Outlet::Tuple      Output;
-    typedef typename Module::Outlet::PtrTuple   PtrOutput; 
+    typedef typename Module::Outlet::Tuple      Output;  
 
     Input                                       m_Input;
     Input                                       m_Future; 
     Cv_TypeMapTuple< Cv_OpListener, Output>     m_Listeners;
+
 public: 
     Ru_Stave( void) 
     {} 
