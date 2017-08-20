@@ -104,6 +104,7 @@ public:
             Conn< 0>()->Join( halfAdder2->OutPort< 0>(), halfAdder1->InPort< 1>());     // sum2 from a & b  => input to the final halfAdder 
             Conn< 1>()->Join( halfAdder1->OutPort< 1>(), orGate->InPort< 0>());         // carry1 => orIn1
             Conn< 2>()->Join( halfAdder2->OutPort< 1>(), orGate->InPort< 1>());         // carry2 => orIn1
+             
         }
     };
 

@@ -257,9 +257,7 @@ struct Ru_TJunctionSite
 {
     Ru_TJunctionSite( Ru_Stave< Module> *stave)
     {}
-
-template < int K>
-    void       *Conn( void) { return nullptr;  } 
+ 
 };
 
 template <typename Module>
@@ -272,7 +270,9 @@ struct Ru_TJunctionSite< Module,  typename Cv_TypeEngage::Exist< typename Module
     {}
 template < int K>
     auto        Conn( void) { return Cv_TupleIndex< Junction, K>( this).PVar();  }  
+     
 };
+
 //_____________________________________________________________________________________________________________________________
 
 template < class Module, typename = void> 

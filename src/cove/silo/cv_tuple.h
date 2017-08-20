@@ -439,3 +439,32 @@ public:
 };
 
 //_____________________________________________________________________________________________________________________________
+
+template < template< class> class TypeMap, typename Tuple, typename = void>
+class Cv_TypeMapTuple 
+{
+public:
+    typedef typename Tuple::CType  CType;
+
+    TypeMap<  CType>   m_Var;
+     
+    auto	PVar( void) { return &m_Var; } 
+};
+
+//_____________________________________________________________________________________________________________________________
+
+template < template< class> class TypeMap, typename Tuple>
+class Cv_TypeMapTuple< TypeMap, Tuple, typename Cv_TypeEngage::Exist< typename Tuple::TupleBase>::Note> 
+                                                                            : public Cv_TypeMapTuple< TypeMap, typename Tuple::TupleBase>
+{
+public:
+    typedef typename Tuple::TupleBase                   TupleTupleBase;
+    typedef Cv_TypeMapTuple< TypeMap, TupleTupleBase>   TupleBase;
+    typedef typename Tuple::CType           CType;
+
+    TypeMap<  CType>       m_Var;
+
+    auto	PVar( void) { return &m_Var; } 
+};
+
+//_____________________________________________________________________________________________________________________________

@@ -66,6 +66,12 @@ struct Ru_StaveCompound<  Module, typename Cv_TypeEngage::Exist< typename  Modul
 
 //_____________________________________________________________________________________________________________________________
 
+template< class X> 
+struct Cv_OpListener
+{
+    std::vector< X >    m_Vec;
+};
+
 template < typename Module>
 struct Ru_Stave :  public Ru_StaveCompound< Module>, public Module
 {
@@ -76,8 +82,9 @@ struct Ru_Stave :  public Ru_StaveCompound< Module>, public Module
     Input                      m_Input;
     Input                      m_Future;
     //PtrOutput                  m_PtrOutput;
-    Cv_OpTuple< Output>        m_OpOutput;
-    
+
+    Cv_OpTuple< Output>        m_OpOutput; 
+    Cv_TypeMapTuple< Cv_OpListener, Output>   m_Listeners;
 public: 
     Ru_Stave( void) 
     {} 
@@ -87,6 +94,9 @@ template < int K>
 
 template < int K>
     auto        OpPtr( void)  { return Cv_TupleIndex< Cv_OpTuple< Output>, Output::Sz -1 -K>( &m_OpOutput).PVar(); } 
+
+template < int K>
+    auto        Listener( void)  { return Cv_TupleIndex< Cv_TypeMapTuple< Cv_OpListener, Output>, Output::Sz -1 -K>( &m_Listeners).PVar(); } 
  };
  
  
