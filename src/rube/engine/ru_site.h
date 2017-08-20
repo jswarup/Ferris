@@ -10,9 +10,18 @@ template < typename T>
 struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
 {
     typedef Ru_Port< T>  Port; 
- 
-    Ru_Port( void) 
-    {}
+    union Data  
+    {
+        Cv_OpListener< T>   *m_Listener;
+        T                   *m_PVal;
+    };
+
+    bool                    m_InFlg;
+    Data                    m_Data;
+    
+    Ru_Port( Cv_OpListener< T>  *l) : m_InFlg( false)  {  m_Data.m_Listener = l; }
+
+    Ru_Port( T *pVal) : m_InFlg( true) {  m_Data.m_PVal = pVal; }
 
     Port    *Join( Ru_Port *port)
     {
@@ -23,31 +32,6 @@ struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
     } 
 };
   
-//_____________________________________________________________________________________________________________________________
-
-template < typename Module, typename T, bool InPortFlg>
-class   Ru_ModulePort;
-
-template < typename Module, typename T>
-struct   Ru_ModulePort< Module, T, false> : public Ru_Port< T>
-{  
-    Cv_OpListener< T>       *m_Listener;
-
-    Ru_ModulePort( Cv_OpListener< T>  *l) 
-        : m_Listener( l)
-    {}
-};
-
-template < typename Module, typename T>
-struct   Ru_ModulePort< Module, T, true> : public Ru_Port< T>
-{  
-    T           *m_PVal;
-
-    Ru_ModulePort( T *pVal) 
-        :  m_PVal( pVal)
-    {}
-};
-
 //_____________________________________________________________________________________________________________________________
  
 template < typename Module, uint32_t Index, bool InFlg>
@@ -82,13 +66,14 @@ struct Ru_StavePortAdaptor< Module, Index, false>
 template < typename Module, typename T, typename... Rest> 
 struct   Ru_Inlet : public Ru_Inlet< Module, Rest...>
 {   
-    typedef Ru_Inlet< Module, Rest...> 	            TupleBase;
-    typedef Cv_Tuple< T, Rest...>  			        Tuple;
-    typedef Cv_Tuple< T*, Rest*...>  			    PtrTuple;
+    typedef Ru_Inlet< Module, Rest...> 	    TupleBase;
+    typedef Cv_Tuple< T, Rest...>  		    Tuple;
+    typedef Cv_Tuple< T*, Rest*...>  	    PtrTuple;
     enum {
         Sz = TupleBase::Sz +1,
     };
-    Ru_ModulePort< Module, T, true>                 m_Var;
+
+    Ru_Port< T>         m_Var;
 
     Ru_Inlet( Ru_Stave< Module> *stave)
         : TupleBase( stave), m_Var( Ru_StavePortAdaptor< Module, Sz -1, true>( stave).Stub())
@@ -103,12 +88,12 @@ template < int K>
 template < typename Module, typename T> 
 struct   Ru_Inlet< Module, T>   
 {  
-    typedef Cv_Tuple< T>  			                Tuple;
-    typedef Cv_Tuple< T*>  			                PtrTuple;
+    typedef Cv_Tuple< T>  			       Tuple; 
     enum {
         Sz = 1,
     };
-    Ru_ModulePort< Module, T, true>                m_Var;
+
+    Ru_Port< T>                             m_Var;
 
     Ru_Inlet( Ru_Stave< Module> *stave)
         : m_Var( Ru_StavePortAdaptor< Module, Sz -1, true>( stave).Stub())
@@ -125,13 +110,12 @@ template < int K>
 template < typename Module, typename T, typename... Rest> 
 struct   Ru_Outlet : public Ru_Outlet< Module, Rest...>
 {  
-    typedef Ru_Outlet< Module, Rest...> 	        TupleBase;
-    typedef Cv_Tuple< T, Rest...>  			        Tuple;
-    typedef Cv_Tuple< T*, Rest*...>  			    PtrTuple;
+    typedef Ru_Outlet< Module, Rest...> 	TupleBase;
+    typedef Cv_Tuple< T, Rest...>  			Tuple; 
     enum {
         Sz = TupleBase::Sz +1,
     };
-    Ru_ModulePort< Module, T, false>                 m_Var;
+    Ru_Port<  T>                            m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
         : TupleBase( stave), m_Var( Ru_StavePortAdaptor< Module, Sz -1, false>( stave).Stub()) 
@@ -146,12 +130,11 @@ template < int K>
 template < typename Module, typename T> 
 struct   Ru_Outlet< Module, T>   
 {  
-    typedef Cv_Tuple< T>  			                Tuple;
-    typedef Cv_Tuple< T*>  			                PtrTuple;
+    typedef Cv_Tuple< T>                    Tuple; 
     enum {
         Sz = 1,
     };
-    Ru_ModulePort< Module, T, false>                m_Var;
+    Ru_Port<  T>                            m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
         : m_Var( Ru_StavePortAdaptor< Module, Sz -1, false>( stave).Stub()) 
