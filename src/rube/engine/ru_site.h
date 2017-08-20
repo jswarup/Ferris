@@ -6,20 +6,11 @@
 
 //_____________________________________________________________________________________________________________________________
 
-template < class Module>
-struct Ru_TSite;
-
 template < typename T>
-class   Ru_Connection;
-
-//_____________________________________________________________________________________________________________________________
-
-template < typename T>
-class   Ru_Port : public Cv_DLink< Ru_Port< T >>
+struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
 {
     typedef Ru_Port< T>  Port; 
-
-public: 
+ 
     Ru_Port( void) 
     {}
 
@@ -34,13 +25,12 @@ public:
   
 //_____________________________________________________________________________________________________________________________
 
-template < typename Module, typename T, bool InPortFlg >
+template < typename Module, typename T, bool InPortFlg>
 class   Ru_ModulePort;
 
 template < typename Module, typename T>
-class   Ru_ModulePort< Module, T, false> : public Ru_Port< T>
-{   
-public: 
+struct   Ru_ModulePort< Module, T, false> : public Ru_Port< T>
+{  
     Cv_OpListener< T>       *m_Listener;
 
     Ru_ModulePort( Cv_OpListener< T>  *l) 
@@ -49,9 +39,8 @@ public:
 };
 
 template < typename Module, typename T>
-class   Ru_ModulePort< Module, T, true> : public Ru_Port< T>
-{   
-public:
+struct   Ru_ModulePort< Module, T, true> : public Ru_Port< T>
+{  
     T           *m_PVal;
 
     Ru_ModulePort( T *pVal) 
@@ -91,9 +80,8 @@ struct Ru_StavePortAdaptor< Module, Index, false>
 //_____________________________________________________________________________________________________________________________
 
 template < typename Module, typename T, typename... Rest> 
-class   Ru_Inlet : public Ru_Inlet< Module, Rest...>
+struct   Ru_Inlet : public Ru_Inlet< Module, Rest...>
 {   
-public:
     typedef Ru_Inlet< Module, Rest...> 	            TupleBase;
     typedef Cv_Tuple< T, Rest...>  			        Tuple;
     typedef Cv_Tuple< T*, Rest*...>  			    PtrTuple;
@@ -113,9 +101,8 @@ template < int K>
 };
 
 template < typename Module, typename T> 
-class   Ru_Inlet< Module, T>   
-{ 
-public:
+struct   Ru_Inlet< Module, T>   
+{  
     typedef Cv_Tuple< T>  			                Tuple;
     typedef Cv_Tuple< T*>  			                PtrTuple;
     enum {
@@ -136,9 +123,8 @@ template < int K>
 //_____________________________________________________________________________________________________________________________
 
 template < typename Module, typename T, typename... Rest> 
-class   Ru_Outlet : public Ru_Outlet< Module, Rest...>
-{   
-public:
+struct   Ru_Outlet : public Ru_Outlet< Module, Rest...>
+{  
     typedef Ru_Outlet< Module, Rest...> 	        TupleBase;
     typedef Cv_Tuple< T, Rest...>  			        Tuple;
     typedef Cv_Tuple< T*, Rest*...>  			    PtrTuple;
@@ -158,9 +144,8 @@ template < int K>
 };
 
 template < typename Module, typename T> 
-class   Ru_Outlet< Module, T>   
-{ 
-public:
+struct   Ru_Outlet< Module, T>   
+{  
     typedef Cv_Tuple< T>  			                Tuple;
     typedef Cv_Tuple< T*>  			                PtrTuple;
     enum {
