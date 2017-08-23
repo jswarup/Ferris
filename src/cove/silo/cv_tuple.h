@@ -4,7 +4,7 @@
 //_____________________________________________________________________________________________________________________________
 
 template < typename T, typename... Rest>
-class   Cv_Tuple; 
+class   Cv_Tuple;  
 
 //_____________________________________________________________________________________________________________________________
 
@@ -54,6 +54,35 @@ struct Cv_TupleType< 0, Cv_Tuple<Head, Tail...>>
  
 //_____________________________________________________________________________________________________________________________
 
+template < template< class> class TypeMap, typename Tuple, typename = void>
+class Cv_TypeMapTuple 
+{
+public:
+    typedef typename Tuple::CType  CType;
+
+    TypeMap<  CType>   m_Var;
+     
+    auto	PVar( void) { return &m_Var; } 
+};
+
+//_____________________________________________________________________________________________________________________________
+
+template < template< class> class TypeMap, typename Tuple>
+class Cv_TypeMapTuple< TypeMap, Tuple, typename Cv_TypeEngage::Exist< typename Tuple::TupleBase>::Note> 
+                                                                            : public Cv_TypeMapTuple< TypeMap, typename Tuple::TupleBase>
+{
+public:
+    typedef typename Tuple::TupleBase                   TupleTupleBase;
+    typedef Cv_TypeMapTuple< TypeMap, TupleTupleBase>   TupleBase;
+    typedef typename Tuple::CType           CType;
+
+    TypeMap<  CType>       m_Var;
+
+    auto	PVar( void) { return &m_Var; } 
+};
+
+//_____________________________________________________________________________________________________________________________
+
 struct  Cv_TupleTools
 {   
 template <std::size_t N,  typename Tuple>
@@ -80,8 +109,8 @@ template< typename T, typename... BT >
 template< typename... Types >
     static constexpr auto 	Dump( std::ostream &ostr, const  Cv_Tuple< Types...> &tuple);
 	
-template< typename... Types >
-    static constexpr void 	PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const Cv_Tuple< Types...> &tuple);
+template< template< class> class TypeMap, typename... Types >
+    static constexpr void 	PtrVectorAssign( Cv_TypeMapTuple< TypeMap, Cv_Tuple< Types...>> *ptrVecTuple, const Cv_Tuple< Types...> &tuple);
 
 template< typename T1, typename T2>
     static constexpr   auto Fuse( const T1 &t1, const T2 &t2); 
@@ -316,30 +345,33 @@ constexpr auto   Cv_TupleTools::Dump( std::ostream &ostr, const  Cv_Tuple< Types
         return true; 
     });
 }
-
+ 
 template< typename T1, typename T2, typename = void>
-struct Cv_TupleToolsPtrAssigner
+struct Cv_TupleToolsPtrVectorAssigner
 {
-    static constexpr void PtrAssign( const T1 &ptrTuple, const T2 &tuple)
+    static constexpr void PtrVectorAssign( const T1 *ptrVecTuple, const T2 &tuple)
     {
-        *ptrTuple.m_Var = tuple.m_Var;       
+        for (  auto it = ptrVecTuple->m_Var.begin(); it != ptrVecTuple->m_Var.end();  ++it)
+            *(*it) = tuple.m_Var;       
     }
 };
 
 template< typename T1, typename T2>
-struct Cv_TupleToolsPtrAssigner< T1, T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
+struct Cv_TupleToolsPtrVectorAssigner< T1, T2, typename Cv_TypeEngage::Exist< typename T1::TupleBase>::Note>
 {
-    static constexpr void PtrAssign( const T1 &ptrTuple, const T2 &tuple)
+    static constexpr void PtrVectorAssign( const T1 *ptrVecTuple, const T2 &tuple)
     {
-        *ptrTuple.m_Var = tuple.m_Var;  
-        return Cv_TupleTools::PtrAssign( static_cast< const typename T1::TupleBase &>( ptrTuple), static_cast< const typename T2::TupleBase &>( tuple));
+        for (  auto it = ptrVecTuple->m_Var.begin(); it != ptrVecTuple->m_Var.end();  ++it)
+            *(*it) = tuple.m_Var;    
+        Cv_TupleTools::PtrVectorAssign( static_cast< const typename T1::TupleBase *>( ptrVecTuple), static_cast< const typename T2::TupleBase &>( tuple));
     }
 };
+ 
 
-template< typename... Types >
-constexpr void 	Cv_TupleTools::PtrAssign( Cv_Tuple< Types*...> &ptrTuple, const Cv_Tuple< Types...> &tuple) 
+template< template< class> class TypeMap, typename... Types >
+constexpr void 	Cv_TupleTools::PtrVectorAssign( Cv_TypeMapTuple< TypeMap, Cv_Tuple< Types...>> *ptrVecTuple, const Cv_Tuple< Types...> &tuple) 
 {
-    Cv_TupleToolsPtrAssigner< Cv_Tuple< Types*...>, Cv_Tuple< Types...>>::PtrAssign( ptrTuple, tuple);
+    Cv_TupleToolsPtrVectorAssigner< Cv_TypeMapTuple< TypeMap, Cv_Tuple< Types...>>, Cv_Tuple< Types...>>::PtrVectorAssign( ptrVecTuple, tuple);
 }
 
 
@@ -436,35 +468,6 @@ public:
     auto	PVar( void) { return &m_Var; }
     
     bool    Apply( const Tuple &tup)  { return m_Var( tup.m_Var) && TupleBase::Apply( static_cast< const TupleTupleBase &>( tup)); }
-};
-
-//_____________________________________________________________________________________________________________________________
-
-template < template< class> class TypeMap, typename Tuple, typename = void>
-class Cv_TypeMapTuple 
-{
-public:
-    typedef typename Tuple::CType  CType;
-
-    TypeMap<  CType>   m_Var;
-     
-    auto	PVar( void) { return &m_Var; } 
-};
-
-//_____________________________________________________________________________________________________________________________
-
-template < template< class> class TypeMap, typename Tuple>
-class Cv_TypeMapTuple< TypeMap, Tuple, typename Cv_TypeEngage::Exist< typename Tuple::TupleBase>::Note> 
-                                                                            : public Cv_TypeMapTuple< TypeMap, typename Tuple::TupleBase>
-{
-public:
-    typedef typename Tuple::TupleBase                   TupleTupleBase;
-    typedef Cv_TypeMapTuple< TypeMap, TupleTupleBase>   TupleBase;
-    typedef typename Tuple::CType           CType;
-
-    TypeMap<  CType>       m_Var;
-
-    auto	PVar( void) { return &m_Var; } 
 };
 
 //_____________________________________________________________________________________________________________________________

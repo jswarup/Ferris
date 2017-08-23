@@ -12,24 +12,33 @@ struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
     typedef Ru_Port< T>  Port; 
     union Data  
     {
-        Cv_OpListener< T>   *m_Listener;
+        Cv_PtrVector< T>    *m_Listener;
         T                   *m_PVal;
     };
 
     bool                    m_InFlg;
     Data                    m_Data;
     
-    Ru_Port( Cv_OpListener< T>  *l) : m_InFlg( false)  {  m_Data.m_Listener = l; }
+    Ru_Port( Cv_PtrVector< T>  *l) : m_InFlg( false)  {  m_Data.m_Listener = l; }
 
     Ru_Port( T *pVal) : m_InFlg( true) {  m_Data.m_PVal = pVal; }
 
-    Port    *Join( Ru_Port *port)
+    void    Join( Ru_Port *port)
     {
         Cv_DList< Port>  list1( Cv_DLink< Port>::GetHeadLink());
         Cv_DList< Port>  list2( port->GetHeadLink());
-        list1.Transfer( &list2); 
-        return list1.GetHead();
+
+        for ( Ru_Port  *port1 = list1.GetHead(); port1; port1 = port1->GetNext())
+            for ( Ru_Port  *port2 = list2.GetHead(); port2; port2 = port2->GetNext())
+                if ( port1->m_InFlg != port2->m_InFlg)
+                    port1->m_InFlg ? port2->OutConnect( port1) :  port1->OutConnect( port2);
+                   
+        while ( port = list2.Pop())
+            list1.Append( port);        
+        return;
     } 
+
+    void    OutConnect( Ru_Port *port) { m_Data.m_Listener->push_back( port->m_Data.m_PVal); }
 };
   
 //_____________________________________________________________________________________________________________________________

@@ -93,9 +93,9 @@ public:
             Ru_Site< Ru_HalfAdder>  *halfAdder2 = Child< 1>();
             Ru_Site< Ru_OrGate>     *orGate =   Child< 2>(); 
 
-            InPort< 0>()->Join( halfAdder1->InPort< 0>());      // carryIn
-            InPort< 1>()->Join( halfAdder2->InPort< 0>());      // a
-            InPort< 2>()->Join( halfAdder2->InPort< 1>());      // b
+            InPort< 0>()->Join( halfAdder1->InPort< 0>());                      // carryIn
+            InPort< 1>()->Join( halfAdder2->InPort< 0>());                      // a
+            InPort< 2>()->Join( halfAdder2->InPort< 1>());                      // b
     
             OutPort< 0>()->Join( halfAdder1->OutPort< 0>());
             OutPort< 1>()->Join( orGate->OutPort< 0>());
