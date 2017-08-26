@@ -38,7 +38,10 @@ struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
         return;
     } 
 
-    void    OutConnect( Ru_Port *port) { m_Data.m_Listener->push_back( port->m_Data.m_PVal); }
+    void    OutConnect( Ru_Port *port) 
+    { 
+        m_Data.m_Listener->push_back( port->m_Data.m_PVal); 
+    }
 };
   
 //_____________________________________________________________________________________________________________________________
@@ -55,7 +58,7 @@ struct Ru_StavePortAdaptor< Module, Index, true>
         : m_Stave( stave)
     {};
 
-    auto    Stub( void) { return m_Stave->VarPtr< Index>(); }
+    auto    Stub( void) { return m_Stave->template VarPtr< Index>(); }
 };
 
 template < typename Module, uint32_t Index>
@@ -67,7 +70,7 @@ struct Ru_StavePortAdaptor< Module, Index, false>
         : m_Stave( stave)
     {};
 
-    auto    Stub( void) { return m_Stave->Listener< Index>(); }
+    auto    Stub( void) { return m_Stave->template Listener< Index>(); }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -91,7 +94,7 @@ struct   Ru_Inlet : public Ru_Inlet< Module, Rest...>
     auto	PVar( void) { return &m_Var; }
 
 template < int K>
-    auto        Port( void) { return Cv_TupleIndex< Base, K>( this).PVar(); }
+    auto        Port( void) { return Cv_TupleIndex< TupleBase, K>( this).PVar(); }
 };
 
 template < typename Module, typename T> 
@@ -133,7 +136,7 @@ struct   Ru_Outlet : public Ru_Outlet< Module, Rest...>
     auto	PVar( void) { return &m_Var; }
 
 template < int K>
-    auto        Port( void) { return Cv_TupleIndex< Base, K>( this).PVar(); }
+    auto        Port( void) { return Cv_TupleIndex< TupleBase, K>( this).PVar(); }
 };
 
 template < typename Module, typename T> 

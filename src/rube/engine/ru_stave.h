@@ -34,7 +34,8 @@ struct Ru_StaveAction<  Module, typename Cv_TypeEngage::Exist< decltype((( Modul
     {   
         return Cv_TupleTools::Make( [this]( auto... rest) { 
             Ru_Stave< Module>       *thisModule = static_cast< Ru_Stave< Module> *>( this);  
-            Cv_TupleTools::PtrVectorAssign( &thisModule->m_Listeners, thisModule->Action( thisModule->m_Input));
+            Output                  output = thisModule->Action( thisModule->m_Input);
+            Cv_TupleTools::PtrVectorAssign( thisModule->m_Listeners, output);
             return true; });
     }
  };
@@ -57,7 +58,7 @@ struct Ru_StaveCompound<  Module, typename Cv_TypeEngage::Exist< typename  Modul
     auto  ActionFn( void)
     {   
         auto    modFn = static_cast< Ru_StaveAction< Module> *>( this)->ActionFn(); 
-        auto    subActions = static_cast< SubStaves *>( this)->Unary( []( auto var) { return var.ActionFn(); } ); 
+        auto    subActions = static_cast< SubStaves *>( this)->Unary( []( auto &var) { return var.ActionFn(); } ); 
         return Cv_TupleTools::Fuse( modFn, Cv_TupleTools::Melt( subActions)); 
     }
 };
