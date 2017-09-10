@@ -52,8 +52,10 @@ struct Ru_ModulePort;
 template < typename Module, typename T>
 struct Ru_ModulePort< Module, T, true> : public Ru_Port< T>
 { 
-    Ru_ModulePort( T *pVal) 
-        : Ru_Port< T>( pVal) 
+    Ru_Stave< Module>       *m_Stave;
+
+    Ru_ModulePort(Ru_Stave< Module> *stave, T *pVal)
+        : Ru_Port< T>( pVal), m_Stave(stave)
     {}
 
 };
@@ -61,8 +63,10 @@ struct Ru_ModulePort< Module, T, true> : public Ru_Port< T>
 template < typename Module, typename T>
 struct Ru_ModulePort< Module, T, false> : public Ru_Port< T>
 {
-    Ru_ModulePort( Cv_PtrVector< T>  *l) 
-        : Ru_Port< T>( l) 
+    Ru_Stave< Module>       *m_Stave;
+
+    Ru_ModulePort( Ru_Stave< Module> *stave, Cv_PtrVector< T>  *l)
+        : Ru_Port< T>( l), m_Stave( stave)
     {}
 };
 
@@ -110,7 +114,7 @@ struct   Ru_Inlet : public Ru_Inlet< Module, Rest...>
     Ru_ModulePort< Module, T, true>         m_Var;
 
     Ru_Inlet( Ru_Stave< Module> *stave)
-        : TupleBase( stave), m_Var( Ru_StavePortAdaptor< Module, Sz -1, true>( stave).Stub())
+        : TupleBase( stave), m_Var( stave, Ru_StavePortAdaptor< Module, Sz -1, true>( stave).Stub())
     {}
 
     auto	    PVar( void) { return &m_Var; }
@@ -130,7 +134,7 @@ struct   Ru_Inlet< Module, T>
     Ru_ModulePort< Module, T, true>        m_Var;
 
     Ru_Inlet( Ru_Stave< Module> *stave)
-        : m_Var( Ru_StavePortAdaptor< Module, Sz -1, true>( stave).Stub())
+        : m_Var( stave, Ru_StavePortAdaptor< Module, Sz -1, true>( stave).Stub())
     {}
 
     auto	PVar( void) { return &m_Var; }
@@ -152,7 +156,7 @@ struct   Ru_Outlet : public Ru_Outlet< Module, Rest...>
     Ru_ModulePort< Module, T, false>        m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
-        : TupleBase( stave), m_Var( Ru_StavePortAdaptor< Module, Sz -1, false>( stave).Stub()) 
+        : TupleBase( stave), m_Var( stave, Ru_StavePortAdaptor< Module, Sz -1, false>( stave).Stub())
     {}
 
     auto	PVar( void) { return &m_Var; }
@@ -171,7 +175,7 @@ struct   Ru_Outlet< Module, T>
     Ru_ModulePort< Module, T, false>        m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
-        : m_Var( Ru_StavePortAdaptor< Module, Sz -1, false>( stave).Stub()) 
+        : m_Var( stave, Ru_StavePortAdaptor< Module, Sz -1, false>( stave).Stub())
     {}
 
     auto	PVar( void) { return &m_Var; }
