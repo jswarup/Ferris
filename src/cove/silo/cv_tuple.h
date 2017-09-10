@@ -58,9 +58,8 @@ template < template< class> class TypeMap, typename Tuple, typename = void>
 class Cv_TypeMapTuple 
 {
 public:
-    typedef typename Tuple::CType  CType;
-
-    TypeMap<  CType>   m_Var;
+    typedef typename Tuple::CType                       CType; 
+    TypeMap<  CType>                                    m_Var;
      
     auto	PVar( void) { return &m_Var; } 
 };
@@ -74,9 +73,9 @@ class Cv_TypeMapTuple< TypeMap, Tuple, typename Cv_TypeEngage::Exist< typename T
 public:
     typedef typename Tuple::TupleBase                   TupleTupleBase;
     typedef Cv_TypeMapTuple< TypeMap, TupleTupleBase>   TupleBase;
-    typedef typename Tuple::CType           CType;
+    typedef typename Tuple::CType                       CType;
 
-    TypeMap<  CType>       m_Var;
+    TypeMap<  CType>                                    m_Var;
 
     auto	PVar( void) { return &m_Var; } 
 };

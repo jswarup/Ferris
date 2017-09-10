@@ -27,12 +27,11 @@ struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
     {
         Cv_DList< Port>  list1( Cv_DLink< Port>::GetHeadLink());
         Cv_DList< Port>  list2( port->GetHeadLink());
-
         for ( Ru_Port  *port1 = list1.GetHead(); port1; port1 = port1->GetNext())
             for ( Ru_Port  *port2 = list2.GetHead(); port2; port2 = port2->GetNext())
                 if ( port1->m_InFlg != port2->m_InFlg)
                     port1->m_InFlg ? port2->OutConnect( port1) :  port1->OutConnect( port2);
-                   
+                 
         while ( port = list2.Pop())
             list1.Append( port);        
         return;
@@ -45,6 +44,29 @@ struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
 };
   
 //_____________________________________________________________________________________________________________________________
+
+template < typename Module, typename T, bool InFlg>
+struct Ru_ModulePort;
+
+
+template < typename Module, typename T>
+struct Ru_ModulePort< Module, T, true> : public Ru_Port< T>
+{ 
+    Ru_ModulePort( T *pVal) 
+        : Ru_Port< T>( pVal) 
+    {}
+
+};
+
+template < typename Module, typename T>
+struct Ru_ModulePort< Module, T, false> : public Ru_Port< T>
+{
+    Ru_ModulePort( Cv_PtrVector< T>  *l) 
+        : Ru_Port< T>( l) 
+    {}
+};
+
+//_____________________________________________________________________________________________________________________________
  
 template < typename Module, uint32_t Index, bool InFlg>
 struct Ru_StavePortAdaptor;
@@ -52,7 +74,7 @@ struct Ru_StavePortAdaptor;
 template < typename Module, uint32_t Index>
 struct Ru_StavePortAdaptor< Module, Index, true>
 {
-    Ru_Stave< Module>   *m_Stave;
+    Ru_Stave< Module>       *m_Stave;
 
     Ru_StavePortAdaptor( Ru_Stave< Module> *stave)
         : m_Stave( stave)
@@ -64,13 +86,13 @@ struct Ru_StavePortAdaptor< Module, Index, true>
 template < typename Module, uint32_t Index>
 struct Ru_StavePortAdaptor< Module, Index, false>
 {
-    Ru_Stave< Module>   *m_Stave;
+    Ru_Stave< Module>       *m_Stave;
 
     Ru_StavePortAdaptor( Ru_Stave< Module> *stave)
         : m_Stave( stave)
     {};
 
-    auto    Stub( void) { return m_Stave->template Listener< Index>(); }
+    auto        Stub( void) { return m_Stave->template Listener< Index>(); }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -85,13 +107,13 @@ struct   Ru_Inlet : public Ru_Inlet< Module, Rest...>
         Sz = TupleBase::Sz +1,
     };
 
-    Ru_Port< T>         m_Var;
+    Ru_ModulePort< Module, T, true>         m_Var;
 
     Ru_Inlet( Ru_Stave< Module> *stave)
         : TupleBase( stave), m_Var( Ru_StavePortAdaptor< Module, Sz -1, true>( stave).Stub())
     {}
 
-    auto	PVar( void) { return &m_Var; }
+    auto	    PVar( void) { return &m_Var; }
 
 template < int K>
     auto        Port( void) { return Cv_TupleIndex< TupleBase, K>( this).PVar(); }
@@ -100,12 +122,12 @@ template < int K>
 template < typename Module, typename T> 
 struct   Ru_Inlet< Module, T>   
 {  
-    typedef Cv_Tuple< T>  			       Tuple; 
+    typedef Cv_Tuple< T>  	                Tuple; 
     enum {
         Sz = 1,
     };
 
-    Ru_Port< T>                             m_Var;
+    Ru_ModulePort< Module, T, true>        m_Var;
 
     Ru_Inlet( Ru_Stave< Module> *stave)
         : m_Var( Ru_StavePortAdaptor< Module, Sz -1, true>( stave).Stub())
@@ -127,7 +149,7 @@ struct   Ru_Outlet : public Ru_Outlet< Module, Rest...>
     enum {
         Sz = TupleBase::Sz +1,
     };
-    Ru_Port<  T>                            m_Var;
+    Ru_ModulePort< Module, T, false>        m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
         : TupleBase( stave), m_Var( Ru_StavePortAdaptor< Module, Sz -1, false>( stave).Stub()) 
@@ -146,7 +168,7 @@ struct   Ru_Outlet< Module, T>
     enum {
         Sz = 1,
     };
-    Ru_Port<  T>                            m_Var;
+    Ru_ModulePort< Module, T, false>        m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
         : m_Var( Ru_StavePortAdaptor< Module, Sz -1, false>( stave).Stub()) 

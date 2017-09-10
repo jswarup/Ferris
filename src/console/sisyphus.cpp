@@ -14,10 +14,10 @@
 
 void    TestAdder( void)
 {
-    auto    a = Cv_TupleTools::Make( 0, 1, 2, 3, 4);
-    Cv_OpTuple< decltype( a)>   tup;
-
+    auto                            a = Cv_TupleTools::Make( 0, 1, 2, 3, 4);
+    Cv_OpTuple< decltype( a)>       tup; 
     Ru_Stave< Ru_FullAdder>         stave; 
+
     Ru_FullAdder::Site              rr( &stave);
  
     auto    lambda = []( uint32_t k, auto var, auto... args) 
@@ -26,7 +26,7 @@ void    TestAdder( void)
         return true; 
     };
 
-    auto        lm = stave.ActionFn();
+    auto                            lm = stave.ActionFn();
     lm.Invoke();  
     return;
 }
@@ -36,7 +36,8 @@ void    TestAdder( void)
 void TestArena( void)
 {
     typedef  Cv_FileArena< uint32_t, false, 4, 5, 6>    Arena;
-    uint32_t                            szVec = 1 << Arena::SzMask();
+
+    uint32_t                        szVec = 1 << Arena::SzMask();
     
     {
         Cv_FileSpritz   fp( "test.sge", Cv_FileSpritz::WriteTrim);                   // if the file exists and user intends to use it
