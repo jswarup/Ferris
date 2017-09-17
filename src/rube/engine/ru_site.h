@@ -10,18 +10,11 @@ template < typename T>
 struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
 {
     typedef Ru_Port< T>  Port; 
-    union Data  
-    {
-        Cv_PtrVector< T>    *m_Listener;
-        T                   *m_PVal;
-    };
-
     bool                    m_InFlg;
-    Data                    m_Data;
     
-    Ru_Port( Cv_PtrVector< T>  *l) : m_InFlg( false)  {  m_Data.m_Listener = l; }
-
-    Ru_Port( T *pVal) : m_InFlg( true) {  m_Data.m_PVal = pVal; }
+    Ru_Port( void) 
+        : m_InFlg( false)  
+    { } 
 
     void    Join( Ru_Port *port)
     {
@@ -37,10 +30,7 @@ struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
         return;
     } 
 
-    void    OutConnect( Ru_Port *port) 
-    { 
-        m_Data.m_Listener->push_back( port->m_Data.m_PVal); 
-    }
+    virtual void    OutConnect( Ru_Port *port) = 0;
 };
   
 //_____________________________________________________________________________________________________________________________
@@ -52,22 +42,54 @@ struct Ru_ModulePort;
 template < typename Module, typename T>
 struct Ru_ModulePort< Module, T, true> : public Ru_Port< T>
 { 
+    union Data
+    {
+        Cv_PtrVector< T>    *m_Listener;
+        T                   *m_PVal;
+    };
+    Data                    m_Data;
+
+
     Ru_Stave< Module>       *m_Stave;
 
     Ru_ModulePort(Ru_Stave< Module> *stave, T *pVal)
-        : Ru_Port< T>( pVal), m_Stave(stave)
-    {}
+        : Ru_Port< T>( ), m_Stave(stave)
+    {
+        m_Data.m_PVal = pVal;
+        m_InFlg = true;
+    }
+    void    WireInputs(void)
+    {
+        Cv_DList<  Ru_Port< T>>  list(Cv_DLink<  Ru_Port< T> >::GetHeadLink());
+        for (Ru_Port< T> *port = list.GetHead(); port; port = port->GetNext())
+            if ((port != this) && !port->m_InFlg)
+                Ru_Port< T>::m_Data.m_Listener->push_back(port->m_Data.m_PVal);
+        return;
+    }
 
+    void    OutConnect(Ru_Port *port) {}
 };
 
 template < typename Module, typename T>
 struct Ru_ModulePort< Module, T, false> : public Ru_Port< T>
 {
+    union Data
+    {
+        Cv_PtrVector< T>    *m_Listener;
+        T                   *m_PVal;
+    };
+    Data                    m_Data;
+
+
     Ru_Stave< Module>       *m_Stave;
 
     Ru_ModulePort( Ru_Stave< Module> *stave, Cv_PtrVector< T>  *l)
-        : Ru_Port< T>( l), m_Stave( stave)
-    {}
+        : Ru_Port< T>(), m_Stave( stave)
+    {
+        m_Data.m_Listener = l;
+
+        m_InFlg = false;
+    }
 
     void    WireInputs( void)
     {
@@ -76,6 +98,13 @@ struct Ru_ModulePort< Module, T, false> : public Ru_Port< T>
             if ( ( port != this)  && !port->m_InFlg)
                 Ru_Port< T>::m_Data.m_Listener->push_back( port->m_Data.m_PVal);
         return;
+    }
+
+    void    OutConnect( Ru_Port< T> *p)
+    {
+        Ru_ModulePort< Module, T, true> *inPort = static_cast< Ru_ModulePort< Module, T, true> *>( p);
+
+        m_Data.m_Listener->push_back( inPort->m_Data.m_PVal);
     }
 };
 
