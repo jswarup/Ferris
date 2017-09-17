@@ -32,7 +32,7 @@ struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
                 if ( port1->m_InFlg != port2->m_InFlg)
                     port1->m_InFlg ? port2->OutConnect( port1) :  port1->OutConnect( port2);
                  
-        while ( port = list2.Pop())
+        while (( port = list2.Pop()))
             list1.Append( port);        
         return;
     } 
@@ -68,6 +68,15 @@ struct Ru_ModulePort< Module, T, false> : public Ru_Port< T>
     Ru_ModulePort( Ru_Stave< Module> *stave, Cv_PtrVector< T>  *l)
         : Ru_Port< T>( l), m_Stave( stave)
     {}
+
+    void    WireInputs( void)
+    {
+        Cv_DList<  Ru_Port< T>>  list( Cv_DLink<  Ru_Port< T> >::GetHeadLink());
+        for ( Ru_Port< T> *port = list.GetHead(); port; port = port->GetNext())
+            if ( ( port != this)  && !port->m_InFlg)
+                Ru_Port< T>::m_Data.m_Listener->push_back( port->m_Data.m_PVal);
+        return;
+    }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -84,7 +93,7 @@ struct Ru_StavePortAdaptor< Module, Index, true>
         : m_Stave( stave)
     {};
 
-    auto    Stub( void) { return m_Stave->template VarPtr< Index>(); }
+    auto    Stub( void) { auto  varPtr = Ru_StaveTools< Ru_Stave< Module>, Index>::VarPtr(); return varPtr(m_Stave); }
 };
 
 template < typename Module, uint32_t Index>
@@ -96,7 +105,7 @@ struct Ru_StavePortAdaptor< Module, Index, false>
         : m_Stave( stave)
     {};
 
-    auto        Stub( void) { return m_Stave->template Listener< Index>(); }
+    auto        Stub( void) { auto listener = Ru_StaveTools< Ru_Stave< Module>, Index>::Listener(); return listener( m_Stave); ; }
 };
 
 //_____________________________________________________________________________________________________________________________
@@ -156,7 +165,7 @@ struct   Ru_Outlet : public Ru_Outlet< Module, Rest...>
     Ru_ModulePort< Module, T, false>        m_Var;
 
     Ru_Outlet( Ru_Stave< Module> *stave)
-        : TupleBase( stave), m_Var( stave, Ru_StavePortAdaptor< Module, Sz -1, false>( stave).Stub())
+        : TupleBase( stave), m_Var( stave, NULL)
     {}
 
     auto	PVar( void) { return &m_Var; }

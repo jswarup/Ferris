@@ -81,12 +81,19 @@ public:
     Ru_Stave( void) 
     {} 
 
-template < int K>
-    auto        VarPtr( void)  { return Cv_TupleIndex< Input, Input::Sz -1 -K>( &m_Future).PVar(); } 
+};
 
-template < int K>
-    auto        Listener( void)  { return Cv_TupleIndex< Cv_TypeMapTuple< Cv_PtrVector, Output>, Output::Sz -1 -K>( &m_Listeners).PVar(); } 
- };
+//_____________________________________________________________________________________________________________________________
+
+template < typename Stave, int K>
+struct Ru_StaveTools
+{
+    static auto        VarPtr( void)  { return []( Stave *stave) {
+                                           return  Cv_TupleIndex< typename Stave::Input, Stave::Input::Sz -1 -K>( &stave->m_Future).PVar(); }; }
+
+    static auto        Listener( void)  { return []( Stave *stave) {
+                                            return  Cv_TupleIndex< Cv_TypeMapTuple< Cv_PtrVector, typename Stave::Output>, Stave::Output::Sz -1 -K>( &stave->m_Listeners).PVar(); }; }
+};
  
  
 //_____________________________________________________________________________________________________________________________
