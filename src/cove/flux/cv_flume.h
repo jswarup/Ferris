@@ -178,9 +178,9 @@ public:
 template < class Flume>
 class Cv_MarginFlume : public Flume, public Cv_MarginMgr
 {
-    uint32_t        m_Cols;
     uint32_t        m_Lines;
-  
+    uint32_t        m_Cols;
+    
 public:
     typedef typename Flume::Stream  Stream;
 

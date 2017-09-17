@@ -6,6 +6,11 @@
 
 //_____________________________________________________________________________________________________________________________
 
+template < typename Module, typename = void>
+struct  Ru_Site;
+
+//_____________________________________________________________________________________________________________________________
+
 template < typename T>
 struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
 {
@@ -16,19 +21,7 @@ struct   Ru_Port : public Cv_DLink< Ru_Port< T>>
         : m_InFlg( false)  
     { } 
 
-    void    Join( Ru_Port *port)
-    {
-        Cv_DList< Port>  list1( Cv_DLink< Port>::GetHeadLink());
-        Cv_DList< Port>  list2( port->GetHeadLink());
-        for ( Ru_Port  *port1 = list1.GetHead(); port1; port1 = port1->GetNext())
-            for ( Ru_Port  *port2 = list2.GetHead(); port2; port2 = port2->GetNext())
-                if ( port1->m_InFlg != port2->m_InFlg)
-                    port1->m_InFlg ? port2->OutConnect( port1) :  port1->OutConnect( port2);
-                 
-        while (( port = list2.Pop()))
-            list1.Append( port);        
-        return;
-    } 
+     
 
     virtual void    OutConnect( Ru_Port *port) = 0;
 };
@@ -52,11 +45,11 @@ struct Ru_ModulePort< Module, T, true> : public Ru_Port< T>
 
     Ru_Stave< Module>       *m_Stave;
 
-    Ru_ModulePort(Ru_Stave< Module> *stave, T *pVal)
+    Ru_ModulePort( Ru_Stave< Module> *stave, T *pVal)
         : Ru_Port< T>( ), m_Stave(stave)
     {
         m_Data.m_PVal = pVal;
-        m_InFlg = true;
+        this->m_InFlg = true;
     }
     void    WireInputs(void)
     {
@@ -67,7 +60,17 @@ struct Ru_ModulePort< Module, T, true> : public Ru_Port< T>
         return;
     }
 
-    void    OutConnect(Ru_Port *port) {}
+    void    OutConnect( Ru_Port< T> *port) {}
+    
+template < typename Mod2>
+    void    Join( Ru_ModulePort< Mod2, T, true>  *port)
+    {
+        Cv_DList< Ru_Port< T>>  list1( Cv_DLink< Ru_Port< T>>::GetHeadLink());
+        Cv_DList< Ru_Port< T>>  list2( port->GetHeadLink());
+        list1.Transfer( &list2);
+        return;
+    }
+
 };
 
 template < typename Module, typename T>
@@ -88,7 +91,7 @@ struct Ru_ModulePort< Module, T, false> : public Ru_Port< T>
     {
         m_Data.m_Listener = l;
 
-        m_InFlg = false;
+        this->m_InFlg = false;
     }
 
     void    WireInputs( void)
@@ -105,6 +108,24 @@ struct Ru_ModulePort< Module, T, false> : public Ru_Port< T>
         Ru_ModulePort< Module, T, true> *inPort = static_cast< Ru_ModulePort< Module, T, true> *>( p);
 
         m_Data.m_Listener->push_back( inPort->m_Data.m_PVal);
+    }
+
+template < typename Mod2>
+    void    Join( Ru_ModulePort< Mod2, T, false>  *port)
+    {
+        Cv_DList< Ru_Port< T>>  list1(Cv_DLink< Ru_Port< T>>::GetHeadLink());
+        Cv_DList< Ru_Port< T>>  list2(port->GetHeadLink());
+        list1.Transfer(&list2);
+        return;
+    }
+
+template < typename Mod2>
+    void    Join( Ru_ModulePort< Mod2, T, true>  *port)
+    {
+        Cv_DList< Ru_Port< T>>  list1( Cv_DLink< Ru_Port< T>>::GetHeadLink());
+        Cv_DList< Ru_Port< T>>  list2( port->GetHeadLink()); 
+        list1.Transfer( &list2);
+        return;
     }
 };
 
@@ -294,19 +315,6 @@ struct Ru_CSite : public Ru_TSite< Module>
     {}
 };
 
-//_____________________________________________________________________________________________________________________________
-
-template < typename Module, typename = void>
-struct  Ru_Site : public Ru_CSite< Module>
-{
-    typedef typename Module::Inlet::Tuple       Input;
-    typedef typename Module::Outlet::Tuple      Output;
-
-    Ru_Site( Ru_Stave< Module> *stave)
-        :   Ru_CSite< Module>( stave)
-    {}
- 
-};
 
 //_____________________________________________________________________________________________________________________________
 
@@ -379,6 +387,19 @@ public:
     {}
 };
 
+//_____________________________________________________________________________________________________________________________
+
+template < typename Module>
+struct  Ru_Site<Module, void>: public Ru_CSite< Module>
+{
+    typedef typename Module::Inlet::Tuple       Input;
+    typedef typename Module::Outlet::Tuple      Output;
+
+    Ru_Site(Ru_Stave< Module> *stave)
+        : Ru_CSite< Module>(stave)
+    {}
+
+};
 //_____________________________________________________________________________________________________________________________
 
 template < typename Module>

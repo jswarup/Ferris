@@ -35,8 +35,7 @@ public:
 template < typename Lambda>
     auto    Compose( Lambda param) const
     {
-        typedef decltype( param) RetLambda;
-        uint32_t    i = 0;
+        typedef decltype( param) RetLambda; 
         auto        lwrap = [ param,  this]( auto... rest) { return param( 0, this->at( 0), rest...);};  
         auto        retVals = Construct( lwrap); 
         for ( uint32_t i = 1; i < this->size(); ++i)

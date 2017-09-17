@@ -394,7 +394,7 @@ public:
 
     //_____________________________________________________________________________________________________________________________
 
-    void    Transfer(Cv_DList< DLink> *dlist)
+    void    Transfer( Cv_DList< DLink> *dlist)
     {
         bool    opn = isOpen();
         DLink   *tl = GetTail();
